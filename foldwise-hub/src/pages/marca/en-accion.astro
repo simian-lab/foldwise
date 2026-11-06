@@ -62,9 +62,12 @@ void icons;
             cliente.
           </p>
         </div>
-        <div class="hero__mark">
-          <AnimatedLogo variant="ciruela" size={380} trigger="load" loop />
-        </div>
+        <figure class="hero__mark">
+          <div class="hero__stage">
+            <AnimatedLogo variant="crema" size={440} trigger="load" loop />
+          </div>
+          <figcaption>Logo animado: la f se dobla y se vuelve caja.</figcaption>
+        </figure>
       </div>
     </header>
 
@@ -252,7 +255,6 @@ void icons;
     --ink-soft: rgb(58 29 63 / 0.72);
     --chamfer: 18px;
     background: var(--c-crema);
-    overflow-x: clip;
   }
   .wrap {
     width: min(100% - 2rem, 1320px);
@@ -306,12 +308,31 @@ void icons;
     color: rgb(246 241 231 / 0.82);
   }
   .hero__mark {
+    margin: 0;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-3);
+  }
+  .hero__stage {
     display: grid;
     place-items: center;
+    aspect-ratio: 5 / 4;
+    padding: var(--s-4);
+    background: var(--c-crema);
+    border-radius: var(--r-lg);
+    /* same chamfered tuck-flap corner as the panels below */
+    clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 0 100%);
+    box-shadow: inset 0 0 0 1px rgb(58 29 63 / 0.06);
   }
-  .hero__mark :global(svg) {
-    max-width: 100%;
+  /* the animated logo ships a fixed px size; let it scale with the stage */
+  .hero__stage :global(.al) {
+    width: min(100%, 440px);
     height: auto;
+  }
+  .hero__mark figcaption {
+    font-size: var(--fs-xs);
+    color: rgb(246 241 231 / 0.7);
   }
 
   /* Sheet of panels */
@@ -793,14 +814,18 @@ void icons;
 
   @media (max-width: 720px) {
     .hero__grid {
-      grid-template-columns: 1fr;
+      grid-template-columns: minmax(0, 1fr);
       gap: var(--s-6);
     }
     .hero__back {
       margin-bottom: var(--s-8);
     }
-    .hero__mark :global(svg) {
-      width: 200px;
+    .hero__stage {
+      aspect-ratio: auto;
+      padding: var(--s-8) var(--s-4);
+    }
+    .hero__stage :global(.al) {
+      width: min(100%, 240px);
     }
     .panel {
       padding: var(--s-6) var(--s-4);

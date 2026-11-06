@@ -24,9 +24,11 @@ test.describe('brand-in-action board', () => {
     const blocked = await blockExternal(page);
     await page.goto(PAGE);
 
-    await expect(page.locator('h1')).toBeVisible();
+    // scoped to <main>: the Astro dev toolbar injects its own headings in dev
+    const main = page.locator('main');
+    await expect(main.locator('h1')).toBeVisible();
     for (const name of SECTIONS) {
-      await expect(page.getByRole('heading', { level: 2, name, exact: true })).toBeVisible();
+      await expect(main.getByRole('heading', { level: 2, name, exact: true })).toBeVisible();
     }
     expect(errors).toEqual([]);
     expect(blocked).toEqual([]);
@@ -69,7 +71,19 @@ test.describe('brand-in-action board', () => {
     for (const kind of ['troquel', 'flauta']) {
       await expect(page.locator(`[data-pattern="${kind}"] pattern`).first()).toHaveCount(1);
     }
+    // nothing may hide overflow: the scroll width must be the real layout width
+    const clips = await page.evaluate(() =>
+      ['html', 'body', 'main'].map((s) => getComputedStyle(document.querySelector(s)!).overflowX),
+    );
+    expect(clips).toEqual(['visible', 'visible', 'visible']);
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     expect(overflow).toBeLessThanOrEqual(0);
+    const wide = await page.evaluate(() =>
+      [...document.querySelectorAll('main *')]
+        .filter((el) => el.getBoundingClientRect().right > window.innerWidth + 1)
+        .filter((el) => !el.closest('svg'))
+        .map((el) => el.tagName + '.' + el.className),
+    );
+    expect(wide).toEqual([]);
   });
 });
