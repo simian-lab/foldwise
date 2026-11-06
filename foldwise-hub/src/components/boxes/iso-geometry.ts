@@ -74,8 +74,8 @@ export interface Part {
   dash?: string;
   opacity?: number;
   part?: string;
-  /** 'blur' applies the instance's soft-shadow filter. */
-  filter?: 'blur';
+  /** 'blur' is the wide ambient shadow blur, 'blur-s' the tight contact blur (shared page filters). */
+  filter?: 'blur' | 'blur-s';
   /** Name of a clip region in `Scene.clips`. */
   clip?: string;
   evenodd?: boolean;
@@ -196,19 +196,49 @@ class Builder {
   line(pts: Vec3[], style: Style) {
     this.parts.push({ pts3: [pts], closed: false, style });
   }
-  /** A filled face shaded by its own normal. */
+  /**
+   * A filled face shaded by its own normal. The edge is tonal (a darker step
+   * of the face itself) rather than a drawn outline, so folds read as light.
+   */
   face(pts: Vec3[], opts: { part?: string; inside?: boolean; fill?: string; clip?: string } = {}) {
     const n = cross(sub(pts[1], pts[0]), sub(pts[2], pts[0]));
     const fill = opts.fill ?? shade(n, this.pal, opts.inside);
     this.poly(pts, {
       fill,
-      stroke: this.pal.edge,
-      sw: 0.7,
+      stroke: mix(fill, this.pal.edge, 0.55),
+      sw: 0.55,
       part: opts.part,
       clip: opts.clip,
     });
     return fill;
   }
+  /** Paper-fibre texture over a board face (shared page pattern). */
+  fiber(pts: Vec3[], clip?: string) {
+    const o = FIBER[this.pal === COLORWAYS.kraft ? 'kraft' : this.pal === COLORWAYS.ciruela ? 'ciruela' : 'light'];
+    this.poly(pts, { fill: 'url:fiber', opacity: o, clip });
+  }
+  /** Soft lighting gradient over a face (shared page gradient). */
+  light(pts: Vec3[], grad: 'vshade' | 'front-light' | 'side-light' | 'top-light' | 'inner') {
+    this.poly(pts, { fill: `url:${grad}` });
+  }
+}
+
+/** Fibre strength per board: kraft shows its fibre, printed and bleached boards much less. */
+const FIBER = { kraft: 1, ciruela: 0.55, light: 0.4 } as const;
+
+/**
+ * Flute line along a cut board edge: a wave running between the two liners,
+ * from a to b, swinging ±amp along `across`. Pitch follows the board.
+ */
+function flute(b: Builder, a: Vec3, c: Vec3, across: Vec3, amp: number, pitch: number, opacity = 0.55) {
+  const len = Math.hypot(...sub(c, a));
+  const n = Math.max(6, Math.min(160, Math.round(len / pitch) * 2));
+  const pts: Vec3[] = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n;
+    pts.push(add(add(a, mul(sub(c, a), t)), mul(across, (i % 2 ? 1 : -1) * amp)));
+  }
+  b.line(pts, { stroke: mix(b.pal.inner, '#000000', 0.15), sw: 0.45, opacity, part: 'flute' });
 }
 
 const rect = (F: Frame, s0: number, t0: number, s1: number, t1: number): Vec3[] => [
@@ -268,16 +298,18 @@ function floorShadow(b: Builder, d: Dims, reach: number) {
       [d.x0 + d.L + g + dx, d.y0 + d.W + g + dy, z],
       [d.x0 - g, d.y0 + d.W + g, z],
     ],
-    { fill: SHADOW, opacity: 0.2, filter: 'blur', part: 'shadow' },
+    { fill: SHADOW, opacity: 0.17, filter: 'blur', part: 'shadow' },
   );
+  // a tight, darker contact line right where the board meets the floor
+  const k = reach * 0.04;
   b.poly(
     [
-      [d.x0 - 0.1, d.y0 - 0.1, z],
-      [d.x0 + d.L + 0.25, d.y0 - 0.1, z],
-      [d.x0 + d.L + 0.25, d.y0 + d.W + 0.15, z],
-      [d.x0 - 0.1, d.y0 + d.W + 0.15, z],
+      [d.x0 - k, d.y0 - k, z],
+      [d.x0 + d.L + k * 2, d.y0 - k, z],
+      [d.x0 + d.L + k * 2, d.y0 + d.W + k, z],
+      [d.x0 - k, d.y0 + d.W + k, z],
     ],
-    { fill: SHADOW, opacity: 0.28, filter: 'blur', part: 'contact-shadow' },
+    { fill: SHADOW, opacity: 0.42, filter: 'blur-s', part: 'contact-shadow' },
   );
 }
 
@@ -286,9 +318,10 @@ function edgeLights(b: Builder, d: Dims) {
   const hi = mix(b.pal.top, '#FFFFFF', 0.45);
   const { x0, y0, z0, L, W, H } = d;
   b.line([[x0, y0 + W, z0 + H], [x0 + L, y0 + W, z0 + H], [x0 + L, y0, z0 + H]], {
-    stroke: hi, sw: 1.1, opacity: 0.85, part: 'edge-light',
+    stroke: hi, sw: 0.9, opacity: 0.75, part: 'edge-light',
   });
-  b.line([[x0 + L, y0 + W, z0 + H], [x0 + L, y0 + W, z0]], { stroke: hi, sw: 0.8, opacity: 0.35 });
+  // the rounded front corner catches a little light, fading toward the floor
+  b.line([[x0 + L, y0 + W, z0 + H], [x0 + L, y0 + W, z0 + H * 0.35]], { stroke: hi, sw: 0.7, opacity: 0.3 });
 }
 
 /** Closed rectangular solid: front, side and top faces with a soft vertical gradient. */
@@ -296,18 +329,27 @@ function shell(b: Builder, d: Dims, names = { front: 'front', side: 'side', top:
   const F = frontFrame(d);
   const S = sideFrame(d);
   const T = topFrame(d);
-  b.face(rect(F, 0, 0, d.L, d.H), { part: names.front });
-  b.poly(rect(F, 0, 0, d.L, d.H), { fill: 'url:vshade' });
-  b.face(rect(S, 0, 0, d.W, d.H), { part: names.side });
-  b.poly(rect(S, 0, 0, d.W, d.H), { fill: 'url:vshade' });
-  b.face(rect(T, 0, 0, d.L, d.W), { part: names.top });
-  if (b.pal === COLORWAYS.kraft) {
-    for (const [Fr, w, h] of [[F, d.L, d.H], [S, d.W, d.H], [T, d.L, d.W]] as const) {
-      b.poly(rect(Fr, 0, 0, w, h), { fill: 'url:grain' });
-    }
-  }
+  walls(b, F, S, d.L, d.W, d.H, names);
+  const top = rect(T, 0, 0, d.L, d.W);
+  b.face(top, { part: names.top });
+  b.light(top, 'top-light');
+  b.fiber(top);
   if (lights) edgeLights(b, d);
   return { F, S, T };
+}
+
+/** Front and end walls with their lighting and fibre. */
+function walls(b: Builder, F: Frame, S: Frame, L: number, W: number, H: number, names = { front: 'front', side: 'side' }) {
+  const fr = rect(F, 0, 0, L, H);
+  b.face(fr, { part: names.front });
+  b.light(fr, 'front-light');
+  b.light(fr, 'vshade');
+  b.fiber(fr);
+  const sd = rect(S, 0, 0, W, H);
+  b.face(sd, { part: names.side });
+  b.light(sd, 'side-light');
+  b.light(sd, 'vshade');
+  b.fiber(sd);
 }
 
 /**
@@ -319,10 +361,18 @@ function tray(b: Builder, d: Dims, t: number, inside?: () => void, opts: { rimTo
   const zi = z0 + t;
   const xi0 = x0 + t, xi1 = x0 + L - t, yi0 = y0 + t, yi1 = y0 + W - t;
   // floor
-  b.face([[xi0, yi0, zi], [xi1, yi0, zi], [xi1, yi1, zi], [xi0, yi1, zi]], { part: 'floor', inside: true });
-  // inner back wall (faces +y) and inner left wall (faces +x)
+  const floorPts: Vec3[] = [[xi0, yi0, zi], [xi1, yi0, zi], [xi1, yi1, zi], [xi0, yi1, zi]];
+  b.face(floorPts, { part: 'floor', inside: true });
+  b.fiber(floorPts);
+  // inner back wall (faces +y) and inner left wall (faces +x), darker toward the floor
+  const ib: Vec3[] = [[xi1, yi0, z0 + H], [xi0, yi0, z0 + H], [xi0, yi0, zi], [xi1, yi0, zi]];
   b.face([[xi0, yi0, zi], [xi1, yi0, zi], [xi1, yi0, z0 + H], [xi0, yi0, z0 + H]], { part: 'inner-back', inside: true });
+  b.light(ib, 'inner');
+  b.fiber(ib);
+  const il: Vec3[] = [[xi0, yi0, z0 + H], [xi0, yi1, z0 + H], [xi0, yi1, zi], [xi0, yi0, zi]];
   b.face([[xi0, yi0, zi], [xi0, yi1, zi], [xi0, yi1, z0 + H], [xi0, yi0, z0 + H]], { part: 'inner-left', inside: true });
+  b.light(il, 'inner');
+  b.fiber(il);
   // contact darkening where the floor meets the back walls
   const sw = Math.min(L, W) * 0.12;
   b.poly([[xi0, yi0, zi], [xi1, yi0, zi], [xi1, yi0 + sw, zi], [xi0 + sw, yi0 + sw, zi], [xi0 + sw, yi1, zi], [xi0, yi1, zi]], {
@@ -331,14 +381,7 @@ function tray(b: Builder, d: Dims, t: number, inside?: () => void, opts: { rimTo
   inside?.();
   const F = frontFrame(d);
   const S = sideFrame(d);
-  b.face(rect(F, 0, 0, L, H), { part: 'front' });
-  b.poly(rect(F, 0, 0, L, H), { fill: 'url:vshade' });
-  b.face(rect(S, 0, 0, W, H), { part: 'side' });
-  b.poly(rect(S, 0, 0, W, H), { fill: 'url:vshade' });
-  if (b.pal === COLORWAYS.kraft) {
-    b.poly(rect(F, 0, 0, L, H), { fill: 'url:grain' });
-    b.poly(rect(S, 0, 0, W, H), { fill: 'url:grain' });
-  }
+  walls(b, F, S, L, W, H);
   // rim: the cut board edge, drawn as a ring
   const zt = z0 + H;
   b.multi(
@@ -346,8 +389,16 @@ function tray(b: Builder, d: Dims, t: number, inside?: () => void, opts: { rimTo
       [[x0, y0, zt], [x0 + L, y0, zt], [x0 + L, y0 + W, zt], [x0, y0 + W, zt]],
       [[xi0, yi0, zt], [xi0, yi1, zt], [xi1, yi1, zt], [xi1, yi0, zt]],
     ],
-    { fill: opts.rimTone ?? mix(b.pal.top, '#FFFFFF', 0.2), stroke: b.pal.edge, sw: 0.6, evenodd: true, part: 'rim' },
+    { fill: opts.rimTone ?? mix(b.pal.top, '#FFFFFF', 0.2), stroke: mix(b.pal.side, b.pal.edge, 0.5), sw: 0.45, evenodd: true, part: 'rim' },
   );
+  // corrugation seen in the cut edge: a flute wave between the two liners
+  const m = t / 2;
+  const amp = t * 0.26;
+  const pitch = Math.max(t * 1.1, Math.max(L, W) / 70);
+  flute(b, [x0 + m, y0 + m, zt], [x0 + L - m, y0 + m, zt], [0, 1, 0], amp, pitch, 0.4);
+  flute(b, [x0 + m, y0 + m, zt], [x0 + m, y0 + W - m, zt], [1, 0, 0], amp, pitch, 0.4);
+  flute(b, [x0 + m, y0 + W - m, zt], [x0 + L - m, y0 + W - m, zt], [0, 1, 0], amp, pitch);
+  flute(b, [x0 + L - m, y0 + m, zt], [x0 + L - m, y0 + W - m, zt], [1, 0, 0], amp, pitch);
   edgeLights(b, d);
   return { F, S };
 }
@@ -370,15 +421,28 @@ function flap(b: Builder, o: Vec3, along: Vec3, dir: Vec3, depth: number, part: 
   const vis = dot(n, VIEW) >= 0 ? n : mul(n, -1);
   const inside = dot(vis, insideSide) > 0;
   b.face(pts, { part, inside });
-  if (b.pal === COLORWAYS.kraft) b.poly(pts, { fill: 'url:grain' });
+  b.fiber(pts);
+  // the free edge is a cut through the board: show its thickness and flutes
+  const ud = norm(dir);
+  if (dot(ud, VIEW) > 0.05) {
+    const th = Math.min(0.24, depth * 0.06);
+    const off = mul(norm(insideSide), th);
+    const e0 = pts[4], e1 = pts[3];
+    b.poly([e0, e1, add(e1, off), add(e0, off)], {
+      fill: mix(b.pal.top, '#FFFFFF', 0.15), stroke: mix(b.pal.side, b.pal.edge, 0.5), sw: 0.4, part: 'cut-edge',
+    });
+    flute(b, add(e0, mul(off, 0.5)), add(e1, mul(off, 0.5)), off, 0.28, Math.max(th * 1.2, len / 60));
+  }
 }
 
+/** Packing tape: slightly translucent film with a glossy sheen; clear tape tints the board amber. */
 function tape(b: Builder, pts: Vec3[], vertical: boolean, lime: boolean) {
   if (lime) {
-    b.poly(pts, { fill: vertical ? LIME_SHADE : LIME, stroke: mix(LIME_SHADE, '#3A1D3F', 0.2), sw: 0.5, part: 'tape' });
+    b.poly(pts, { fill: vertical ? LIME_SHADE : LIME, opacity: 0.94, stroke: mix(LIME_SHADE, '#3A1D3F', 0.12), sw: 0.4, part: 'tape' });
   } else {
-    b.poly(pts, { fill: '#FFFFFF', opacity: 0.2, stroke: '#FFFFFF', sw: 0.5, part: 'tape' });
+    b.poly(pts, { fill: mix(b.pal.front, '#B8894F', 0.5), opacity: 0.22, stroke: '#FFFFFF', sw: 0.4, part: 'tape' });
   }
+  b.poly(pts, { fill: 'url:tape-gloss', opacity: vertical ? 0.55 : 0.85 });
 }
 
 /** Zig-zag cut end of a tape strip on a face frame, from s0 to s1 at depth t. */
@@ -609,7 +673,7 @@ function drawMailer(c: Ctx, easy: boolean) {
   b.face([L(0, w * 0.1), L(0, w), L(0, w, sideDepth), L(0, w * 0.86, sideDepth)], { inside: true });
   // lid inner face
   b.face([L(0, 0), L(l, 0), L(l, w), L(0, w)], { part: 'lid-inner', inside: true });
-  if (b.pal === COLORWAYS.kraft) b.poly([L(0, 0), L(l, 0), L(l, w), L(0, w)], { fill: 'url:grain' });
+  b.fiber([L(0, 0), L(l, 0), L(l, w), L(0, w)]);
   b.line([L(0, w - lip * 2), L(l, w - lip * 2)], { stroke: b.pal.edge, sw: 0.6, opacity: 0.5 });
   // tuck flap at the lid's far edge, folded toward the viewer
   const phi = 125 * DEG;
@@ -856,7 +920,7 @@ function fit(b: Builder): Scene {
   // Fit on solid geometry; blurred shadows may bleed into the padding.
   let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
   for (const p of raw) {
-    if (p.style.filter === 'blur') continue;
+    if (p.style.filter) continue;
     for (const s of p.pts2) for (const [x, y] of s) {
       minX = Math.min(minX, x); maxX = Math.max(maxX, x);
       minY = Math.min(minY, y); maxY = Math.max(maxY, y);

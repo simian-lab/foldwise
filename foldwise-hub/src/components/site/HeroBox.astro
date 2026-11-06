@@ -5,7 +5,7 @@
  */
 import { ISOTYPE_PATH as ISOTYPE, ISOTYPE_FOLDS as FOLDS } from '../../data/brand';
 import { heroStatic, heroFrame, STATIC_MATS, VIEW, LIME } from '../../scripts/hero-box';
-
+import Materials from '../boxes/materials.astro';
 
 const st = heroStatic();
 const fr = heroFrame(0);
@@ -22,10 +22,14 @@ const openFrame = {
   lidFront: open.lidFront,
 };
 
-const TRAY_BACK = ['shadow', 'contact', 'floor', 'innerBack', 'innerLeft', 'tissueBack', 'tissueLeft', 'tissue', 'tissueCreases', 'seal', 'sealRing'];
+const TRAY_BACK = ['shadow', 'contact', 'floor', 'floorTex', 'innerBack', 'innerBackShade', 'innerBackTex', 'innerLeft', 'innerLeftShade', 'innerLeftTex', 'tissueBack', 'tissueLeft', 'tissue', 'tissueCreases', 'seal', 'sealRing'];
 const JAR = ['jarShadow', 'jarBody', 'jarGlint', 'jarLabel', 'jarLabelLine', 'jarLabelLine2', 'jarCap', 'jarCapTop'];
-const TRAY_FRONT = ['front', 'frontShade', 'side', 'sideShade', 'rim', 'edgeLight', 'cornerLight'];
-const LID_A = ['lidOuter', 'lidOuterShade', 'lidEdge', 'hingeFold', 'lidInner', 'lipBottom', 'lidSide', 'lip'];
+const TRAY_FRONT = ['front', 'frontLight', 'frontShade', 'frontTex', 'side', 'sideLight', 'sideShade', 'sideTex', 'rim', 'rimFlute', 'edgeLight', 'cornerLight'];
+// Lid paint order: outer face (+ its fibre, shade, edge light, hinge score), printed outer
+// art, inner face (+ fibre, light), printed inner art, then the cut edges and the lip.
+const LID_OUTER = ['lidOuter', 'lidOuterTex', 'lidOuterShade', 'lidEdge', 'hingeFold'];
+const LID_INNER = ['lidInner', 'lidInnerTex', 'lidInnerShade'];
+const LID_EDGES = ['lipBottom', 'lidSide', 'lidFlute', 'lip'];
 const CARD = ['cardShadow', 'cardBack', 'cardFace'];
 
 const sh = (k: string) => {
@@ -40,7 +44,7 @@ const sh = (k: string) => {
     'stroke-linejoin': 'round',
     'stroke-linecap': 'round',
     opacity: s.opacity,
-    filter: k === 'shadow' || k === 'contact' || k === 'jarShadow' || k === 'cardShadow' ? 'url(#hb-blur)' : undefined,
+    filter: k === 'contact' ? 'url(#fw-blur-s)' : k === 'shadow' || k === 'jarShadow' || k === 'cardShadow' ? 'url(#hb-blur)' : undefined,
     style: (fr.shapes[k] as { hidden?: boolean } | undefined)?.hidden ? 'display:none' : undefined,
   };
 };
@@ -54,6 +58,7 @@ const rays = Array.from({ length: 9 }, (_, i) => {
 });
 ---
 
+<Materials />
 <button
   type="button"
   class="hero-box"
@@ -124,12 +129,12 @@ const rays = Array.from({ length: 9 }, (_, i) => {
       </g>
       {JAR.map((k) => <path {...sh(k)} />)}
       {TRAY_FRONT.map((k) => <path {...sh(k)} />)}
-      <g transform={STATIC_MATS.front} data-part="front-print">
+      <g transform={STATIC_MATS.front} data-part="front-print" filter="url(#fw-ink)" opacity="0.95">
         <text x="0.8" y="3.2" font-family="'Figtree', sans-serif" font-weight="600" font-size="0.46" fill="#F6F1E7" opacity="0.92">
           Pedidos pequeños. Cuidado enorme.
         </text>
       </g>
-      <g transform={STATIC_MATS.side} data-part="side-print">
+      <g transform={STATIC_MATS.side} data-part="side-print" filter="url(#fw-ink)">
         <g transform="translate(3.9 1.25) scale(0.05)">
           <path d={ISOTYPE} fill="#F6F1E7" opacity="0.9"></path>
           <path d={FOLDS} fill="none" stroke="#3A1D3F" stroke-width="2" stroke-dasharray="3 2.5"></path>
@@ -139,8 +144,8 @@ const rays = Array.from({ length: 9 }, (_, i) => {
 
     <g data-slot="front">
       <g data-lid>
-        {LID_A.slice(0, 4).map((k) => <path {...sh(k)} />)}
-        <g data-mat="lidOuter" transform={fr.mats.lidOuter}>
+        {LID_OUTER.map((k) => <path {...sh(k)} />)}
+        <g data-mat="lidOuter" transform={fr.mats.lidOuter} filter="url(#fw-ink)" opacity="0.95">
           <g transform="translate(2.3 3.55) scale(0.058)">
             <path d={ISOTYPE} fill="#F6F1E7"></path>
             <path d={FOLDS} fill="none" stroke={LIME} stroke-width="2.2" stroke-dasharray="3 2.5"></path>
@@ -155,8 +160,8 @@ const rays = Array.from({ length: 9 }, (_, i) => {
             fill="#F6F1E7"
           >foldwise</text>
         </g>
-        <path {...sh('lidInner')} />
-        <g data-mat="lidInner" transform={fr.mats.lidInner} style="display:none">
+        {LID_INNER.map((k) => <path {...sh(k)} />)}
+        <g data-mat="lidInner" transform={fr.mats.lidInner} style="display:none" filter="url(#fw-ink)">
           <g transform="translate(6.35 1.7) scale(0.028)">
             <path d={ISOTYPE} fill="#3A1D3F"></path>
           </g>
@@ -174,7 +179,7 @@ const rays = Array.from({ length: 9 }, (_, i) => {
             Tu aliado de packaging desde la primera caja.
           </text>
         </g>
-        {LID_A.slice(5).map((k) => <path {...sh(k)} />)}
+        {LID_EDGES.map((k) => <path {...sh(k)} />)}
         <g data-mat="lip" transform={fr.mats.lip}>
           <circle cx="7" cy="0.47" r="0.36" fill={LIME}></circle>
           <circle cx="7" cy="0.47" r="0.27" fill="none" stroke="#3A1D3F" stroke-width="0.04" stroke-dasharray="0.08 0.07"></circle>

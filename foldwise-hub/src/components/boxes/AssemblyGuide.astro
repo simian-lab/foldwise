@@ -7,6 +7,7 @@
  */
 import { guides, guideInfo, type GuideSlug } from '../../data/guides';
 import { buildFrame, poseParams, viewOf, matOf, MAT_COLORS, readout } from '../../scripts/guide';
+import Materials from './materials.astro';
 
 interface Props {
   slug: GuideSlug;
@@ -25,6 +26,7 @@ const blur = Math.max(0.2, closedView.w * 0.012);
 const uid = `gd-${slug}`;
 ---
 
+<Materials />
 <div class="guide" data-guide data-kind={info.kind} data-dims={JSON.stringify(info.dims)}>
   <div class="guide__stage">
     <figure class="guide__card" data-guide-figure data-pose={steps[0].pose} data-animating="false" data-done="false">
@@ -44,6 +46,9 @@ const uid = `gd-${slug}`;
           <filter id={`${uid}-blur`} x="-20%" y="-20%" width="140%" height="140%">
             <feGaussianBlur stdDeviation={blur}></feGaussianBlur>
           </filter>
+          <filter id={`${uid}-blur-s`} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation={blur * 0.28}></feGaussianBlur>
+          </filter>
         </defs>
         <g class="guide__mat" aria-hidden="true">
           <path d={mat.side} fill={MAT_COLORS.side}></path>
@@ -54,11 +59,13 @@ const uid = `gd-${slug}`;
           <path d={mat.ticks} fill="none" stroke={MAT_COLORS.line} stroke-opacity="0.75" stroke-width="0.8" vector-effect="non-scaling-stroke"></path>
         </g>
         <path data-shadow d={frame.shadow} fill="#2A1430" opacity={frame.shadowOpacity} filter={`url(#${uid}-blur)`}></path>
+        <path data-shadow-contact d={frame.contact} fill="#2A1430" opacity={frame.contactOpacity} filter={`url(#${uid}-blur-s)`}></path>
         <g data-faces>
           {
             frame.faces.map((f) => (
               <g data-poly={f.id} style={f.hidden ? 'display:none' : f.opacity !== undefined ? `opacity:${f.opacity}` : undefined}>
                 <path data-face={f.id} d={f.d} fill={f.fill} class="guide__face" vector-effect="non-scaling-stroke" />
+                {f.tex && <path data-tex d={f.d} fill="url(#fw-fiber-in)" class="guide__tex" />}
                 {f.hinge && <path data-hinge d={f.hinge} class:list={['guide__hinge', { 'is-active': f.active }]} vector-effect="non-scaling-stroke" />}
               </g>
             ))
@@ -221,10 +228,15 @@ const uid = `gd-${slug}`;
     aspect-ratio: 1.3;
     height: auto;
   }
+  /* tonal board edges: a darker kraft step, not a drawn outline */
   .guide__face {
-    stroke: #7e5e3e;
-    stroke-width: 0.9;
+    stroke: color-mix(in srgb, #7e5e3e 62%, var(--c-kraft));
+    stroke-opacity: 0.75;
+    stroke-width: 0.7;
     stroke-linejoin: round;
+  }
+  .guide__tex {
+    pointer-events: none;
   }
   .guide__hinge {
     fill: none;

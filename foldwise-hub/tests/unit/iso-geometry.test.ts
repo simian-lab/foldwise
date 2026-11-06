@@ -43,7 +43,7 @@ describe('buildBox', () => {
       for (const [style, open] of BOX_STYLES.flatMap((st) => [[st, false], [st, true]] as const)) {
         const scene = buildBox({ style, l, w, h, open, colorway: 'kraft', branding: 'none' });
         // real (unclamped) bounds of the solid geometry; blurred shadows may bleed into the padding
-        const pts = scene.parts.filter((p) => p.filter !== 'blur').flatMap((p) => p.pts.flat());
+        const pts = scene.parts.filter((p) => !p.filter).flatMap((p) => p.pts.flat());
         const xs = pts.map((q) => q[0]);
         const ys = pts.map((q) => q[1]);
         expect(Math.min(...xs)).toBeGreaterThanOrEqual(0);
@@ -89,6 +89,36 @@ describe('buildBox', () => {
     expect(none.logo).toBeNull();
     expect(brand.logo).not.toBeNull();
     expect(brand.logo!.matrix).toHaveLength(6);
+  });
+});
+
+describe('materials', () => {
+  it('references shared page materials, never per-box filters', () => {
+    for (const style of BOX_STYLES) {
+      for (const open of [false, true]) {
+        const scene = buildBox({ style, l: 12, w: 9, h: 6, open, colorway: 'kraft', branding: 'foldwise' });
+        for (const p of scene.parts) {
+          if (p.filter) expect(['blur', 'blur-s']).toContain(p.filter);
+          for (const v of [p.fill, p.stroke]) {
+            if (v?.startsWith('url:')) expect(['fiber', 'vshade', 'front-light', 'side-light', 'top-light', 'inner', 'deep', 'tape-gloss']).toContain(v.slice(4));
+          }
+        }
+      }
+    }
+  });
+
+  it('shows corrugation flutes on the cut rim of an open box and none on a closed one', () => {
+    const open = buildBox({ style: 'rsc', l: 12, w: 9, h: 6, open: true, colorway: 'kraft', branding: 'none' });
+    const closed = buildBox({ style: 'rsc', l: 12, w: 9, h: 6, open: false, colorway: 'kraft', branding: 'none' });
+    expect(open.parts.filter((p) => p.part === 'flute').length).toBeGreaterThanOrEqual(4);
+    expect(closed.parts.some((p) => p.part === 'flute')).toBe(false);
+  });
+
+  it('draws faces with tonal edges instead of the dark outline', () => {
+    const scene = buildBox({ style: 'rsc', l: 12, w: 9, h: 6, open: false, colorway: 'kraft', branding: 'none' });
+    const front = scene.parts.find((p) => p.part === 'front')!;
+    expect(front.stroke).not.toBe(COLORWAYS.kraft.edge);
+    expect(luminance(front.stroke!)).toBeGreaterThan(luminance(COLORWAYS.kraft.edge));
   });
 });
 

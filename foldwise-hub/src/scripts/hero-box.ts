@@ -30,6 +30,12 @@ const OUT = COLORWAYS.ciruela;
 const IN = COLORWAYS.kraft;
 export const LIME = '#C8F25A';
 const EDGE_KRAFT = '#D8B48A';
+// Tonal edges: a darker step of each board instead of a drawn outline.
+const OUT_EDGE = mix(OUT.side, OUT.edge, 0.45);
+const IN_EDGE = mix(IN.side, IN.edge, 0.35);
+const FLUTE = mix(IN.inner, '#000000', 0.1);
+// Shared page materials (../components/boxes/materials.astro).
+const FIBER = 'url(#fw-fiber)';
 const TISSUE = '#FBF8F1';
 
 const S = 26; // px per projected inch
@@ -108,6 +114,18 @@ const dOf = (pts: V3[], closed = true) =>
     return `${i ? 'L' : 'M'}${r1(x)} ${r1(y)}`;
   }).join('') + (closed ? 'Z' : '');
 const dMulti = (subs: V3[][]) => subs.map((s) => dOf(s)).join('');
+
+/** Corrugation wave in a cut board edge: zig between the liners from a to b. */
+function fluteD(a: V3, b: V3, across: V3, amp: number, pitch: number): string {
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]);
+  const n = Math.max(6, Math.round(len / pitch) * 2);
+  const pts: V3[] = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, k = (i % 2 ? 1 : -1) * amp;
+    pts.push([a[0] + (b[0] - a[0]) * t + across[0] * k, a[1] + (b[1] - a[1]) * t + across[1] * k, a[2] + (b[2] - a[2]) * t + across[2] * k]);
+  }
+  return dOf(pts, false);
+}
 
 /** SVG matrix mapping face-local inches (u right, v down) onto the screen. */
 function matrixOf(o: V3, u: V3, v: V3): string {
@@ -216,12 +234,17 @@ export function heroStatic(): Record<string, Shape> {
     shadow: {
       d: dOf([[-0.6, -0.4, 0], [L + 2.2, -1.2, 0], [L + 2.2, W + 0.2, 0], [-0.4, W + 0.9, 0]]),
       fill: '#2A1430',
-      opacity: 0.22,
+      opacity: 0.2,
     },
-    contact: { d: dOf(rectZ(0, -0.1, L + 0.3, -0.1, W + 0.2)), fill: '#2A1430', opacity: 0.3 },
-    floor: { d: dOf(rectZ(T, xi0, xi1, yi0, yi1)), fill: shade([0, 0, 1], IN, true), stroke: IN.edge, sw: 0.6 },
-    innerBack: { d: dOf(rectY(yi0, xi0, xi1, T, H)), fill: shade([0, 1, 0], IN, true), stroke: IN.edge, sw: 0.6 },
-    innerLeft: { d: dOf(rectX(xi0, yi0, yi1, T, H)), fill: shade([1, 0, 0], IN, true), stroke: IN.edge, sw: 0.6 },
+    contact: { d: dOf(rectZ(0, -0.06, L + 0.14, -0.06, W + 0.08)), fill: '#2A1430', opacity: 0.45 },
+    floor: { d: dOf(rectZ(T, xi0, xi1, yi0, yi1)), fill: shade([0, 0, 1], IN, true), stroke: IN_EDGE, sw: 0.5 },
+    floorTex: { d: dOf(rectZ(T, xi0, xi1, yi0, yi1)), fill: FIBER },
+    innerBack: { d: dOf(rectY(yi0, xi0, xi1, T, H)), fill: shade([0, 1, 0], IN, true), stroke: IN_EDGE, sw: 0.5 },
+    innerBackShade: { d: dOf(rectY(yi0, xi0, xi1, T, H)), fill: 'url(#fw-inner)' },
+    innerBackTex: { d: dOf(rectY(yi0, xi0, xi1, T, H)), fill: FIBER },
+    innerLeft: { d: dOf(rectX(xi0, yi0, yi1, T, H)), fill: shade([1, 0, 0], IN, true), stroke: IN_EDGE, sw: 0.5 },
+    innerLeftShade: { d: dOf(rectX(xi0, yi0, yi1, T, H)), fill: 'url(#fw-inner)' },
+    innerLeftTex: { d: dOf(rectX(xi0, yi0, yi1, T, H)), fill: FIBER },
     tissueBack: { d: dOf(tissueWall('back')), fill: mix(TISSUE, '#C7B89D', 0.28), stroke: '#D9CDB6', sw: 0.6 },
     tissueLeft: { d: dOf(tissueWall('left')), fill: mix(TISSUE, '#C7B89D', 0.16), stroke: '#D9CDB6', sw: 0.6 },
     tissue: { d: dOf(tissueBed()), fill: TISSUE, stroke: '#DCD1BB', sw: 0.6 },
@@ -239,24 +262,40 @@ export function heroStatic(): Record<string, Shape> {
     seal: { d: dOf(circle(SEAL.x, SEAL.y, ZT + 0.24, 0.85, 0, 360)), fill: LIME, stroke: '#A6CE3E', sw: 0.8 },
     sealRing: { d: dOf(circle(SEAL.x, SEAL.y, ZT + 0.24, 0.6, 0, 360)), fill: 'none', stroke: '#3A1D3F', sw: 0.9, dash: '2 2' },
     ...jarShapes(),
-    front: { d: dOf(rectY(W, 0, L, 0, H)), fill: frontFill, stroke: OUT.edge, sw: 0.7 },
+    front: { d: dOf(rectY(W, 0, L, 0, H)), fill: frontFill, stroke: OUT_EDGE, sw: 0.6 },
+    frontLight: { d: dOf(rectY(W, 0, L, 0, H)), fill: 'url(#fw-front-light)' },
     frontShade: { d: dOf(rectY(W, 0, L, 0, H)), fill: 'url(#hb-vshade)' },
-    side: { d: dOf(rectX(L, 0, W, 0, H)), fill: sideFill, stroke: OUT.edge, sw: 0.7 },
+    frontTex: { d: dOf(rectY(W, 0, L, 0, H)), fill: FIBER, opacity: 0.55 },
+    side: { d: dOf(rectX(L, 0, W, 0, H)), fill: sideFill, stroke: OUT_EDGE, sw: 0.6 },
+    sideLight: { d: dOf(rectX(L, 0, W, 0, H)), fill: 'url(#fw-side-light)' },
     sideShade: { d: dOf(rectX(L, 0, W, 0, H)), fill: 'url(#hb-vshade)' },
+    sideTex: { d: dOf(rectX(L, 0, W, 0, H)), fill: FIBER, opacity: 0.55 },
     rim: {
       d: dMulti([rectZ(H, 0, L, 0, W), [...rectZ(H, xi0, xi1, yi0, yi1)].reverse()]),
       fill: EDGE_KRAFT,
-      stroke: IN.edge,
-      sw: 0.6,
+      stroke: IN_EDGE,
+      sw: 0.5,
+    },
+    rimFlute: {
+      d: [
+        fluteD([T / 2, T / 2, H], [L - T / 2, T / 2, H], [0, 1, 0], T * 0.24, 0.32),
+        fluteD([T / 2, T / 2, H], [T / 2, W - T / 2, H], [1, 0, 0], T * 0.24, 0.32),
+        fluteD([T / 2, W - T / 2, H], [L - T / 2, W - T / 2, H], [0, 1, 0], T * 0.24, 0.32),
+        fluteD([L - T / 2, T / 2, H], [L - T / 2, W - T / 2, H], [1, 0, 0], T * 0.24, 0.32),
+      ].join(''),
+      fill: 'none',
+      stroke: FLUTE,
+      sw: 0.5,
+      opacity: 0.5,
     },
     edgeLight: {
       d: dOf([[0, W, H], [L, W, H], [L, 0, H]], false),
       fill: 'none',
       stroke: mix(OUT.top, '#FFFFFF', 0.35),
-      sw: 1,
-      opacity: 0.7,
+      sw: 0.9,
+      opacity: 0.6,
     },
-    cornerLight: { d: dOf([[L, W, H], [L, W, 0]], false), fill: 'none', stroke: mix(OUT.top, '#FFFFFF', 0.3), sw: 0.8, opacity: 0.4 },
+    cornerLight: { d: dOf([[L, W, H], [L, W, H * 0.35]], false), fill: 'none', stroke: mix(OUT.top, '#FFFFFF', 0.3), sw: 0.7, opacity: 0.3 },
   };
 }
 
@@ -301,8 +340,14 @@ export function heroFrame(p: number, peek = 0): HeroFrame {
     lidOuter: {
       d: dOf([lp(0, 0, LT), lp(L, 0, LT), lp(L, W + LT, LT), lp(0, W + LT, LT)]),
       fill: shade(outerN, OUT),
-      stroke: OUT.edge,
-      sw: 0.7,
+      stroke: OUT_EDGE,
+      sw: 0.6,
+      hidden: !outer,
+    },
+    lidOuterTex: {
+      d: dOf([lp(0, 0, LT), lp(L, 0, LT), lp(L, W + LT, LT), lp(0, W + LT, LT)]),
+      fill: FIBER,
+      opacity: 0.55,
       hidden: !outer,
     },
     lidOuterShade: {
@@ -313,28 +358,48 @@ export function heroFrame(p: number, peek = 0): HeroFrame {
     lidInner: {
       d: dOf([lp(0, 0, 0), lp(L, 0, 0), lp(L, W, 0), lp(0, W, 0)]),
       fill: shade([0, s, -c], IN, true),
-      stroke: IN.edge,
-      sw: 0.6,
+      stroke: IN_EDGE,
+      sw: 0.5,
+      hidden: outer,
+    },
+    lidInnerTex: {
+      d: dOf([lp(0, 0, 0), lp(L, 0, 0), lp(L, W, 0), lp(0, W, 0)]),
+      fill: FIBER,
+      hidden: outer,
+    },
+    lidInnerShade: {
+      d: dOf([lp(0, 0, 0), lp(L, 0, 0), lp(L, W, 0), lp(0, W, 0)]),
+      fill: 'url(#fw-top-light)',
       hidden: outer,
     },
     lipBottom: {
       d: dOf([lp(0, W, LT - LIP), lp(L, W, LT - LIP), lp(L, W + LT, LT - LIP), lp(0, W + LT, LT - LIP)]),
       fill: EDGE_KRAFT,
-      stroke: IN.edge,
-      sw: 0.5,
+      stroke: IN_EDGE,
+      sw: 0.45,
       hidden: !facing(lipBottomN),
     },
     lip: {
       d: dOf([lp(0, W + LT, LT), lp(L, W + LT, LT), lp(L, W + LT, LT - LIP), lp(0, W + LT, LT - LIP)]),
       fill: shade([0, c, s], OUT),
-      stroke: OUT.edge,
-      sw: 0.7,
+      stroke: OUT_EDGE,
+      sw: 0.6,
     },
     lidSide: {
       d: dOf(profile.map(([dy, dz]) => lp(L, dy, dz))),
       fill: EDGE_KRAFT,
-      stroke: IN.edge,
-      sw: 0.6,
+      stroke: IN_EDGE,
+      sw: 0.5,
+    },
+    // the lid's cut end: flutes along the panel, then down the front lip
+    lidFlute: {
+      d:
+        fluteD(lp(L, 0.05, LT / 2), lp(L, W + LT / 2, LT / 2), [0, -s, c], LT * 0.24, 0.32) +
+        fluteD(lp(L, W + LT / 2, LT / 2), lp(L, W + LT / 2, LT - LIP + 0.05), [0, c, s], LT * 0.24, 0.32).replace(/^M/, 'L'),
+      fill: 'none',
+      stroke: FLUTE,
+      sw: 0.5,
+      opacity: 0.5,
     },
     lidEdge: {
       d: dOf([lp(0, W + LT, LT), lp(L, W + LT, LT), lp(L, 0, LT)], false),
@@ -352,8 +417,8 @@ export function heroFrame(p: number, peek = 0): HeroFrame {
       dash: '5 4',
       hidden: !outer,
     },
-    cardBack: { d: dOf(card), fill: '#E2C7A0', stroke: '#A9845E', sw: 0.6, hidden: cardFront },
-    cardFace: { d: dOf(card), fill: '#FBF8F1', stroke: '#D6C9AE', sw: 0.6, hidden: !cardFront },
+    cardBack: { d: dOf(card), fill: '#E2C7A0', stroke: '#C4A47E', sw: 0.5, hidden: cardFront },
+    cardFace: { d: dOf(card), fill: '#FBF8F1', stroke: '#E2D7C1', sw: 0.5, hidden: !cardFront },
     cardShadow: {
       d: dOf([cardPt(0.2, 0, phi), cardPt(CARD.w + 0.4, 0, phi), [CARD.x0 + CARD.w + 0.9, CARD.y + 1.1, ZT + 0.16], [CARD.x0 + 0.5, CARD.y + 1.1, ZT + 0.16]]),
       fill: '#2A1430',

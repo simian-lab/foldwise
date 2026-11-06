@@ -25,9 +25,16 @@ test.describe('isometric boxes', () => {
       expect(bb?.height ?? 0).toBeGreaterThan(50);
       await expect(boxes.nth(i)).toHaveAttribute('role', 'img');
     }
-    const ids = await page.locator('svg.iso-box [id]').evaluateAll((els) => els.map((e) => e.id));
-    expect(ids.length).toBeGreaterThan(0);
+    // box ids (clips) and the shared materials (fibre, lighting, blurs, ink) never
+    // collide, and the materials exist once however many boxes render
+    const ids = await page.locator('svg.iso-box [id], #fw-materials, #fw-materials [id]').evaluateAll((els) => els.map((e) => e.id));
     expect(new Set(ids).size).toBe(ids.length);
+    await expect(page.locator('#fw-materials')).toHaveCount(1);
+    // no box carries its own filter: blurs, fibre and ink are the shared defs
+    await expect(page.locator('svg.iso-box filter')).toHaveCount(0);
+    expect(await page.locator('#fw-materials filter').count()).toBeLessThanOrEqual(4);
+    const fills = await page.locator('svg.iso-box path[fill^="url(#fw-fiber)"]').count();
+    expect(fills).toBeGreaterThan(12);
     expect(errors).toEqual([]);
     expect(blocked).toEqual([]);
   });

@@ -1,0 +1,116 @@
+---
+/**
+ * Shared board materials for every box drawing on the page: paper-fibre
+ * texture, soft face lighting, shadow blurs, tape gloss and print roughness.
+ *
+ * Rendered by IsoBox, HeroBox and AssemblyGuide, but only the first call on a
+ * page emits anything (guarded through Astro.locals), so a page with a dozen
+ * boxes still holds ONE copy of each filter. Every drawing references these
+ * by id (`url(#fw-…)`). The inline script moves the defs to the top of <body>
+ * so a first box inside a hidden container never hides the paint servers
+ * (Chrome drops gradients, patterns and filters under display:none).
+ *
+ * Units: gradients are objectBoundingBox (scale-free). `fw-fiber` and the
+ * blurs live in the user space of a ~400-unit viewBox (IsoBox, HeroBox);
+ * `fw-fiber-in` is the same fibre for drawings in inch units (the guide).
+ * `fw-ink` works in face-local inches (the print groups' own space).
+ */
+const locals = Astro.locals as Record<string, unknown>;
+const first = !locals.__fwMaterials;
+locals.__fwMaterials = true;
+const TILE = 240;
+---
+
+{
+  first && (
+    <>
+      <svg id="fw-materials" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+        <defs>
+          {/* paper fibre: fine dark fibres, pale specks and a slow mottle, all low alpha */}
+          <filter id="fw-fiber-f" filterUnits="userSpaceOnUse" x="0" y="0" width={TILE} height={TILE} color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="1.1 0.38" numOctaves="2" seed="4" stitchTiles="stitch" result="fine" />
+            <feColorMatrix in="fine" type="matrix" values="0 0 0 0 0.29  0 0 0 0 0.19  0 0 0 0 0.10  0.85 0 0 0 -0.43" result="dark" />
+            <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="11" stitchTiles="stitch" result="speck" />
+            <feColorMatrix in="speck" type="matrix" values="0 0 0 0 1  0 0 0 0 0.97  0 0 0 0 0.9  0 0.9 0 0 -0.52" result="light" />
+            <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="2" stitchTiles="stitch" result="slow" />
+            <feColorMatrix in="slow" type="matrix" values="0 0 0 0 0.33  0 0 0 0 0.22  0 0 0 0 0.12  0.32 0 0 0 -0.13" result="mottle" />
+            <feMerge>
+              <feMergeNode in="mottle" />
+              <feMergeNode in="dark" />
+              <feMergeNode in="light" />
+            </feMerge>
+          </filter>
+          <pattern id="fw-fiber" width={TILE} height={TILE} patternUnits="userSpaceOnUse">
+            <rect width={TILE} height={TILE} fill="#000" filter="url(#fw-fiber-f)" />
+          </pattern>
+          <pattern id="fw-fiber-in" width={TILE} height={TILE} patternUnits="userSpaceOnUse" patternTransform="scale(0.075)">
+            <rect width={TILE} height={TILE} fill="#000" filter="url(#fw-fiber-f)" />
+          </pattern>
+
+          {/* face lighting: key light from the upper left, ambient occlusion toward the floor */}
+          <linearGradient id="fw-vshade" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.09" />
+            <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0" />
+            <stop offset="0.88" stop-color="#2A1430" stop-opacity="0.1" />
+            <stop offset="1" stop-color="#2A1430" stop-opacity="0.2" />
+          </linearGradient>
+          <linearGradient id="fw-front-light" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.1" />
+            <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0" />
+            <stop offset="0.97" stop-color="#2A1430" stop-opacity="0.07" />
+            <stop offset="1" stop-color="#2A1430" stop-opacity="0.14" />
+          </linearGradient>
+          <linearGradient id="fw-side-light" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.05" />
+            <stop offset="0.04" stop-color="#FFFFFF" stop-opacity="0" />
+            <stop offset="1" stop-color="#2A1430" stop-opacity="0.16" />
+          </linearGradient>
+          <linearGradient id="fw-top-light" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16" />
+            <stop offset="0.55" stop-color="#FFFFFF" stop-opacity="0.02" />
+            <stop offset="1" stop-color="#2A1430" stop-opacity="0.07" />
+          </linearGradient>
+          <linearGradient id="fw-inner" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#2A1430" stop-opacity="0" />
+            <stop offset="0.7" stop-color="#2A1430" stop-opacity="0.1" />
+            <stop offset="1" stop-color="#2A1430" stop-opacity="0.26" />
+          </linearGradient>
+          <linearGradient id="fw-deep" x1="1" y1="0" x2="0" y2="0.4">
+            <stop offset="0" stop-color="#000000" stop-opacity="0.05" />
+            <stop offset="1" stop-color="#000000" stop-opacity="0.45" />
+          </linearGradient>
+          {/* clear or printed tape: a soft diagonal sheen with a second, fainter streak */}
+          <linearGradient id="fw-tape-gloss" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0.2" stop-color="#FFFFFF" stop-opacity="0" />
+            <stop offset="0.38" stop-color="#FFFFFF" stop-opacity="0.42" />
+            <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.06" />
+            <stop offset="0.72" stop-color="#FFFFFF" stop-opacity="0.22" />
+            <stop offset="0.86" stop-color="#FFFFFF" stop-opacity="0" />
+          </linearGradient>
+
+          {/* shadows: wide ambient and a tight contact blur (viewBox ~400 units) */}
+          <filter id="fw-blur" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="6" />
+          </filter>
+          <filter id="fw-blur-s" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur stdDeviation="1.8" />
+          </filter>
+
+          {/* printed ink: slightly ragged edges and a few unprinted pores (face-local inches) */}
+          <filter id="fw-ink" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
+            <feTurbulence type="fractalNoise" baseFrequency="7" numOctaves="2" seed="9" result="n" />
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="0.03" xChannelSelector="R" yChannelSelector="G" result="d" />
+            <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 -11 0 0 9" result="pores" />
+            <feComposite in="d" in2="pores" operator="in" />
+          </filter>
+        </defs>
+      </svg>
+      <script is:inline>
+        (function () {
+          var m = document.getElementById('fw-materials');
+          if (m && document.body && m.parentNode !== document.body) document.body.insertBefore(m, document.body.firstChild);
+        })();
+      </script>
+    </>
+  )
+}

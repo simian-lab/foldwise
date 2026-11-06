@@ -98,12 +98,17 @@ export interface Face {
   opacity?: number;
   hinge?: string;
   active?: boolean;
+  /** Board faces carry the shared paper-fibre texture. */
+  tex?: boolean;
 }
 
 export interface GuideFrame {
   faces: Face[];
   shadow: string;
   shadowOpacity: number;
+  /** Tight contact shadow right under the board (its footprint on the mat). */
+  contact: string;
+  contactOpacity: number;
 }
 
 // ───────────── hinge chains (mailers) ─────────────
@@ -577,6 +582,7 @@ export function buildFrame(kind: GuideKind, p: Params, dims: Dims, active: strin
     opacity: q.opacity,
     hinge: q.hinge ? `M${P2(q.hinge[0]).map(r2).join(' ')}L${P2(q.hinge[1]).map(r2).join(' ')}` : undefined,
     active: !!q.key && active.includes(q.key) && q.hinge !== undefined,
+    tex: q.tone === 'board',
   });
   for (const q of order) faces.push(toFace(q, false));
   for (const q of polys) if (q.hidden) faces.push(toFace(q, true));
@@ -587,7 +593,12 @@ export function buildFrame(kind: GuideKind, p: Params, dims: Dims, active: strin
   // a blank lying on the mat barely casts; a standing box casts more
   const top = Math.max(0, ...visible.filter((q) => q.tone === 'board').flatMap((q) => q.pts.map((v) => v[2])));
   const shadowOpacity = r2(0.05 + 0.15 * clamp01(top / Math.max(2, dims.h)));
-  return { faces, shadow, shadowOpacity };
+  // contact: only what touches the mat, darker the more board stands on it
+  const low = visible.filter((q) => q.tone === 'board').flatMap((q) => q.pts.filter((v) => v[2] < 0.3).map((v) => P2([v[0], v[1], 0])));
+  const cp = low.length >= 3 ? hull(low) : hp;
+  const contact = cp.map(([x, y], i) => `${i ? 'L' : 'M'}${r2(x)} ${r2(y)}`).join('') + 'Z';
+  const contactOpacity = r2(0.12 + 0.28 * clamp01(top / Math.max(2, dims.h)));
+  return { faces, shadow, shadowOpacity, contact, contactOpacity };
 }
 
 // ───────────── camera ─────────────
@@ -704,6 +715,7 @@ export function mountGuide(root: HTMLElement): void {
   const svg = fig?.querySelector<SVGSVGElement>('svg');
   const layer = svg?.querySelector<SVGGElement>('[data-faces]');
   const shadowEl = svg?.querySelector<SVGPathElement>('[data-shadow]');
+  const contactEl = svg?.querySelector<SVGPathElement>('[data-shadow-contact]');
   if (!fig || !svg || !layer) return;
   const kind = root.dataset.kind as GuideKind;
   const dims: Dims = JSON.parse(root.dataset.dims ?? '{}');
@@ -718,11 +730,12 @@ export function mountGuide(root: HTMLElement): void {
   const live = root.querySelector<HTMLElement>('[data-guide-live]');
   const reduceQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  const groups = new Map<string, { g: SVGGElement; face: SVGPathElement; hinge: SVGPathElement | null }>();
+  const groups = new Map<string, { g: SVGGElement; face: SVGPathElement; tex: SVGPathElement | null; hinge: SVGPathElement | null }>();
   layer.querySelectorAll<SVGGElement>('[data-poly]').forEach((g) => {
     groups.set(g.dataset.poly as string, {
       g,
       face: g.querySelector<SVGPathElement>('[data-face]')!,
+      tex: g.querySelector<SVGPathElement>('[data-tex]'),
       hinge: g.querySelector<SVGPathElement>('[data-hinge]'),
     });
   });
@@ -744,6 +757,7 @@ export function mountGuide(root: HTMLElement): void {
       if (!g) continue;
       g.face.setAttribute('d', f.d);
       g.face.setAttribute('fill', f.fill);
+      if (g.tex) g.tex.setAttribute('d', f.d);
       g.g.style.display = f.hidden ? 'none' : '';
       g.g.style.opacity = f.opacity !== undefined ? String(f.opacity) : '';
       if (g.hinge) {
@@ -757,6 +771,8 @@ export function mountGuide(root: HTMLElement): void {
     }
     shadowEl?.setAttribute('d', fr.shadow);
     shadowEl?.setAttribute('opacity', String(fr.shadowOpacity));
+    contactEl?.setAttribute('d', fr.contact);
+    contactEl?.setAttribute('opacity', String(fr.contactOpacity));
     const v = viewOf(kind, cur, dims);
     svg!.setAttribute('viewBox', `${v.x} ${v.y} ${v.w} ${v.h}`);
     if (read) read.textContent = readout(kind, lastKey, cur);

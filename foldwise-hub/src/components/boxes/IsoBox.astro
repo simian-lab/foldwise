@@ -5,6 +5,7 @@
  */
 import type { BoxStyle } from '../../data/categories';
 import Isotype from '../brand/Isotype.astro';
+import Materials from './materials.astro';
 import { buildBox, pathD, VIEWBOX, COLORWAYS } from './iso-geometry';
 import type { Colorway, Branding, Part } from './iso-geometry';
 
@@ -62,7 +63,12 @@ locals.__isoBoxSeq = seq;
 const slug = `${style}-${l}-${w}-${h}-${colorway}-${open ? 'o' : 'c'}-${branding}`.replace(/[^a-z0-9-]/gi, '_');
 const uid = `ib-${slug}-${seq}`;
 const ref = (name: string) => `url(#${uid}-${name})`;
-const paint = (v?: string) => (v?.startsWith('url:') ? ref(v.slice(4)) : (v ?? 'none'));
+// Materials (fibre, lighting gradients, blurs, ink) are shared page defs from
+// ./materials.astro, so a page of boxes holds one copy of each filter.
+const shared = (name: string) => `url(#fw-${name})`;
+const paint = (v?: string) => (v?.startsWith('url:') ? shared(v.slice(4)) : (v ?? 'none'));
+// Print reads as ink on board: multiply on light boards lets the paper through.
+const lightBoard = colorway !== 'ciruela';
 const fmt = (n: number) => (Number.isInteger(n) ? `${n}` : `${n}`.replace('.', ','));
 const name =
   label ??
@@ -78,7 +84,7 @@ function attrs(p: Part) {
     'stroke-linejoin': 'round',
     'stroke-linecap': p.closed ? undefined : 'round',
     opacity: p.opacity,
-    filter: p.filter ? ref(p.filter) : undefined,
+    filter: p.filter ? shared(p.filter) : undefined,
     'clip-path': p.clip ? ref(`clip-${p.clip}`) : undefined,
     'fill-rule': p.evenodd ? 'evenodd' : undefined,
     'data-part': p.part,
@@ -104,6 +110,7 @@ const ph = logo
   : null;
 ---
 
+<Materials />
 <svg
   class:list={['iso-box', className]}
   viewBox={`0 0 ${VIEWBOX.w} ${VIEWBOX.h}`}
@@ -117,26 +124,6 @@ const ph = logo
   focusable="false"
 >
   <defs>
-    <filter id={`${uid}-blur`} x="-30%" y="-30%" width="160%" height="160%">
-      <feGaussianBlur stdDeviation="5"></feGaussianBlur>
-    </filter>
-    <linearGradient id={`${uid}-vshade`} x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.06"></stop>
-      <stop offset="0.55" stop-color="#000000" stop-opacity="0"></stop>
-      <stop offset="1" stop-color="#2A1430" stop-opacity="0.13"></stop>
-    </linearGradient>
-    <linearGradient id={`${uid}-deep`} x1="1" y1="0" x2="0" y2="0.4">
-      <stop offset="0" stop-color="#000000" stop-opacity="0.05"></stop>
-      <stop offset="1" stop-color="#000000" stop-opacity="0.45"></stop>
-    </linearGradient>
-    <pattern id={`${uid}-grain`} width="23" height="19" patternUnits="userSpaceOnUse">
-      <circle cx="3" cy="4" r="0.55" fill="#6E4F31" opacity="0.22"></circle>
-      <circle cx="14" cy="2" r="0.4" fill="#FFF6E6" opacity="0.3"></circle>
-      <circle cx="19" cy="11" r="0.6" fill="#6E4F31" opacity="0.18"></circle>
-      <circle cx="8" cy="14" r="0.45" fill="#FFF6E6" opacity="0.25"></circle>
-      <circle cx="11" cy="8" r="0.35" fill="#6E4F31" opacity="0.25"></circle>
-      <path d="M2 10l4 1.2 M15 16l5-1" stroke="#7A5A3A" stroke-width="0.4" opacity="0.18"></path>
-    </pattern>
     {
       scene.clips.map((cl) => (
         <clipPath id={`${uid}-clip-${cl.name}`}>
@@ -150,7 +137,13 @@ const ph = logo
 
   {
     logo && (
-      <g transform={`matrix(${logo.matrix.join(' ')})`} data-part="front-print">
+      <g
+        transform={`matrix(${logo.matrix.join(' ')})`}
+        data-part="front-print"
+        filter="url(#fw-ink)"
+        style={lightBoard ? 'mix-blend-mode:multiply' : undefined}
+        opacity={lightBoard ? undefined : '0.94'}
+      >
         {lockup && (
           <g data-part="brand">
             <g transform={`translate(${lockup.x} ${lockup.y})`}>
