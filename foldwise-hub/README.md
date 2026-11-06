@@ -40,3 +40,5 @@ Genera / writes:
 - `exports/foldwise-catalogo.pdf`: catálogo (`/tienda/catalogo`), A4 horizontal / landscape
 
 Las páginas se imprimen con movimiento reducido, así el logo animado sale en su versión estática. / Pages print with reduced motion, so the animated logo appears in its static form.
+
+Deployment (Spacefast preview): see [../DEPLOY.md](../DEPLOY.md).
