@@ -65,6 +65,13 @@ test.describe('brand-in-action board', () => {
     await expect(page.locator('[data-application="shipping-box"] [data-part="band"]')).toHaveCount(1);
   });
 
+  test('the patterns panel shows the 8 brand icons', async ({ page }) => {
+    await page.goto(PAGE);
+    const icons = page.locator('[data-board-section="patrones"] [data-icons-slot] [data-icon]');
+    await expect(icons).toHaveCount(8);
+    for (let i = 0; i < 8; i++) await expect(icons.nth(i)).toBeVisible();
+  });
+
   test('patterns are tileable SVG and the board has no horizontal scroll at 375 px', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto(PAGE);

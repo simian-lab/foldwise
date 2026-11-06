@@ -1,0 +1,2044 @@
+---
+import HubLayout from '../../layouts/HubLayout.astro';
+import Section from '../../components/hub/Section.astro';
+import Wordmark from '../../components/brand/Wordmark.astro';
+import Isotype from '../../components/brand/Isotype.astro';
+import AnimatedLogo from '../../components/brand/AnimatedLogo.astro';
+import Swatch from '../../components/brand/Swatch.astro';
+import Pattern from '../../components/brand/Pattern.astro';
+import Icon from '../../components/brand/Icon.astro';
+import PaletteStudy from '../../components/brand/explored/PaletteStudy.astro';
+import IsotypeStudy from '../../components/brand/explored/IsotypeStudy.astro';
+import { palette, taglines, voice } from '../../data/brand';
+
+const chapters = [
+  { id: 'la-marca', num: '01', title: 'La marca' },
+  { id: 'nombre', num: '02', title: 'Nombre' },
+  { id: 'logo', num: '03', title: 'Logo' },
+  { id: 'logo-animado', num: '04', title: 'Logo animado' },
+  { id: 'color', num: '05', title: 'Color' },
+  { id: 'tipografia', num: '06', title: 'Tipografía' },
+  { id: 'iconos', num: '07', title: 'Íconos' },
+  { id: 'patrones', num: '08', title: 'Patrones' },
+  { id: 'voz', num: '09', title: 'Voz de marca' },
+  { id: 'direcciones', num: '10', title: 'Direcciones exploradas' },
+  { id: 'proximos-pasos', num: '11', title: 'Próximos pasos' },
+] as const;
+const ch = Object.fromEntries(chapters.map((c) => [c.id, c])) as Record<(typeof chapters)[number]['id'], (typeof chapters)[number]>;
+
+const differentiators = [
+  { icon: 'pedido-pequeno', label: 'Pedidos pequeños', text: 'Desde 25 cajas, sin mínimos de bodega.' },
+  { icon: 'rapido', label: 'Entrega rápida', text: 'Para que tu lanzamiento no espere.' },
+  { icon: 'asesoria', label: 'Atención personalizada', text: 'Una persona real que conoce tu pedido.' },
+  { icon: 'personaliza', label: 'Personalización', text: 'Tu logo en la caja, desde el primer pedido.' },
+  { icon: 'medida', label: 'A la medida', text: 'Si tu producto es raro, la caja no tiene por qué serlo.' },
+  { icon: 'envio', label: 'Precio competitivo', text: 'Precio de fabricante, con descuento por volumen.' },
+] as const;
+
+const versions = [
+  { variant: 'crema', bg: palette.crema, label: 'Sobre crema', note: 'Versión principal. Ciruela con pliegues lima.' },
+  { variant: 'ciruela', bg: palette.ciruela, label: 'Sobre ciruela', note: 'Crema con pliegues ciruela, para fondos oscuros.' },
+  { variant: 'kraft', bg: palette.kraft, label: 'Sobre kraft', note: 'Impresa directo sobre el cartón natural.' },
+  { variant: 'lima', bg: palette.lima, label: 'Sobre lima', note: 'Solo en piezas de celebración: cinta y stickers.' },
+] as const;
+
+const misuses = [
+  { kind: 'stretch', text: 'No lo estires ni lo comprimas.' },
+  { kind: 'rotate', text: 'No lo gires.' },
+  { kind: 'recolor', text: 'No cambies sus colores.' },
+  { kind: 'effects', text: 'No le agregues sombras ni contornos.' },
+  { kind: 'font', text: 'No cambies la tipografía.' },
+  { kind: 'busy', text: 'No lo pongas sobre fondos que compitan.' },
+] as const;
+
+const primary = [
+  { name: 'Crema', hex: palette.crema, role: 'Base', why: 'El fondo de todo. Más cálido que el blanco, se siente a papel.' },
+  { name: 'Kraft', hex: palette.kraft, role: 'Material', why: 'El color real del cartón. La marca nunca lo esconde.' },
+  { name: 'Ciruela', hex: palette.ciruela, role: 'Principal', why: 'Profundo y poco común en la categoría: confianza sin frialdad.' },
+  { name: 'Lima', hex: palette.lima, role: 'Acento', why: 'La chispa. Solo donde hay acción o celebración.' },
+];
+const support = [
+  { name: 'Ciruela claro', hex: palette.ciruelaClaro },
+  { name: 'Ciruela sombra', hex: palette.ciruelaSombra },
+  { name: 'Kraft claro', hex: palette.kraftClaro },
+  { name: 'Kraft sombra', hex: palette.kraftSombra },
+];
+
+const typeScale = [
+  { cls: 'display', name: 'Display', spec: 'Bricolage Grotesque 800, 112 px, interlineado 0,9', sample: 'foldwise' },
+  { cls: 'h1', name: 'Titular', spec: 'Bricolage Grotesque 800, 64 px, interlineado 1,0', sample: 'Cuidado enorme.' },
+  { cls: 'h2', name: 'Subtítulo', spec: 'Bricolage Grotesque 700, 24 px, interlineado 1,2', sample: 'Empieza con 25 cajas.' },
+  { cls: 'body', name: 'Texto', spec: 'Figtree 400, 17 px, interlineado 1,6', sample: 'Cuando crezcas, el precio baja contigo. Y si tienes dudas, te ayudamos a elegir la caja.' },
+  { cls: 'note', name: 'Nota', spec: 'Figtree 600, 13 px, interlineado 1,35', sample: 'Envío en 3 a 5 días hábiles.' },
+] as const;
+
+const icons = [
+  { name: 'pedido-pequeno', label: 'Pedidos pequeños' },
+  { name: 'envio', label: 'Envío' },
+  { name: 'rapido', label: 'Entrega rápida' },
+  { name: 'personaliza', label: 'Personaliza' },
+  { name: 'medida', label: 'A la medida' },
+  { name: 'armado', label: 'Fácil de armar' },
+  { name: 'asesoria', label: 'Asesoría' },
+  { name: 'eco', label: 'Reciclable' },
+] as const;
+
+const traits = ['Amigable', 'Cercana', 'Joven', 'Vibrante', 'Atenta'];
+
+const animSteps = [
+  'Aparece la f plana y se dibujan los pliegues lima.',
+  'Las tres solapas se doblan sobre el tronco, una tras otra, con un leve giro.',
+  'La f se convierte en una caja isométrica, con un pequeño rebote.',
+  'La cinta lima cruza la tapa y el isotipo aparece en el costado.',
+  'La caja vuelve a ser f, lista para empezar otra vez.',
+];
+
+const nextSteps = [
+  {
+    title: 'Validación legal del nombre',
+    text: 'Búsqueda de anterioridades en la USPTO con un abogado de marcas y, si el camino está libre, la solicitud de registro. Si no, ajustamos a tiempo.',
+  },
+  {
+    title: 'Identidad final',
+    text: 'Refinamos nombre, logo y color con tu retroalimentación, y cerramos el sistema con artes finales listos para producción.',
+  },
+  {
+    title: 'Sistema completo de packaging',
+    text: 'Artes para las 12 cajas, troqueles a escala, cinta, papel de seda, stickers y una guía de impresión para tu planta.',
+  },
+  {
+    title: 'Fotografía real',
+    text: 'Sesión de producto y de estilo de vida con emprendedores reales empacando, para reemplazar las imágenes de muestra.',
+  },
+  {
+    title: 'E-commerce en producción',
+    text: 'El sitio que viste, conectado a catálogo, precios reales, carrito y pagos, y medido desde el primer día.',
+  },
+  {
+    title: 'Lanzamiento en EE. UU.',
+    text: 'Versión en inglés de todo el sistema, voz adaptada al mercado, redes y un kit de lanzamiento para los primeros clientes.',
+  },
+];
+---
+
+<HubLayout
+  title="Foldwise · Manual de marca"
+  description="El manual de marca de Foldwise: nombre, logo, color, tipografía, íconos, patrones, voz y el porqué de cada decisión."
+>
+  <main class="manual">
+    <header class="cover" aria-labelledby="h-cover">
+      <div class="cover__pattern" aria-hidden="true">
+        <Pattern kind="troquel" color={palette.ciruelaClaro} bg={palette.ciruela} scale={1.6} />
+      </div>
+      <div class="cover__inner">
+        <div class="cover__run">
+          <a class="cover__back" href="/">Volver al hub</a>
+          <span>Versión 1.0, noviembre de 2026</span>
+        </div>
+        <div class="cover__grid">
+          <div class="cover__copy">
+            <Wordmark variant="ciruela" size={36} withIsotype />
+            <h1 id="h-cover" class="cover__title">Manual<br />de marca</h1>
+            <p class="cover__tagline">{taglines.principal}</p>
+            <p class="cover__lede">
+              Todo lo que hace que Foldwise se vea, suene y se sienta como Foldwise, y el porqué detrás de cada decisión.
+              Es una propuesta: nombre, colores y logo pueden ajustarse contigo.
+            </p>
+          </div>
+          <div class="cover__mark">
+            <AnimatedLogo variant="ciruela" size={500} trigger="load" loop />
+          </div>
+        </div>
+        <p class="cover__credit">Propuesta de marca por Simian</p>
+      </div>
+    </header>
+
+    <div class="manual__layout">
+      <nav class="index" data-manual-nav aria-label="Índice del manual">
+        <p class="index__title">Índice</p>
+        <ol class="index__list" role="list">
+          {
+            chapters.map((c) => (
+              <li>
+                <a href={`#${c.id}`}>
+                  <span class="index__num">{c.num}</span>
+                  {c.title}
+                </a>
+              </li>
+            ))
+          }
+        </ol>
+        <div class="index__more">
+          <a href="/marca/en-accion">La marca en acción</a>
+          <a href="/marca/cajas">Las 12 cajas</a>
+        </div>
+      </nav>
+
+      <div class="sheets">
+        {/* 01 ------------------------------------------------------------ */}
+        <Section {...ch['la-marca']}>
+          <Fragment slot="aside">
+            <p>Foldwise es el aliado de packaging de los negocios que están arrancando.</p>
+            <p>
+              Vende cajas de cartón corrugado listas para armar en Estados Unidos, a pymes, pequeños comerciantes y tiendas en
+              línea que necesitan cajas buenas sin pedir miles.
+            </p>
+          </Fragment>
+          <blockquote class="promise">
+            <p>Ser pequeño no te hace cliente secundario.</p>
+            <footer>La promesa de Foldwise</footer>
+          </blockquote>
+          <div class="rows">
+            <article>
+              <h3>Historia</h3>
+              <p>
+                Detrás de Foldwise hay un fabricante con años en el cartón corrugado: materiales, maquinaria y oficio propios.
+                En Estados Unidos vio una demanda enorme que nadie atiende bien: el negocio que arranca y necesita 50 cajas,
+                no 5.000. Foldwise nace como una marca nueva, hecha solo para ellos.
+              </p>
+            </article>
+            <article>
+              <h3>El porqué del nombre</h3>
+              <p>
+                Fold, doblar, más wise, con inteligencia. Las cajas llegan con pliegues marcados y se arman en segundos, y
+                detrás hay alguien que te orienta. El nombre dice qué hacemos y cómo lo hacemos.
+              </p>
+            </article>
+            <article>
+              <h3>Posicionamiento</h3>
+              <p>
+                Entre el catálogo industrial amplio y sólido y las marcas cercanas para emprendedores. Tomamos la solidez del
+                primero y la calidez del segundo: un catálogo serio que te dice hazla tuya.
+              </p>
+            </article>
+          </div>
+          <figure class="spectrum" aria-label="Mapa de posicionamiento">
+            <div class="spectrum__track">
+              <span class="spectrum__end">Catálogo industrial<small>Amplio y sólido, pero frío</small></span>
+              <span class="spectrum__dot" aria-hidden="true"><Isotype variant="lima" size={30} label="" /></span>
+              <span class="spectrum__end spectrum__end--right">Marcas para emprendedores<small>Cercanas, pero limitadas</small></span>
+            </div>
+            <figcaption>Foldwise ocupa el centro: la solidez del fabricante con el trato de quien te conoce.</figcaption>
+          </figure>
+          <ul class="diffs" role="list">
+            {
+              differentiators.map((d) => (
+                <li>
+                  <Icon name={d.icon} size={28} />
+                  <b>{d.label}</b>
+                  <span>{d.text}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </Section>
+
+        {/* 02 ------------------------------------------------------------ */}
+        <Section {...ch['nombre']}>
+          <Fragment slot="aside">
+            <p>Un nombre corto, fácil de decir en inglés y con el producto adentro.</p>
+            <p>
+              En un mercado lleno de nombres genéricos de bodega, Foldwise suena a marca, no a proveedor. Y se entiende sin
+              explicación: algo que se dobla, bien hecho.
+            </p>
+          </Fragment>
+          <div class="name-eq" aria-label="Fold más wise es Foldwise">
+            <div><span class="name-eq__word">fold</span><span class="name-eq__gloss">doblar</span></div>
+            <span class="name-eq__op" aria-hidden="true">+</span>
+            <div><span class="name-eq__word">wise</span><span class="name-eq__gloss">con inteligencia</span></div>
+            <span class="name-eq__op" aria-hidden="true">=</span>
+            <div class="name-eq__result">
+              <Wordmark variant="crema" size={44} />
+              <span class="name-eq__gloss">Doblar con inteligencia</span>
+            </div>
+          </div>
+          <div class="cols2">
+            <article class="name-card" data-name="foldwise">
+              <h3>Foldwise</h3>
+              <p>
+                El producto se arma con pliegues claros, y wise evoca al asesor que te orienta: atención personalizada y
+                cajas a la medida. Funciona en inglés para el cliente estadounidense y se pronuncia sin dudar.
+              </p>
+            </article>
+            <article class="name-card name-card--rejected" data-name="ridgeline">
+              <span class="name-card__tag">Descartado</span>
+              <h3><s>Ridgeline</s></h3>
+              <p>
+                Venía de las crestas del corrugado, la onda que le da fuerza al cartón. Lo descartamos porque choca con la
+                camioneta Honda Ridgeline: en Estados Unidos, el nombre ya tiene dueño en la mente de la gente.
+              </p>
+            </article>
+          </div>
+          <aside class="legal" data-legal-note aria-label="Nota legal">
+            <h3>Pendiente: verificación legal</h3>
+            <p>
+              Existe la solicitud USPTO “FOLDWISE” (serial 99663592, febrero de 2026, clase sin confirmar) y el registro “F
+              FOLDWISE” (clase 20, muebles). Hay que verificarlo con un abogado de marcas antes de la aprobación final. Si hace
+              falta, dos salidas naturales: Foldwise Box Co. o Foldwise Packaging.
+            </p>
+          </aside>
+        </Section>
+
+        {/* 03 ------------------------------------------------------------ */}
+        <Section {...ch['logo']}>
+          <Fragment slot="aside">
+            <p>La f de Foldwise es un despiece de caja.</p>
+            <p>
+              Sus solapas tienen el chaflán de un troquel real y las líneas punteadas marcan dónde se doblan. Es la inicial y
+              es el producto, en una sola forma.
+            </p>
+            <p>El logotipo va en minúsculas, en Bricolage Grotesque 800 con interletrado ajustado: cercano, nunca gritón.</p>
+          </Fragment>
+          <div class="logo-hero">
+            <div class="logo-hero__lockup"><Wordmark variant="crema" size={80} withIsotype /></div>
+            <figure class="construct">
+              <svg viewBox="-6 -4 58 54" role="img" aria-label="Construcción del isotipo">
+                <defs>
+                  <pattern id="construct-grid" width="2" height="2" patternUnits="userSpaceOnUse">
+                    <path d="M2 0H0V2" fill="none" stroke="#3A1D3F" stroke-width="0.06" opacity="0.35"></path>
+                  </pattern>
+                </defs>
+                <rect x="0" y="0" width="46" height="46" fill="url(#construct-grid)"></rect>
+                <rect x="0" y="0" width="46" height="46" fill="none" stroke="#3A1D3F" stroke-width="0.15" opacity="0.4"></rect>
+                <path d="M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z" fill="#3A1D3F" opacity="0.92"></path>
+                <path d="M25 4v8 M15 19v8 M25 19v8" fill="none" stroke="#C8F25A" stroke-width="1.1" stroke-dasharray="1.6 1.3"></path>
+                <g fill="none" stroke="#3A1D3F" stroke-width="0.25">
+                  <path d="M36 9L41 6"></path>
+                  <path d="M8 21L3 17"></path>
+                  <path d="M25 23L41 31"></path>
+                </g>
+                <g font-family="Figtree, sans-serif" font-size="2.4" font-weight="700" fill="#3A1D3F">
+                  <circle cx="43" cy="5" r="2.2" fill="#F6F1E7" stroke="#3A1D3F" stroke-width="0.25"></circle>
+                  <text x="43" y="5.85" text-anchor="middle">1</text>
+                  <circle cx="1.5" cy="15.5" r="2.2" fill="#F6F1E7" stroke="#3A1D3F" stroke-width="0.25"></circle>
+                  <text x="1.5" y="16.35" text-anchor="middle">2</text>
+                  <circle cx="43" cy="32" r="2.2" fill="#F6F1E7" stroke="#3A1D3F" stroke-width="0.25"></circle>
+                  <text x="43" y="32.85" text-anchor="middle">3</text>
+                </g>
+              </svg>
+              <figcaption>
+                <ol role="list">
+                  <li>Chaflán de troquel en cada solapa.</li>
+                  <li>Solapas laterales que se doblan hacia el tronco.</li>
+                  <li>Pliegues punteados donde la solapa se une al tronco.</li>
+                </ol>
+              </figcaption>
+            </figure>
+          </div>
+
+          <div class="block">
+            <h3>Versiones</h3>
+            <ul class="versions" role="list">
+              {
+                versions.map((v) => (
+                  <li data-logo-version={v.variant}>
+                    <div class="versions__tile" style={`background:${v.bg}`}>
+                      <Wordmark variant={v.variant} size={22} withIsotype />
+                    </div>
+                    <b>{v.label}</b>
+                    <span>{v.note}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+
+          <div class="cols2 cols2--top">
+            <div class="block">
+              <h3>Zona de protección</h3>
+              <div class="clear">
+                <div class="clear__frame">
+                  <span class="clear__x clear__x--t" aria-hidden="true">x</span>
+                  <span class="clear__x clear__x--l" aria-hidden="true">x</span>
+                  <span class="clear__x clear__x--r" aria-hidden="true">x</span>
+                  <span class="clear__x clear__x--b" aria-hidden="true">x</span>
+                  <div class="clear__logo"><Wordmark variant="crema" size={40} withIsotype /></div>
+                </div>
+              </div>
+              <p class="small">
+                Deja libre alrededor, como mínimo, el ancho de la solapa superior del isotipo (x). Ningún texto, borde o imagen
+                entra en esa zona.
+              </p>
+            </div>
+            <div class="block">
+              <h3>Tamaño mínimo</h3>
+              <div class="minsize">
+                <div class="minsize__item">
+                  <Wordmark variant="crema" size={18} withIsotype />
+                  <span>24 px de alto en pantalla<br />10 mm en impresión</span>
+                </div>
+                <div class="minsize__item">
+                  <Isotype variant="crema" size={16} label="Isotipo en tamaño mínimo" />
+                  <span>Isotipo solo: 16 px<br />6 mm en impresión</span>
+                </div>
+              </div>
+              <p class="small">
+                Por debajo de estos tamaños los pliegues punteados se pierden. En favicon y redes, el isotipo va solo.
+              </p>
+            </div>
+          </div>
+
+          <div class="block">
+            <h3>Usos incorrectos</h3>
+            <ul class="misuse" role="list">
+              {
+                misuses.map((m) => (
+                  <li data-misuse={m.kind}>
+                    <div class:list={['misuse__tile', `misuse__tile--${m.kind}`]}>
+                      {m.kind === 'busy' && (
+                        <div class="misuse__bg" aria-hidden="true">
+                          <Pattern kind="flauta" color={palette.ciruela} bg={palette.kraft} scale={0.55} />
+                        </div>
+                      )}
+                      {m.kind === 'font' ? (
+                        <span class="misuse__font" aria-hidden="true">
+                          <Isotype variant="crema" size={26} label="" />
+                          <span>Foldwise</span>
+                        </span>
+                      ) : (
+                        <span class="misuse__logo">
+                          <Wordmark variant="crema" size={18} withIsotype />
+                        </span>
+                      )}
+                      <span class="misuse__x" aria-hidden="true">
+                        <svg viewBox="0 0 12 12" width="12" height="12">
+                          <path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+                        </svg>
+                      </span>
+                    </div>
+                    <span>{m.text}</span>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        </Section>
+
+        {/* 04 ------------------------------------------------------------ */}
+        <Section {...ch['logo-animado']}>
+          <Fragment slot="aside">
+            <p>La f se dobla y se vuelve caja. Es la marca contando, en siete segundos, lo que hace.</p>
+            <p>
+              Es estilizado: no pretende ser un despiece geométricamente exacto, sino un gesto reconocible. Se usa en la
+              intro y la carga del sitio, al pasar el cursor por el logo del header y como firma de este manual.
+            </p>
+          </Fragment>
+          <div class="anim">
+            <div class="anim__stage anim__stage--light">
+              <AnimatedLogo variant="crema" size={340} trigger="view" loop />
+            </div>
+            <div class="anim__stage anim__stage--dark">
+              <AnimatedLogo variant="ciruela" size={220} trigger="view" loop />
+              <span>Sobre ciruela, la caja es kraft: el producto real.</span>
+            </div>
+          </div>
+          <ol class="steps" role="list">
+            {
+              animSteps.map((s, i) => (
+                <li>
+                  <span class="steps__num">{i + 1}</span>
+                  {s}
+                </li>
+              ))
+            }
+          </ol>
+          <p class="small">
+            Con movimiento reducido activado en el sistema, el logo se muestra quieto. Para redes puede exportarse como video.
+          </p>
+        </Section>
+
+        {/* 05 ------------------------------------------------------------ */}
+        <Section {...ch['color']}>
+          <Fragment slot="aside">
+            <p>Una base tranquila y un acento con energía.</p>
+            <p>
+              Crema, kraft y ciruela sostienen la marca y la hacen sentir premium. La lima es la chispa: aparece solo donde
+              hay una acción o una emoción. En una categoría llena de marrones y verdes, el ciruela con lima es imposible de
+              confundir.
+            </p>
+            <p>
+              Los valores CMYK son una conversión aproximada. Antes de imprimir, pide una prueba de color a la imprenta.
+            </p>
+          </Fragment>
+          <div class="swatches">
+            {
+              primary.map((c) => (
+                <div class="swatches__item">
+                  <Swatch name={c.name} hex={c.hex} role={c.role} tier="primary" />
+                  <p class="small">{c.why}</p>
+                </div>
+              ))
+            }
+          </div>
+          <div class="rule" data-rule-8020>
+            <h3>Regla 80/20</h3>
+            <div class="rule__dims" aria-hidden="true">
+              <span style="flex:80">80%</span>
+              <span style="flex:20">20%</span>
+            </div>
+            <div class="rule__bar" aria-hidden="true">
+              <span style="flex:44;background:var(--c-crema)"></span>
+              <span style="flex:20;background:var(--c-kraft)"></span>
+              <span style="flex:16;background:var(--c-ciruela)"></span>
+              <span style="flex:20;background:var(--c-lima)"></span>
+            </div>
+            <div class="rule__legend">
+              <p><b>80% calma premium.</b> Crema, kraft y ciruela en fondos, textos, cajas y fotografía.</p>
+              <p><b>20% energía.</b> Lima solo en botones de acción, destacados, pliegues, cinta y celebraciones.</p>
+            </div>
+          </div>
+          <div class="block">
+            <h3>Tonos de apoyo</h3>
+            <div class="support">
+              {support.map((c) => <Swatch name={c.name} hex={c.hex} tier="support" />)}
+            </div>
+            <p class="small">Para sombras, volumen y estados de la interfaz. Nunca como color principal de una pieza.</p>
+          </div>
+        </Section>
+
+        {/* 06 ------------------------------------------------------------ */}
+        <Section {...ch['tipografia']}>
+          <Fragment slot="aside">
+            <p>Dos familias, cada una con un trabajo.</p>
+            <p>
+              Bricolage Grotesque tiene carácter juvenil y un dibujo un poco imperfecto que se siente hecho a mano: es la voz
+              de los titulares y del logotipo. Figtree es clara y amable, para leer sin esfuerzo en la caja y en la pantalla.
+            </p>
+            <p>Las dos son de licencia abierta y van incluidas en el sitio, sin depender de internet.</p>
+          </Fragment>
+          <div class="faces">
+            <div class="face face--display">
+              <span class="face__aa" aria-hidden="true">Aa</span>
+              <p class="face__name">Bricolage Grotesque</p>
+              <p class="small">Titulares y logotipo. Pesos 500, 700 y 800.</p>
+              <p class="face__glyphs" aria-hidden="true">abcdefghijklmnñopqrstuvwxyz<br />ABCDEFGHIJKLMNÑOPQRSTUVWXYZ<br />0123456789 ¿?¡!</p>
+            </div>
+            <div class="face face--text">
+              <span class="face__aa" aria-hidden="true">Aa</span>
+              <p class="face__name">Figtree</p>
+              <p class="small">Textos e interfaz. Pesos 400, 500, 600 y 700.</p>
+              <p class="face__glyphs" aria-hidden="true">abcdefghijklmnñopqrstuvwxyz<br />ABCDEFGHIJKLMNÑOPQRSTUVWXYZ<br />0123456789 ¿?¡!</p>
+            </div>
+          </div>
+          <div class="block">
+            <h3>Jerarquía</h3>
+            <dl class="scale">
+              {
+                typeScale.map((t) => (
+                  <div class="scale__row">
+                    <dt>
+                      <b>{t.name}</b>
+                      <span>{t.spec}</span>
+                    </dt>
+                    <dd class={`scale__sample scale__sample--${t.cls}`}>{t.sample}</dd>
+                  </div>
+                ))
+              }
+            </dl>
+          </div>
+        </Section>
+
+        {/* 07 ------------------------------------------------------------ */}
+        <Section {...ch['iconos']}>
+          <Fragment slot="aside">
+            <p>Íconos de línea redondeada, con un pliegue punteado.</p>
+            <p>
+              Se dibujan en una retícula de 24 px con trazo de 2 px y terminaciones redondeadas. Cada uno lleva un detalle
+              punteado, el mismo lenguaje de troquel del isotipo. Heredan el color del texto que los acompaña.
+            </p>
+          </Fragment>
+          <div class="icon-hero">
+            <figure class="icon-hero__grid" aria-hidden="true">
+              <Icon name="pedido-pequeno" size={168} />
+            </figure>
+            <ul class="spec" role="list">
+              <li><b>Retícula</b> 24 × 24 px</li>
+              <li><b>Trazo</b> 2 px, punteado 1,6 px</li>
+              <li><b>Esquinas</b> Redondeadas</li>
+              <li><b>Color</b> El del texto; lima solo al activarse</li>
+            </ul>
+          </div>
+          <ul class="iconset" role="list" data-iconset>
+            {
+              icons.map((i) => (
+                <li>
+                  <Icon name={i.name} size={40} />
+                  <span>{i.label}</span>
+                </li>
+              ))
+            }
+          </ul>
+        </Section>
+
+        {/* 08 ------------------------------------------------------------ */}
+        <Section {...ch['patrones']}>
+          <Fragment slot="aside">
+            <p>Los patrones salen del propio cartón.</p>
+            <p>
+              El troquel repite las líneas de corte y de pliegue de un despiece. La flauta es la onda del corrugado vista de
+              canto. Se usan en el interior de las mailers, el papel de seda, los fondos de redes y la papelería.
+            </p>
+          </Fragment>
+          <div class="patterns">
+            <figure class="patterns__big">
+              <div class="patterns__tile"><Pattern kind="troquel" color={palette.ciruela} bg={palette.crema} label="Patrón troquel sobre crema" /></div>
+              <figcaption><b>Troquel</b> Ciruela sobre crema. Para interiores y papel de seda.</figcaption>
+            </figure>
+            <figure>
+              <div class="patterns__tile"><Pattern kind="troquel" color={palette.kraftSombra} bg={palette.kraft} scale={0.7} label="Patrón troquel sobre kraft" /></div>
+              <figcaption><b>Troquel sobre kraft</b> Impreso a una tinta, directo en la caja.</figcaption>
+            </figure>
+            <figure>
+              <div class="patterns__tile"><Pattern kind="flauta" color={palette.kraftSombra} bg={palette.kraftClaro} label="Patrón flauta" /></div>
+              <figcaption><b>Flauta</b> Para bandas, etiquetas y bordes.</figcaption>
+            </figure>
+            <figure>
+              <div class="patterns__tile"><Pattern kind="flauta" color={palette.ciruelaClaro} bg={palette.ciruela} scale={0.8} label="Patrón flauta sobre ciruela" /></div>
+              <figcaption><b>Flauta sobre ciruela</b> Fondos oscuros de redes y web.</figcaption>
+            </figure>
+          </div>
+          <p class="small">
+            El patrón siempre va en un solo tono sobre su fondo y nunca detrás del logo. Hay más ejemplos en
+            <a href="/marca/en-accion">la marca en acción</a>.
+          </p>
+        </Section>
+
+        {/* 09 ------------------------------------------------------------ */}
+        <Section {...ch['voz']}>
+          <Fragment slot="aside">
+            <p>Hablamos como un amigo que sabe de cajas.</p>
+            <p>
+              Tuteamos, usamos frases cortas y celebramos al emprendedor. Explicamos lo técnico en simple y nunca hacemos
+              sentir pequeño a nadie por pedir pocas cajas.
+            </p>
+          </Fragment>
+          <ul class="traits" role="list">
+            {traits.map((t) => <li>{t}</li>)}
+          </ul>
+          <div class="taglines">
+            <p class="taglines__main">{taglines.principal}</p>
+            <p class="taglines__sub">{taglines.secundaria}</p>
+          </div>
+          <div class="cols2 cols2--top">
+            <div class="voice voice--si" data-voice="si">
+              <h3>Lo que sí</h3>
+              <ul role="list">{voice.si.map((v) => <li>{v}</li>)}</ul>
+            </div>
+            <div class="voice voice--no" data-voice="no">
+              <h3>Lo que no</h3>
+              <ul role="list">{voice.no.map((v) => <li>{v}</li>)}</ul>
+            </div>
+          </div>
+          <div class="block">
+            <h3>Antes y después</h3>
+            <ul class="examples" role="list">
+              {
+                voice.ejemplos.map((e) => (
+                  <li data-voice-example>
+                    <p class="examples__before">
+                      <span>Así no</span>
+                      {e.antes}
+                    </p>
+                    <p class="examples__after">
+                      <span>Así sí</span>
+                      {e.despues}
+                    </p>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+        </Section>
+
+        {/* 10 ------------------------------------------------------------ */}
+        <Section {...ch['direcciones']}>
+          <Fragment slot="aside">
+            <p>Antes de llegar aquí exploramos otros caminos.</p>
+            <p>
+              Los mostramos porque son parte del proceso y porque todo está sujeto a tu aprobación. Si alguno te habla más
+              fuerte, lo retomamos.
+            </p>
+          </Fragment>
+          <div class="block">
+            <h3>Paletas</h3>
+            <div class="studies">
+              <PaletteStudy
+                id="palette-a"
+                letter="A"
+                name="Cobalt & Coral"
+                colors={[
+                  { name: 'Crema', hex: '#F6F1E7' },
+                  { name: 'Kraft', hex: '#C9A27A' },
+                  { name: 'Cobalto', hex: '#1E2BB8' },
+                  { name: 'Coral', hex: '#FF6B57' },
+                ]}
+                band="#1E2BB8"
+                bandInk="#F6F1E7"
+                accentInk="#FFFFFF"
+                note="Optimista y fresca, muy de emprendedores. La descartamos porque el azul es el color más usado en logística: se perdía entre transportadoras."
+              />
+              <PaletteStudy
+                id="chosen"
+                letter="B"
+                name="Plum & Lime"
+                colors={[
+                  { name: 'Crema', hex: '#F6F1E7' },
+                  { name: 'Kraft', hex: '#C9A27A' },
+                  { name: 'Ciruela', hex: '#3A1D3F' },
+                  { name: 'Lima', hex: '#C8F25A' },
+                ]}
+                band="#3A1D3F"
+                bandInk="#C8F25A"
+                accentInk="#3A1D3F"
+                note="La más joven y atrevida, y la más distintiva en una categoría de marrones y verdes."
+                chosen
+              />
+              <PaletteStudy
+                id="palette-c"
+                letter="C"
+                name="Ink & Tomato"
+                colors={[
+                  { name: 'Crema', hex: '#F6F1E7' },
+                  { name: 'Kraft', hex: '#C9A27A' },
+                  { name: 'Tinta', hex: '#1F1D1A' },
+                  { name: 'Tomate', hex: '#F2542D' },
+                ]}
+                band="#F2542D"
+                bandInk="#F6F1E7"
+                accentInk="#FFFFFF"
+                note="La más editorial y premium. La descartamos por seria: le faltaba el juego que pide un aliado de emprendedores."
+              />
+            </div>
+          </div>
+          <div class="block">
+            <h3>Isotipos</h3>
+            <div class="studies">
+              <IsotypeStudy
+                kind="fold"
+                id="isotype-fold"
+                letter="A"
+                name="The Fold"
+                note="Un cuadrado con la esquina doblada. Amable y simple, pero genérico: cualquier marca de papelería podría usarlo."
+              />
+              <IsotypeStudy
+                kind="flute"
+                id="isotype-flute"
+                letter="B"
+                name="The Flute"
+                note="El corte del corrugado. Cuenta resistencia, pero de lejos se lee como un ícono de agua o de audio. Su onda vive en el patrón."
+              />
+              <IsotypeStudy
+                kind="dieline"
+                id="isotype-dieline"
+                letter="C"
+                name="The Dieline f"
+                note="La inicial construida como despiece. Une el nombre con el troquel y con las guías de armado."
+                chosen
+              />
+            </div>
+          </div>
+          <p class="small">
+            En nombre también hubo otro candidato, Ridgeline. Su historia está en la sección <a href="#nombre">02 Nombre</a>.
+          </p>
+        </Section>
+
+        {/* 11 ------------------------------------------------------------ */}
+        <Section {...ch['proximos-pasos']} class="sheet--closing">
+          <Fragment slot="aside">
+            <p>Este manual es el comienzo.</p>
+            <p>
+              Lo que viste es una propuesta completa y coherente, pero todavía es una propuesta. Para que Foldwise salga al
+              mercado, este es el camino que proponemos recorrer juntos.
+            </p>
+          </Fragment>
+          <ol class="next" role="list">
+            {
+              nextSteps.map((s, i) => (
+                <li data-next-step>
+                  <span class="next__num">{String(i + 1).padStart(2, '0')}</span>
+                  <div>
+                    <h3>{s.title}</h3>
+                    <p>{s.text}</p>
+                  </div>
+                </li>
+              ))
+            }
+          </ol>
+          <div class="closing">
+            <div class="closing__sign">
+              <AnimatedLogo variant="ciruela" size={132} trigger="hover" loop={false} />
+              <div>
+                <p class="closing__line">{taglines.secundaria}</p>
+                <p class="closing__credit">Propuesta de marca por Simian</p>
+              </div>
+            </div>
+            <div class="closing__links">
+              <a class="btn btn--primary" href="/marca/en-accion">Ver la marca en acción</a>
+              <a class="btn" href="/marca/cajas">Ver las 12 cajas</a>
+            </div>
+          </div>
+        </Section>
+      </div>
+    </div>
+  </main>
+</HubLayout>
+
+<style>
+  .manual {
+    --paper-bg: color-mix(in srgb, var(--c-kraft-claro) 34%, var(--c-crema));
+    background: var(--paper-bg);
+    padding-bottom: var(--s-16);
+  }
+  .small {
+    margin: 0;
+    font-size: var(--fs-xs);
+    line-height: 1.5;
+    color: rgb(58 29 63 / 0.78);
+    max-width: 62ch;
+  }
+  .small a {
+    font-weight: 600;
+  }
+  h3 {
+    font-size: var(--fs-lg);
+    letter-spacing: -0.025em;
+    font-weight: 700;
+  }
+  .block {
+    display: grid;
+    gap: var(--s-4);
+    min-width: 0;
+  }
+  .cols2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-8);
+  }
+  .cols2--top {
+    align-items: start;
+  }
+  .cols3 {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-8);
+  }
+  .rows {
+    display: grid;
+  }
+  .rows article {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 5fr);
+    gap: var(--s-6);
+    padding: var(--s-6) 0;
+    border-top: 1px dashed rgb(58 29 63 / 0.3);
+  }
+  .rows p {
+    margin: 0;
+    max-width: 60ch;
+  }
+  .cols3 p,
+  .name-card p {
+    margin: var(--s-3) 0 0;
+    font-size: var(--fs-sm);
+  }
+
+  /* Cover ------------------------------------------------------------- */
+  .cover {
+    position: relative;
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .cover__pattern {
+    position: absolute;
+    inset: 0;
+    opacity: 0.35;
+    z-index: -1;
+    mask-image: linear-gradient(100deg, transparent 35%, #000 85%);
+    -webkit-mask-image: linear-gradient(100deg, transparent 35%, #000 85%);
+  }
+  .cover__inner {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: var(--s-6) clamp(1rem, 0.5rem + 2.5vw, 3rem) var(--s-8);
+    min-height: min(92vh, 860px);
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    gap: var(--s-8);
+  }
+  .cover__run {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+  }
+  .cover__back {
+    text-decoration: none;
+    border-bottom: 1px dashed currentColor;
+  }
+  .cover__back:hover {
+    color: var(--c-lima);
+  }
+  .cover__back:focus-visible {
+    outline-color: var(--c-lima);
+  }
+  .cover__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    align-items: center;
+    gap: var(--s-8);
+  }
+  .cover__copy {
+    display: grid;
+    gap: var(--s-6);
+    justify-items: start;
+  }
+  .cover__title {
+    font-size: clamp(3.5rem, 1rem + 9vw, 9.5rem);
+    line-height: 0.86;
+    letter-spacing: -0.045em;
+    margin-top: var(--s-4);
+  }
+  .cover__tagline {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-xl);
+    letter-spacing: -0.025em;
+    line-height: 1.1;
+    color: var(--c-lima);
+  }
+  .cover__lede {
+    margin: 0;
+    max-width: 46ch;
+    color: rgb(246 241 231 / 0.82);
+  }
+  .cover__mark {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+  }
+  .cover__credit {
+    margin: 0;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: rgb(246 241 231 / 0.75);
+  }
+
+  /* Layout + index ---------------------------------------------------- */
+  .manual__layout {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: var(--s-8) clamp(1rem, 0.5rem + 2.5vw, 3rem) 0;
+    display: grid;
+    grid-template-columns: 200px minmax(0, 1fr);
+    gap: var(--s-8);
+    align-items: start;
+  }
+  .index {
+    position: sticky;
+    top: var(--s-6);
+    display: grid;
+    gap: var(--s-4);
+    font-size: var(--fs-sm);
+  }
+  .index__title {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 700;
+  }
+  .index__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 2px;
+  }
+  .index__list a,
+  .index__more a {
+    display: flex;
+    gap: var(--s-3);
+    padding: 5px 8px;
+    margin-left: -8px;
+    border-radius: var(--r-sm);
+    text-decoration: none;
+    line-height: 1.3;
+  }
+  .index__list a:hover,
+  .index__more a:hover {
+    background: var(--c-crema);
+  }
+  .index__num {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    opacity: 0.55;
+    min-width: 1.4em;
+  }
+  .index__more {
+    display: grid;
+    gap: 2px;
+    padding-top: var(--s-4);
+    border-top: 1px dashed rgb(58 29 63 / 0.3);
+    font-weight: 600;
+  }
+  .sheets {
+    display: grid;
+    gap: var(--s-6);
+    min-width: 0;
+  }
+
+  /* 01 ---------------------------------------------------------------- */
+  .promise {
+    margin: 0;
+    padding: 0;
+  }
+  .promise p {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: clamp(2rem, 1rem + 3.4vw, 3.75rem);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    max-width: 15ch;
+  }
+  .promise footer {
+    margin-top: var(--s-3);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+  }
+  .spectrum {
+    margin: 0;
+    display: grid;
+    gap: var(--s-3);
+  }
+  .spectrum__track {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-4);
+    padding: var(--s-6) 0;
+    border-top: 2px solid var(--c-ciruela);
+  }
+  .spectrum__end {
+    display: grid;
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    line-height: 1.2;
+    max-width: 14em;
+  }
+  .spectrum__end small {
+    font-family: var(--f-text);
+    font-weight: 400;
+    font-size: var(--fs-xs);
+    opacity: 0.75;
+  }
+  .spectrum__end--right {
+    text-align: right;
+  }
+  .spectrum__dot {
+    position: absolute;
+    left: 50%;
+    top: -2px;
+    transform: translate(-50%, -50%);
+    background: var(--c-lima);
+    border-radius: 50%;
+    padding: 10px;
+    box-shadow: 0 0 0 6px var(--c-crema);
+  }
+  .spectrum figcaption {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    text-align: center;
+  }
+  .diffs {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-6) var(--s-8);
+  }
+  .diffs li {
+    display: grid;
+    gap: 4px;
+    align-content: start;
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+  }
+  .diffs li :global(svg) {
+    margin-bottom: var(--s-2);
+  }
+  .diffs span {
+    color: rgb(58 29 63 / 0.78);
+  }
+
+  /* 02 ---------------------------------------------------------------- */
+  .name-eq {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--s-4) var(--s-6);
+    padding: var(--s-8) 0;
+    border-block: 1px dashed rgb(58 29 63 / 0.3);
+  }
+  .name-eq > div {
+    display: grid;
+    gap: var(--s-2);
+  }
+  .name-eq__word {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 44px;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .name-eq__op {
+    font-family: var(--f-display);
+    font-size: 44px;
+    line-height: 1;
+    font-weight: 500;
+    opacity: 0.45;
+  }
+  .name-eq__gloss {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    opacity: 0.75;
+  }
+  .name-eq__result .name-eq__gloss {
+    opacity: 1;
+  }
+  .name-card {
+    position: relative;
+    padding: var(--s-6);
+    border-radius: var(--r-md);
+    background: var(--paper-bg);
+  }
+  .name-card {
+    align-content: start;
+  }
+  .name-card h3 {
+    font-size: var(--fs-xl);
+    font-weight: 800;
+  }
+  .name-card--rejected {
+    background: transparent;
+    box-shadow: inset 0 0 0 1px rgb(58 29 63 / 0.2);
+  }
+  .name-card--rejected h3 {
+    opacity: 0.55;
+  }
+  .name-card__tag {
+    display: inline-block;
+    margin-bottom: var(--s-3);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: var(--r-pill);
+    box-shadow: inset 0 0 0 1.5px currentColor;
+  }
+  .legal {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--s-2) var(--s-6);
+    padding: var(--s-6);
+    border-radius: var(--r-md);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .legal::before {
+    content: '';
+    grid-row: span 2;
+    width: 6px;
+    border-radius: 3px;
+    background: repeating-linear-gradient(180deg, var(--c-lima) 0 6px, transparent 6px 11px);
+  }
+  .legal p {
+    margin: 0;
+    font-size: var(--fs-sm);
+    color: rgb(246 241 231 / 0.86);
+  }
+
+  /* 03 ---------------------------------------------------------------- */
+  .logo-hero {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .logo-hero__lockup {
+    display: grid;
+    place-items: center;
+    min-height: 320px;
+    border-radius: var(--r-md);
+    background: var(--paper-bg);
+    padding: var(--s-8);
+    overflow: hidden;
+  }
+  .construct {
+    margin: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 280px) minmax(0, 1fr);
+    gap: var(--s-8);
+    align-items: center;
+  }
+  .construct svg {
+    width: 100%;
+    height: auto;
+    max-width: 320px;
+  }
+  .construct ol {
+    margin: 0;
+    padding-left: 1.3em;
+    display: grid;
+    gap: var(--s-2);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+  .versions {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+  .versions li {
+    display: grid;
+    gap: 4px;
+    align-content: start;
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+  }
+  .versions b {
+    font-size: var(--fs-sm);
+    margin-top: var(--s-2);
+  }
+  .versions span {
+    color: rgb(58 29 63 / 0.78);
+  }
+  .versions__tile {
+    aspect-ratio: 4 / 3;
+    border-radius: var(--r-md);
+    display: grid;
+    place-items: center;
+    box-shadow: inset 0 0 0 1px rgb(58 29 63 / 0.1);
+    overflow: hidden;
+    padding: var(--s-3);
+  }
+  .clear {
+    display: grid;
+    place-items: center;
+    padding: var(--s-8) var(--s-4);
+    border-radius: var(--r-md);
+    background: var(--paper-bg);
+    overflow: hidden;
+  }
+  .clear__frame {
+    /* x = width of the isotype's top flap: 11 of its 46 units, at a 54 px mark */
+    --x: 13px;
+    position: relative;
+    padding: var(--x);
+    outline: 1px dashed var(--c-ciruela);
+    background: repeating-linear-gradient(45deg, rgb(58 29 63 / 0.07) 0 2px, transparent 2px 7px);
+  }
+  .clear__logo {
+    background: var(--paper-bg);
+    box-shadow: 0 0 0 1px rgb(58 29 63 / 0.35);
+  }
+  .clear__x {
+    position: absolute;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .clear__x--t { top: 1px; left: 50%; transform: translateX(-50%); }
+  .clear__x--b { bottom: 1px; left: 50%; transform: translateX(-50%); }
+  .clear__x--l { left: 3px; top: 50%; transform: translateY(-50%); }
+  .clear__x--r { right: 3px; top: 50%; transform: translateY(-50%); }
+  .minsize {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-4);
+    padding: var(--s-6);
+    border-radius: var(--r-md);
+    background: var(--paper-bg);
+  }
+  .minsize__item {
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+    justify-items: start;
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+    font-weight: 600;
+  }
+  .misuse {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-6) var(--s-4);
+  }
+  .misuse li {
+    display: grid;
+    gap: var(--s-2);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    line-height: 1.35;
+  }
+  .misuse__tile {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--r-md);
+    background: var(--paper-bg);
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .misuse__bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+  }
+  .misuse__x {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .misuse__tile--stretch .misuse__logo { transform: scaleX(1.4) scaleY(0.85); }
+  .misuse__tile--rotate .misuse__logo { transform: rotate(-16deg); }
+  .misuse__tile--recolor .misuse__logo { filter: hue-rotate(150deg) saturate(1.6); }
+  .misuse__tile--effects .misuse__logo {
+    filter: drop-shadow(3px 3px 0 var(--c-kraft)) drop-shadow(0 0 1px var(--c-lima)) drop-shadow(0 0 1px var(--c-lima));
+  }
+  .misuse__font {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-size: 22px;
+  }
+
+  /* 04 ---------------------------------------------------------------- */
+  .anim {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+    gap: var(--s-4);
+  }
+  .anim__stage {
+    border-radius: var(--r-md);
+    display: grid;
+    place-items: center;
+    padding: var(--s-6);
+    min-height: 380px;
+    overflow: hidden;
+  }
+  .anim__stage :global([data-animated-logo]) {
+    max-width: 100%;
+  }
+  .anim__stage--light {
+    background: var(--paper-bg);
+  }
+  .anim__stage--dark span {
+    max-width: 22ch;
+  }
+  .anim__stage--dark {
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    align-content: center;
+    gap: var(--s-4);
+    text-align: center;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+  }
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+  .steps li {
+    display: grid;
+    gap: var(--s-2);
+    align-content: start;
+    font-size: var(--fs-xs);
+    line-height: 1.45;
+    padding-top: var(--s-3);
+    border-top: 1px dashed rgb(58 29 63 / 0.35);
+  }
+  .steps__num {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: var(--fs-lg);
+    line-height: 1;
+  }
+
+  /* 05 ---------------------------------------------------------------- */
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+  .swatches__item {
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+  }
+  .rule {
+    display: grid;
+    gap: var(--s-4);
+  }
+  .rule__bar {
+    display: flex;
+    height: 56px;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgb(58 29 63 / 0.12);
+  }
+  .rule__bar {
+    border: 1px solid rgb(58 29 63 / 0.18);
+  }
+  .rule__dims {
+    display: flex;
+    gap: 6px;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: var(--fs-lg);
+    line-height: 1;
+  }
+  .rule__dims span {
+    padding-bottom: var(--s-2);
+    border-bottom: 2px solid var(--c-ciruela);
+  }
+  .rule__dims span:last-child {
+    border-bottom: 2px dashed var(--c-ciruela);
+  }
+  .rule__legend {
+    display: grid;
+    grid-template-columns: minmax(0, 4fr) minmax(0, 1fr);
+    gap: var(--s-6);
+  }
+  .rule__legend p {
+    margin: 0;
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+  .rule__legend p:first-child {
+    max-width: 48ch;
+  }
+  .rule__legend p:last-child {
+    grid-column: 1 / -1;
+    justify-self: end;
+    text-align: right;
+    max-width: 40ch;
+  }
+  .support {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+
+  /* 06 ---------------------------------------------------------------- */
+  .faces {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+  .face {
+    padding: var(--s-6);
+    border-radius: var(--r-md);
+    background: var(--paper-bg);
+    display: grid;
+    gap: var(--s-2);
+    align-content: start;
+    min-width: 0;
+  }
+  .face--text {
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .face--text .small {
+    color: rgb(246 241 231 / 0.75);
+  }
+  .face__aa {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: clamp(6rem, 3rem + 8vw, 11rem);
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+  }
+  .face--text .face__aa {
+    font-family: var(--f-text);
+    font-weight: 500;
+    letter-spacing: -0.03em;
+  }
+  .face__name {
+    margin: var(--s-4) 0 0;
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-lg);
+    line-height: 1.1;
+  }
+  .face--text .face__name,
+  .face--text .face__glyphs {
+    font-family: var(--f-text);
+  }
+  .face__glyphs {
+    margin: var(--s-3) 0 0;
+    font-family: var(--f-display);
+    font-weight: 500;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+  }
+  .scale {
+    margin: 0;
+    display: grid;
+  }
+  .scale__row {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 7fr);
+    gap: var(--s-6);
+    align-items: baseline;
+    padding: var(--s-4) 0;
+    border-top: 1px dashed rgb(58 29 63 / 0.25);
+  }
+  .scale__row dt {
+    display: grid;
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+  }
+  .scale__row dt span {
+    color: rgb(58 29 63 / 0.72);
+  }
+  .scale__sample {
+    margin: 0;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+  .scale__sample--display {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: clamp(3rem, 1rem + 4.6vw, 6rem);
+    line-height: 0.9;
+    letter-spacing: -0.035em;
+    overflow-wrap: normal;
+  }
+  .scale__sample--h1 {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: var(--fs-2xl);
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+  .scale__sample--h2 {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+  }
+  .scale__sample--body {
+    font-size: var(--fs-body);
+    line-height: 1.6;
+    max-width: 52ch;
+  }
+  .scale__sample--note {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+  }
+
+  /* 07 ---------------------------------------------------------------- */
+  .icon-hero {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--s-8);
+    align-items: center;
+  }
+  .icon-hero__grid {
+    margin: 0;
+    padding: 24px;
+    border-radius: var(--r-md);
+    background-color: var(--paper-bg);
+    background-image:
+      linear-gradient(rgb(58 29 63 / 0.12) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(58 29 63 / 0.12) 1px, transparent 1px);
+    background-size: 7px 7px;
+    background-position: 24px 24px;
+  }
+  .spec {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--s-3);
+    font-size: var(--fs-sm);
+  }
+  .spec li {
+    display: grid;
+    grid-template-columns: 7em minmax(0, 1fr);
+    gap: var(--s-4);
+    padding-bottom: var(--s-3);
+    border-bottom: 1px dashed rgb(58 29 63 / 0.25);
+  }
+  .iconset {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+  .iconset li {
+    display: grid;
+    gap: var(--s-4);
+    justify-items: start;
+    padding: var(--s-6) var(--s-4) var(--s-4);
+    border-radius: var(--r-md);
+    background: var(--paper-bg);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+  }
+
+  /* 08 ---------------------------------------------------------------- */
+  .patterns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+  .patterns figure {
+    margin: 0;
+    display: grid;
+    gap: var(--s-2);
+    align-content: start;
+  }
+  .patterns__big {
+    grid-column: 1 / -1;
+  }
+  .patterns__tile {
+    height: 200px;
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+  .patterns__big .patterns__tile {
+    height: 300px;
+    outline: 1px solid rgb(58 29 63 / 0.16);
+    outline-offset: -1px;
+  }
+  .patterns figcaption {
+    display: grid;
+    font-size: var(--fs-xs);
+    line-height: 1.4;
+    color: rgb(58 29 63 / 0.78);
+  }
+  .patterns figcaption b {
+    color: var(--c-ciruela);
+    font-size: var(--fs-sm);
+  }
+
+  /* 09 ---------------------------------------------------------------- */
+  .traits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+  }
+  .traits li {
+    padding: 6px 16px;
+    border-radius: var(--r-pill);
+    box-shadow: inset 0 0 0 1.5px var(--c-ciruela);
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-sm);
+  }
+  .taglines {
+    padding: var(--s-8);
+    border-radius: var(--r-md);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    display: grid;
+    gap: var(--s-3);
+  }
+  .taglines__main {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: var(--fs-2xl);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    max-width: 14ch;
+  }
+  .taglines__sub {
+    margin: 0;
+    font-size: var(--fs-lg);
+    color: var(--c-lima);
+    font-family: var(--f-display);
+    font-weight: 500;
+  }
+  .voice ul {
+    list-style: none;
+    margin: var(--s-4) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--s-3);
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+  .voice li {
+    position: relative;
+    padding-left: 1.6em;
+  }
+  .voice li::before {
+    position: absolute;
+    left: 0;
+    top: 0.1em;
+    font-weight: 800;
+  }
+  .voice--si li::before {
+    content: '+';
+  }
+  .voice--no li::before {
+    content: '–';
+    opacity: 0.6;
+  }
+  .voice--no li {
+    color: rgb(58 29 63 / 0.82);
+  }
+  .examples {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--s-3);
+  }
+  .examples li {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    border-radius: var(--r-md);
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgb(58 29 63 / 0.14);
+  }
+  .examples p {
+    margin: 0;
+    padding: var(--s-4) var(--s-6);
+    display: grid;
+    gap: 4px;
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+  }
+  .examples p span {
+    font-size: var(--fs-xs);
+    font-weight: 700;
+  }
+  .examples__before {
+    color: rgb(58 29 63 / 0.7);
+  }
+  .examples__before {
+    text-decoration: line-through;
+    text-decoration-color: rgb(58 29 63 / 0.35);
+  }
+  .examples__before span {
+    text-decoration: none;
+    display: inline-block;
+  }
+  .examples__after {
+    background: var(--paper-bg);
+    font-weight: 600;
+  }
+
+  /* 10 ---------------------------------------------------------------- */
+  .studies {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-6);
+  }
+
+  /* 11 ---------------------------------------------------------------- */
+  .next {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 var(--s-8);
+  }
+  .next li {
+    display: grid;
+    grid-template-columns: 2.6em minmax(0, 1fr);
+    gap: var(--s-3);
+    padding: var(--s-6) 0;
+    border-top: 1px dashed rgb(58 29 63 / 0.3);
+  }
+  .next__num {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: var(--fs-lg);
+    line-height: 1.1;
+  }
+  .next h3 {
+    font-size: var(--fs-lg);
+  }
+  .next p {
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: rgb(58 29 63 / 0.82);
+  }
+  .closing {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-6);
+    padding: var(--s-6) var(--s-8);
+    border-radius: var(--r-lg);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .closing__sign {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    min-width: 0;
+  }
+  .closing__line {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-lg);
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+    max-width: 24ch;
+  }
+  .closing__credit {
+    margin: var(--s-2) 0 0;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: rgb(246 241 231 / 0.75);
+  }
+  .closing__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 12px 22px;
+    border-radius: var(--r-pill);
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    box-shadow: inset 0 0 0 1.5px var(--c-crema);
+    transition: transform 160ms ease, background-color 160ms ease;
+  }
+  .btn:hover {
+    transform: translateY(-1px);
+  }
+  .btn--primary {
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+    box-shadow: none;
+  }
+  .btn:focus-visible {
+    outline-color: var(--c-lima);
+  }
+
+  /* Responsive -------------------------------------------------------- */
+  @media (max-width: 1100px) {
+    .manual__layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .index {
+      position: static;
+      padding: var(--s-6);
+      border-radius: var(--r-lg);
+      background: var(--c-crema);
+    }
+    .index__list {
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    }
+    .index__more {
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    }
+    .steps {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .studies {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 760px) {
+    .cover__grid,
+    .logo-hero,
+    .anim,
+    .cols2,
+    .cols3,
+    .rows article,
+    .faces,
+    .next,
+    .studies,
+    .examples li {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .cover__inner {
+      min-height: 0;
+    }
+    .cover__mark {
+      order: -1;
+      justify-items: start;
+    }
+    .cover__mark :global([data-animated-logo]) {
+      --al-size: 200px !important;
+    }
+    .anim__stage--light :global([data-animated-logo]) {
+      --al-size: 260px !important;
+    }
+    .anim__stage--dark :global([data-animated-logo]) {
+      --al-size: 180px !important;
+    }
+    .diffs,
+    .versions,
+    .swatches,
+    .support,
+    .iconset,
+    .misuse,
+    .minsize {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .patterns {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .steps {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .icon-hero,
+    .construct {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .icon-hero__grid {
+      justify-self: start;
+    }
+    .spectrum__track {
+      padding-top: var(--s-12);
+    }
+    .scale__row {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-2);
+    }
+    .rule__legend {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .rule__legend p:last-child {
+      justify-self: start;
+      text-align: left;
+    }
+    .name-eq__word,
+    .name-eq__op {
+      font-size: 34px;
+    }
+    .logo-hero__lockup {
+      min-height: 200px;
+      padding: var(--s-4);
+    }
+    .logo-hero__lockup :global([data-wordmark]) {
+      --wm-size: 44px !important;
+    }
+    .logo-hero__lockup :global([data-isotype]) {
+      width: 60px;
+      height: 60px;
+    }
+    .anim__stage {
+      min-height: 0;
+    }
+    .closing {
+      padding: var(--s-6);
+    }
+    .misuse__tile--stretch .misuse__logo {
+      transform: scaleX(1.25) scaleY(0.85);
+    }
+    .versions__tile :global([data-wordmark]) {
+      --wm-size: 17px !important;
+    }
+    .versions__tile :global([data-isotype]) {
+      width: 23px;
+      height: 23px;
+    }
+    .clear__logo :global([data-wordmark]) {
+      --wm-size: 30px !important;
+    }
+    .clear__logo :global([data-isotype]) {
+      width: 41px;
+      height: 41px;
+    }
+  }
+
+  /* Print: A4 landscape, one chapter per page, no navigation ---------- */
+  @media print {
+    @page {
+      size: A4 landscape;
+      margin: 0;
+    }
+    .manual {
+      background: var(--c-crema);
+      padding: 0;
+    }
+    .index {
+      display: none;
+    }
+    .manual__layout {
+      display: block;
+      max-width: none;
+      padding: 0;
+    }
+    .sheets {
+      display: block;
+    }
+    .cover {
+      min-height: 100vh;
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+    .cover__back {
+      display: none;
+    }
+    .cover__inner {
+      min-height: 100vh;
+    }
+    .btn {
+      box-shadow: inset 0 0 0 1.5px currentColor;
+    }
+    .anim__stage,
+    .versions li,
+    .misuse li,
+    .swatches__item,
+    .examples li,
+    .next li,
+    .studies > *,
+    .patterns figure,
+    .closing {
+      break-inside: avoid;
+    }
+    * {
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+  }
+</style>

@@ -1,0 +1,172 @@
+---
+/**
+ * One sheet of the brand manual, laid out like a printed page: a running
+ * header, the chapter number beside its title, a narrow column for the "why"
+ * (slot "aside") and a wide column for the exhibit (default slot), and a
+ * running footer with the Simian credit. Each sheet prints on its own page.
+ */
+import Isotype from '../brand/Isotype.astro';
+
+interface Props {
+  id: string;
+  num: string;
+  title: string;
+  /** Total sheets, for the folio in the footer. */
+  total?: number;
+  class?: string;
+}
+
+const { id, num, title, total = 11, class: className } = Astro.props;
+const headingId = `h-${id}`;
+---
+
+<section id={id} data-manual-section={id} class:list={['sheet', className]} aria-labelledby={headingId}>
+  <header class="sheet__run" aria-hidden="true">
+    <Isotype variant="crema" size={26} label="" />
+    <span class="sheet__run-meta">
+      <span>Foldwise<br />Manual de marca</span>
+      <span class="sheet__run-version">Versión<br />1.0</span>
+    </span>
+  </header>
+
+  <div class="sheet__body">
+    <span class="sheet__num" data-section-num>{num}</span>
+    <h2 id={headingId} class="sheet__title">{title}</h2>
+    <div class="sheet__aside">
+      <slot name="aside" />
+    </div>
+    <div class="sheet__main">
+      <slot />
+    </div>
+  </div>
+
+  <footer class="sheet__foot">
+    <span>Propuesta de marca por Simian</span>
+    <span class="sheet__folio">{num} de {total}</span>
+  </footer>
+</section>
+
+<style>
+  .sheet {
+    --sheet-pad: clamp(1.25rem, 0.6rem + 3vw, 3.5rem);
+    background: var(--c-crema);
+    border-radius: var(--r-lg);
+    padding: var(--sheet-pad);
+    display: grid;
+    gap: clamp(2rem, 1rem + 3vw, 4rem);
+    scroll-margin-top: var(--s-6);
+    min-width: 0;
+  }
+
+  .sheet__run {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 8fr);
+    align-items: start;
+    column-gap: clamp(1.5rem, 0.5rem + 3vw, 4rem);
+    font-size: var(--fs-xs);
+    line-height: 1.25;
+    font-weight: 600;
+  }
+  .sheet__run-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+  }
+  .sheet__run-version {
+    text-align: right;
+  }
+
+  .sheet__body {
+    display: grid;
+    grid-template-columns: minmax(0, 3fr) minmax(0, 8fr);
+    grid-template-areas:
+      'num title'
+      'aside main';
+    column-gap: clamp(1.5rem, 0.5rem + 3vw, 4rem);
+    row-gap: var(--s-8);
+    min-width: 0;
+  }
+  .sheet__num {
+    grid-area: num;
+    align-self: end;
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    font-variant-numeric: tabular-nums;
+    padding-bottom: 0.55em;
+  }
+  .sheet__title {
+    grid-area: title;
+    font-size: var(--fs-2xl);
+    line-height: 0.95;
+  }
+  .sheet__aside {
+    grid-area: aside;
+    font-size: var(--fs-sm);
+    line-height: 1.6;
+    max-width: 34ch;
+    min-width: 0;
+  }
+  .sheet__aside :global(p) {
+    margin: 0 0 1em;
+  }
+  .sheet__aside :global(p:first-child) {
+    font-weight: 600;
+  }
+  .sheet__main {
+    grid-area: main;
+    min-width: 0;
+    display: grid;
+    gap: var(--s-12);
+    align-content: start;
+  }
+
+  .sheet__foot {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    padding-top: var(--s-4);
+    border-top: 1px dashed rgb(58 29 63 / 0.25);
+  }
+  .sheet__folio {
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 760px) {
+    .sheet__body {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas:
+        'num'
+        'title'
+        'aside'
+        'main';
+      row-gap: var(--s-4);
+    }
+    .sheet__num {
+      padding-bottom: 0;
+    }
+    .sheet__aside {
+      max-width: 60ch;
+      margin-bottom: var(--s-4);
+    }
+    .sheet__run {
+      grid-template-columns: auto minmax(0, 1fr);
+      column-gap: var(--s-6);
+    }
+  }
+
+  @media print {
+    .sheet {
+      break-before: page;
+      break-inside: auto;
+      border-radius: 0;
+      /* A4 landscape is short: scale the sheet so most chapters fit one page. */
+      zoom: 0.62;
+      min-height: calc(100vh / 0.62);
+      print-color-adjust: exact;
+      -webkit-print-color-adjust: exact;
+    }
+  }
+</style>

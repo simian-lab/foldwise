@@ -5,6 +5,7 @@ import Isotype from '../../components/brand/Isotype.astro';
 import AnimatedLogo from '../../components/brand/AnimatedLogo.astro';
 import Swatch from '../../components/brand/Swatch.astro';
 import Pattern from '../../components/brand/Pattern.astro';
+import Icon from '../../components/brand/Icon.astro';
 import MailerInside from '../../components/brand/applications/MailerInside.astro';
 import ShippingBand from '../../components/brand/applications/ShippingBand.astro';
 import Tape from '../../components/brand/applications/Tape.astro';
@@ -33,7 +34,7 @@ const versions = [
   { variant: 'kraft', bg: palette.kraft, label: 'Sobre kraft' },
   { variant: 'lima', bg: palette.lima, label: 'Sobre lima' },
 ] as const;
-// Icon set for the "Patrones e íconos" slot, ready for Icon.astro (Task 7 wires it in).
+// Icon set for the "Patrones e íconos" slot.
 const icons = [
   { name: 'pedido-pequeno', label: 'Pedidos pequeños' },
   { name: 'envio', label: 'Envío' },
@@ -44,7 +45,6 @@ const icons = [
   { name: 'asesoria', label: 'Asesoría' },
   { name: 'eco', label: 'Reciclable' },
 ] as const;
-void icons;
 ---
 
 <HubLayout title="Foldwise · Marca en acción" description="La marca Foldwise aplicada en cajas, cinta, tarjetas, redes y reparto.">
@@ -165,7 +165,16 @@ void icons;
           </figure>
         </div>
         <div data-icons-slot>
-          <!-- icons: filled by Task 7 -->
+          <ul class="icons" role="list">
+            {
+              icons.map((i) => (
+                <li>
+                  <Icon name={i.name} size={28} />
+                  <span>{i.label}</span>
+                </li>
+              ))
+            }
+          </ul>
         </div>
       </section>
 

@@ -1,0 +1,172 @@
+---
+/**
+ * One explored isotype direction, rebuilt from the brainstorm sketch: the
+ * lockup on crema and the mark on ciruela, kraft and lima tiles.
+ * - fold: a square with a folded corner (A, The Fold).
+ * - flute: the corrugated cross-section (B, The Flute).
+ * - dieline: the chosen f, shown with its final, refined geometry (C).
+ */
+import Isotype from '../Isotype.astro';
+
+type Kind = 'fold' | 'flute' | 'dieline';
+
+interface Props {
+  kind: Kind;
+  id: string;
+  letter: string;
+  name: string;
+  note: string;
+  chosen?: boolean;
+}
+
+const { kind, id, letter, name, note, chosen = false } = Astro.props;
+
+const CIRUELA = '#3A1D3F';
+const CREMA = '#F6F1E7';
+const KRAFT = '#C9A27A';
+const LIMA = '#C8F25A';
+
+// Mark colours per tile background (ciruela, kraft, lima), as in the sketch.
+const flute = kind === 'flute';
+const tiles = [
+  { bg: CIRUELA, mark: CREMA, accent: LIMA, variant: 'ciruela' },
+  { bg: KRAFT, mark: CIRUELA, accent: flute ? CIRUELA : LIMA, variant: 'kraft' },
+  { bg: LIMA, mark: CIRUELA, accent: flute ? CIRUELA : CREMA, variant: 'lima' },
+] as const;
+---
+
+<figure class:list={['iso-study', { 'iso-study--chosen': chosen }]} data-direction={id}>
+  <div class="iso-study__lockup">
+    {
+      kind === 'dieline' ? (
+        <Isotype variant="crema" size={46} label="" />
+      ) : (
+        <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true">
+          {kind === 'fold' ? (
+            <>
+              <path d="M4 8a4 4 0 0 1 4-4h20l14 14v20a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill={CIRUELA} />
+              <path d="M28 4v10a4 4 0 0 0 4 4h10z" fill={LIMA} />
+            </>
+          ) : (
+            <>
+              <rect x="2" y="2" width="42" height="42" rx="11" fill={CIRUELA} />
+              <rect x="9" y="12" width="28" height="3" rx="1.5" fill={CREMA} />
+              <rect x="9" y="31" width="28" height="3" rx="1.5" fill={CREMA} />
+              <path d="M9 23c3.5-8 7-8 7 0s3.5 8 7 0 3.5-8 7 0 3.5 8 7 0" fill="none" stroke={LIMA} stroke-width="3" stroke-linecap="round" />
+            </>
+          )}
+        </svg>
+      )
+    }
+    <span class="iso-study__wm" aria-hidden="true">foldwise</span>
+  </div>
+  <ul class="iso-study__tiles" role="list">
+    {
+      tiles.map((t) => (
+        <li style={`background:${t.bg}`}>
+          {kind === 'dieline' ? (
+            <Isotype variant={t.variant} size={40} label="" />
+          ) : (
+            <svg width="40" height="40" viewBox="0 0 46 46" role="img" aria-label={`${name} sobre ${t.variant}`}>
+              {kind === 'fold' ? (
+                <>
+                  <path d="M4 8a4 4 0 0 1 4-4h20l14 14v20a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z" fill={t.mark} />
+                  <path d="M28 4v10a4 4 0 0 0 4 4h10z" fill={t.accent} />
+                </>
+              ) : (
+                <>
+                  <rect x="9" y="12" width="28" height="3" rx="1.5" fill={t.mark} />
+                  <rect x="9" y="31" width="28" height="3" rx="1.5" fill={t.mark} />
+                  <path d="M9 23c3.5-8 7-8 7 0s3.5 8 7 0 3.5-8 7 0 3.5 8 7 0" fill="none" stroke={t.accent} stroke-width="3" stroke-linecap="round" />
+                </>
+              )}
+            </svg>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+  <figcaption>
+    <b><span class="iso-study__letter">{letter}</span>{name}</b>
+    {chosen && <span class="iso-study__badge">Elegida y refinada</span>}
+    <span class="iso-study__note">{note}</span>
+  </figcaption>
+</figure>
+
+<style>
+  .iso-study {
+    margin: 0;
+    display: grid;
+    gap: var(--s-3);
+    align-content: start;
+    min-width: 0;
+  }
+  .iso-study__lockup {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: var(--s-6) var(--s-4);
+    border-radius: var(--r-md);
+    background: #f6f1e7;
+    box-shadow: inset 0 0 0 1px rgb(58 29 63 / 0.12);
+    color: #3a1d3f;
+  }
+  .iso-study--chosen .iso-study__lockup {
+    box-shadow: inset 0 0 0 2px var(--c-ciruela);
+  }
+  .iso-study__wm {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .iso-study__tiles {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .iso-study__tiles li {
+    height: 76px;
+    border-radius: var(--r-sm);
+    display: grid;
+    place-items: center;
+  }
+  figcaption {
+    display: grid;
+    gap: 2px;
+    font-size: var(--fs-xs);
+    line-height: 1.45;
+  }
+  figcaption b {
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-family: var(--f-display);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+  }
+  .iso-study__letter {
+    display: inline-grid;
+    place-items: center;
+    width: 1.5em;
+    height: 1.5em;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    font-size: 0.75rem;
+  }
+  .iso-study__badge {
+    justify-self: start;
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: var(--r-pill);
+  }
+  .iso-study__note {
+    color: rgb(58 29 63 / 0.78);
+  }
+</style>
