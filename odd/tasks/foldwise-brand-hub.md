@@ -36,6 +36,8 @@ Final evidence: vitest 38/38; `npm run build` 11 pages; `grep -ril ebiopacking d
 | R3 | Packbox-style header + hero panel; integrate photos in cards/catalog/familia; opening mailer moves to its own section | delegated, wave B | done 65431b9, 6de3e35 — vitest 43, build OK, no ebiopacking, e2e 93 |
 | R4 | Photoreal opening mailer (3 frames crossfade) — "cambiemos también esta" | delegated | done bf78fe3 |
 | R5 | Photoreal brand board applications + "Versión ilustrada" — "también apliquemos estos cambios en marca en acción" | delegated | done 3f4d6a1, abdc41a — vitest 43, build OK, no ebiopacking, e2e 95 |
+| R6 | Social media examples (board + manual chapter 10) + photos in color/patterns chapters | delegated | done c811de4, 13be20d |
+| R7 | True-fold animated logo: prototype + polish + sitewide replace (classic kept on /marca/logo-animado) | delegated | done aec4d4f, 6197c4c — vitest 55, e2e 105 |
 
 ## Rulings (controller decisions; cost if wrong)
 - R1 Parallel waves (user request) despite skill default — risk of conflicts; none occurred.
