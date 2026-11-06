@@ -1,0 +1,103 @@
+---
+// Dev-only test bench for the isometric box renderer. Delete in Task 12.
+import HubLayout from '../../layouts/HubLayout.astro';
+import IsoBox from '../../components/boxes/IsoBox.astro';
+import { categories } from '../../data/categories';
+
+const colorways = ['kraft', 'ciruela', 'crema', 'blanco'] as const;
+const rep = (i: number) => categories[i].sizes[Math.min(1, categories[i].sizes.length - 1)];
+
+// A stand-in client mark, inlined so the bench makes no external requests.
+const sampleLogo =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 90"><circle cx="45" cy="45" r="34" fill="none" stroke="#2D5BFF" stroke-width="8"/><circle cx="45" cy="45" r="12" fill="#2D5BFF"/><text x="92" y="58" font-family="Georgia, serif" font-size="38" font-weight="700" fill="#14213D">Luna</text></svg>`,
+  );
+---
+
+<HubLayout title="Foldwise · Banco de pruebas de cajas">
+  <main class="bench">
+    <h2>Cerradas · kraft · marca Foldwise</h2>
+    <section class="grid" data-section="closed" aria-label="Cajas cerradas por categoría">
+      {
+        categories.map((c, i) => (
+          <figure class="tile">
+            <IsoBox style={c.style} l={rep(i).l} w={rep(i).w} h={rep(i).h} branding="foldwise" />
+            <figcaption>{c.nameEs} · {c.style} · {rep(i).l}×{rep(i).w}×{rep(i).h}</figcaption>
+          </figure>
+        ))
+      }
+    </section>
+
+    <h2>Abiertas</h2>
+    <section class="grid" data-section="open" aria-label="Cajas abiertas por categoría">
+      {
+        categories.map((c, i) => (
+          <figure class="tile">
+            <IsoBox style={c.style} l={rep(i).l} w={rep(i).w} h={rep(i).h} open branding="foldwise" />
+            <figcaption>{c.nameEs} · abierta</figcaption>
+          </figure>
+        ))
+      }
+    </section>
+
+    {
+      colorways.map((cw) => (
+        <>
+          <h2>Colorway {cw}</h2>
+          <section class="grid" data-section={`colorway-${cw}`}>
+            <figure class="tile"><IsoBox style="mailer" l={12} w={9} h={4} colorway={cw} branding="foldwise" /></figure>
+            <figure class="tile"><IsoBox style="mailer" l={12} w={9} h={4} colorway={cw} branding="foldwise" open /></figure>
+            <figure class="tile"><IsoBox style="rsc" l={16} w={12} h={12} colorway={cw} branding="cliente" /></figure>
+            <figure class="tile"><IsoBox style="retail" l={8} w={8} h={4} colorway={cw} branding="cliente" clientLogo={sampleLogo} /></figure>
+            <figure class="tile"><IsoBox style="apparel" l={15} w={11} h={3} colorway={cw} branding="none" open /></figure>
+            <figure class="tile"><IsoBox style="wine" l={16} w={12} h={16} colorway={cw} branding="none" open /></figure>
+          </section>
+        </>
+      ))
+    }
+
+    <h2>Proporciones (mismo estilo, distintas medidas)</h2>
+    <section class="grid" data-section="sizes">
+      {
+        categories[0].sizes.map((s) => (
+          <figure class="tile">
+            <IsoBox style="rsc" l={s.l} w={s.w} h={s.h} branding="none" />
+            <figcaption>{s.code}</figcaption>
+          </figure>
+        ))
+      }
+    </section>
+  </main>
+</HubLayout>
+
+<style>
+  .bench {
+    padding: 32px;
+    background: #ece5d6;
+    min-height: 100vh;
+  }
+  h2 {
+    font: 600 14px/1.2 'Figtree', sans-serif;
+    color: #3a1d3f;
+    margin: 28px 0 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 16px;
+  }
+  .tile {
+    margin: 0;
+    padding: 12px;
+    border-radius: 18px;
+    background: #f6f1e7;
+  }
+  figcaption {
+    font: 500 12px/1.3 'Figtree', sans-serif;
+    color: #5a3360;
+    text-align: center;
+  }
+</style>
