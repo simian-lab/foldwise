@@ -1,7 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { blockExternal } from './helpers';
 
-const DEV_PAGE = '/dev/boxes';
+// Real pages that render the box renderer (the dev benches are gone).
+const CAJAS = '/marca/cajas';
+const BOARD = '/marca/en-accion';
+const PDP = '/tienda/producto/cajas-mailer';
 const ISOTYPE_D = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
 
 test.describe('isometric boxes', () => {
@@ -12,9 +15,9 @@ test.describe('isometric boxes', () => {
     });
     page.on('pageerror', (e) => errors.push(e.message));
     const blocked = await blockExternal(page);
-    await page.goto(DEV_PAGE);
+    await page.goto(CAJAS);
 
-    const boxes = page.locator('[data-section="closed"] svg[data-style]');
+    const boxes = page.locator('main [data-render] svg[data-style]');
     await expect(boxes).toHaveCount(12);
     for (let i = 0; i < 12; i++) {
       const bb = await boxes.nth(i).boundingBox();
@@ -30,27 +33,28 @@ test.describe('isometric boxes', () => {
   });
 
   test('an open mailer shows the inner face of its lid', async ({ page }) => {
-    await page.goto(DEV_PAGE);
-    const mailer = page.locator('[data-section="open"] svg[data-style="mailer"][data-open="true"]').first();
+    await page.goto(BOARD);
+    const mailer = page.locator('main svg[data-style="mailer"][data-open="true"]').first();
     await expect(mailer).toBeVisible();
     await expect(mailer.locator('[data-part="lid-inner"]')).toHaveCount(1);
   });
 
+  // The uploaded client logo replacing the placeholder is covered in pdp.spec.ts.
   test('branding marks the front face', async ({ page }) => {
-    await page.goto(DEV_PAGE);
+    await page.goto(PDP);
     const placeholder = page
-      .locator('svg[data-branding="cliente"]:not([data-client-logo]) [data-part="logo-placeholder"]')
+      .locator('main svg[data-branding="cliente"]:not([data-client-logo]) [data-part="logo-placeholder"]')
       .first();
     await expect(placeholder).toContainText('Tu logo aquí');
-    const clientLogo = page.locator('svg[data-branding="cliente"][data-client-logo] image[data-part="client-logo"]');
-    expect(await clientLogo.count()).toBeGreaterThan(0);
-    const mark = page.locator('svg[data-branding="foldwise"] [data-part="brand"] [data-isotype-shape]').first();
+    await page.goto(CAJAS);
+    const mark = page.locator('main svg[data-branding="foldwise"] [data-part="brand"] [data-isotype-shape]').first();
     await expect(mark).toHaveAttribute('d', ISOTYPE_D);
   });
 
-  test('every colorway renders', async ({ page }) => {
-    await page.goto(DEV_PAGE);
-    for (const c of ['kraft', 'ciruela', 'crema', 'blanco']) {
+  // "blanco" exists in the renderer but no page uses it yet.
+  test('every colorway used by the brand renders', async ({ page }) => {
+    await page.goto(CAJAS);
+    for (const c of ['kraft', 'ciruela', 'crema']) {
       await expect(page.locator(`svg[data-colorway="${c}"]`).first()).toBeVisible();
     }
   });

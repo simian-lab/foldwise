@@ -3,7 +3,10 @@ import { blockExternal } from './helpers';
 
 const ISOTYPE_D = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
 const FOLDS_D = 'M25 4v8 M15 19v8 M25 19v8';
-const DEV_PAGE = '/dev/logo';
+// Real pages that render the mark components (the dev benches are gone).
+const HUB = '/';
+const MANUAL = '/marca';
+const BOARD = '/marca/en-accion';
 
 const VARIANT_COLORS: Record<string, { mark: string; folds: string }> = {
   crema: { mark: '#3A1D3F', folds: '#C8F25A' },
@@ -15,10 +18,11 @@ const VARIANT_COLORS: Record<string, { mark: string; folds: string }> = {
 test.describe('isotype', () => {
   test('renders the exact isotype path with dashed fold lines in every variant', async ({ page }) => {
     const blocked = await blockExternal(page);
-    await page.goto(DEV_PAGE);
+    await page.goto(BOARD);
 
     for (const [variant, colors] of Object.entries(VARIANT_COLORS)) {
-      const mark = page.locator(`[data-isotype][data-variant="${variant}"]`).first();
+      // the board's "Logo" panel shows the isotype on all four backgrounds
+      const mark = page.locator(`main [data-board-section="logo"] [data-isotype][role="img"][data-variant="${variant}"]`).first();
       await expect(mark).toBeVisible();
       await expect(mark).toHaveAttribute('role', 'img');
       await expect(mark).toHaveAttribute('viewBox', '0 0 46 46');
@@ -38,8 +42,8 @@ test.describe('isotype', () => {
 
   test('wordmark is lowercase foldwise in Bricolage Grotesque 800 with tight tracking', async ({ page }) => {
     await blockExternal(page);
-    await page.goto(DEV_PAGE);
-    const text = page.locator('[data-wordmark] [data-wordmark-text]').first();
+    await page.goto(MANUAL);
+    const text = page.locator('main [data-wordmark] [data-wordmark-text]').first();
     await expect(text).toHaveText('foldwise');
     const style = await text.evaluate((el) => {
       const cs = getComputedStyle(el);
@@ -52,7 +56,7 @@ test.describe('isotype', () => {
     expect(style.family).toContain('Bricolage Grotesque');
     expect(style.weight).toBe('800');
     expect(style.spacing).toBeCloseTo(-0.035, 3);
-    await expect(page.locator('[data-wordmark][data-with-isotype] [data-isotype]').first()).toBeVisible();
+    await expect(page.locator('main [data-wordmark][data-with-isotype] [data-isotype]').first()).toBeVisible();
   });
 });
 
@@ -60,9 +64,9 @@ test.describe('animated logo', () => {
   test('reaches the box state within 3 s when motion is allowed', async ({ page }) => {
     const blocked = await blockExternal(page);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await page.goto(DEV_PAGE);
-    // Looping load logos pause offscreen, so bring the top-of-page one into view first.
-    const logo = page.locator('#stage-load [data-animated-logo][data-trigger="load"]');
+    await page.goto(HUB);
+    // The hub entry hero: a looping load logo. Looping logos pause offscreen.
+    const logo = page.locator('main [data-hub-hero] [data-animated-logo][data-trigger="load"][data-loop="true"]');
     await logo.scrollIntoViewIfNeeded();
     await expect(logo).toHaveAttribute('data-state', /flat|folding/);
     await expect(logo).toHaveAttribute('data-state', 'box', { timeout: 3_000 });
@@ -72,8 +76,8 @@ test.describe('animated logo', () => {
   test('shows the static isotype and runs no timeline under reduced motion', async ({ page }) => {
     await blockExternal(page);
     await page.emulateMedia({ reducedMotion: 'reduce' });
-    await page.goto(DEV_PAGE);
-    const logo = page.locator('[data-animated-logo]').first();
+    await page.goto(HUB);
+    const logo = page.locator('main [data-hub-hero] [data-animated-logo]');
     await expect(logo).toHaveAttribute('data-state', 'static');
 
     const shape = logo.locator('[data-isotype-shape]');
@@ -96,8 +100,8 @@ test.describe('animated logo', () => {
   test('hover trigger stays flat until hovered, then plays', async ({ page }) => {
     await blockExternal(page);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
-    await page.goto(DEV_PAGE);
-    const logo = page.locator('[data-animated-logo][data-trigger="hover"]').first();
+    await page.goto(MANUAL);
+    const logo = page.locator('main [data-animated-logo][data-trigger="hover"]').first();
     await logo.scrollIntoViewIfNeeded();
     await page.waitForTimeout(1_200);
     await expect(logo).toHaveAttribute('data-state', 'flat');
@@ -105,15 +109,15 @@ test.describe('animated logo', () => {
     await expect(logo).toHaveAttribute('data-state', 'box', { timeout: 3_000 });
   });
 
-  // The dev page renders these logos without `loop`, so they inherit loop=true:
-  // hover and view must still play exactly once.
+  // Hover and view must play exactly once, even where the page passes `loop`
+  // (the manual's view logos do).
   for (const trigger of ['hover', 'view'] as const) {
     test(`${trigger} trigger plays once and rests on the flat isotype`, async ({ page }) => {
       test.setTimeout(20_000);
       await blockExternal(page);
       await page.emulateMedia({ reducedMotion: 'no-preference' });
-      await page.goto(DEV_PAGE);
-      const logo = page.locator(`[data-animated-logo][data-trigger="${trigger}"]`).first();
+      await page.goto(MANUAL);
+      const logo = page.locator(`main [data-animated-logo][data-trigger="${trigger}"]`).first();
       await logo.scrollIntoViewIfNeeded();
       if (trigger === 'hover') {
         await logo.hover();

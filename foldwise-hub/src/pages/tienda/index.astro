@@ -2,6 +2,7 @@
 import ShopLayout from '../../layouts/ShopLayout.astro';
 import HeroBox from '../../components/site/HeroBox.astro';
 import CategoryCard from '../../components/site/CategoryCard.astro';
+import BoxLineup from '../../components/boxes/BoxLineup.astro';
 import Icon from '../../components/brand/Icon.astro';
 import { categories } from '../../data/categories';
 import { taglines } from '../../data/brand';
@@ -167,6 +168,17 @@ const steps = [
     </div>
   </section>
 
+  <section class="family" aria-labelledby="family-title">
+    <div class="section-head">
+      <div>
+        <h2 id="family-title">Toda la familia</h2>
+        <p>Del mailer para joyería a la caja de mudanza, todas a escala real entre sí.</p>
+      </div>
+      <a href="/tienda/catalogo" class="btn btn--ghost">Compara las medidas</a>
+    </div>
+    <BoxLineup />
+  </section>
+
   <section class="steps" aria-labelledby="steps-title">
     <img
       class="steps__photo"
@@ -202,6 +214,7 @@ const steps = [
   .benefits,
   .cats,
   .starters,
+  .family,
   .steps {
     max-width: 1360px;
     margin-inline: auto;
@@ -424,6 +437,11 @@ const steps = [
     gap: var(--s-6);
   }
 
+  /* ───── family lineup ───── */
+  .family {
+    margin-top: var(--s-24);
+  }
+
   /* ───── starters ───── */
   .starters {
     margin-top: var(--s-24);
@@ -630,6 +648,7 @@ const steps = [
     .benefits,
     .cats,
     .starters,
+    .family,
     .steps {
       padding-inline: var(--s-4);
     }
@@ -666,6 +685,7 @@ const steps = [
     }
     .cats,
     .starters,
+    .family,
     .steps {
       margin-top: var(--s-16);
     }

@@ -1,13 +1,15 @@
 ---
 import '../styles/tokens.css';
 import '../styles/global.css';
+import HubNav from '../components/hub/HubNav.astro';
+import { taglines } from '../data/brand';
 
 interface Props {
   title: string;
   description?: string;
 }
 
-const { title, description = 'Foldwise: pedidos pequeños, cuidado enorme.' } = Astro.props;
+const { title, description = taglines.principal } = Astro.props;
 ---
 
 <!doctype html>
@@ -23,6 +25,7 @@ const { title, description = 'Foldwise: pedidos pequeños, cuidado enorme.' } = 
     <title>{title}</title>
   </head>
   <body>
+    <HubNav />
     <slot />
   </body>
 </html>

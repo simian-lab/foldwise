@@ -53,8 +53,7 @@ export function fit(pts: V3[], pad = 12): string {
   return `${r2(x0)} ${r2(y0)} ${r2(Math.max(...xs) - x0 + pad)} ${r2(Math.max(...ys) - y0 + pad)}`;
 }
 
-export const ISOTYPE_PATH = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
-export const ISOTYPE_FOLDS = 'M25 4v8 M15 19v8 M25 19v8';
+export { ISOTYPE_PATH, ISOTYPE_FOLDS } from '../../../data/brand';
 
 /** Face tones: top, left (+y), right (+x). */
 export const TONES = {

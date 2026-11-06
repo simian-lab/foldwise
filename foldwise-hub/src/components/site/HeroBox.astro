@@ -3,13 +3,24 @@
  * Interactive hero mailer. The first paint is the closed box rendered on the
  * server from the same geometry the browser animates (src/scripts/hero-box.ts).
  */
+import { ISOTYPE_PATH as ISOTYPE, ISOTYPE_FOLDS as FOLDS } from '../../data/brand';
 import { heroStatic, heroFrame, STATIC_MATS, VIEW, LIME } from '../../scripts/hero-box';
 
-const ISOTYPE = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
-const FOLDS = 'M25 4v8 M15 19v8 M25 19v8';
 
 const st = heroStatic();
 const fr = heroFrame(0);
+
+// The fully open frame, applied before first paint when motion is reduced
+// (see the inline script below), so those visitors never see the closed box.
+const open = heroFrame(1);
+const openFrame = {
+  shapes: Object.fromEntries(
+    Object.entries(open.shapes).map(([k, v]) => [k, { d: v.d, fill: v.fill, opacity: v.opacity, hidden: !!v.hidden }]),
+  ),
+  mats: open.mats,
+  show: { lidOuter: open.outer, lidInner: !open.outer, lip: true, card: open.cardFront },
+  lidFront: open.lidFront,
+};
 
 const TRAY_BACK = ['shadow', 'contact', 'floor', 'innerBack', 'innerLeft', 'tissueBack', 'tissueLeft', 'tissue', 'tissueCreases', 'seal', 'sealRing'];
 const JAR = ['jarShadow', 'jarBody', 'jarGlint', 'jarLabel', 'jarLabelLine', 'jarLabelLine2', 'jarCap', 'jarCapTop'];
@@ -51,14 +62,13 @@ const rays = Array.from({ length: 9 }, (_, i) => {
   data-progress="0"
   data-motion="pending"
   aria-pressed="false"
-  aria-label="Abrir la caja"
+  aria-label="Abrir o cerrar la caja"
+  aria-describedby="hero-box-desc"
 >
-  <svg
-    viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
-    role="img"
-    aria-label="Caja mailer Foldwise color ciruela que se abre y muestra papel de seda, una tarjeta de agradecimiento y una vela"
-    focusable="false"
-  >
+  <span id="hero-box-desc" class="visually-hidden">
+    Caja mailer Foldwise color ciruela que se abre y muestra papel de seda, una tarjeta de agradecimiento y una vela.
+  </span>
+  <svg viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} aria-hidden="true" focusable="false">
     <defs>
       <filter id="hb-blur" x="-30%" y="-30%" width="160%" height="160%">
         <feGaussianBlur stdDeviation="7"></feGaussianBlur>
@@ -194,6 +204,35 @@ const rays = Array.from({ length: 9 }, (_, i) => {
     </g>
   </svg>
 </button>
+<script is:inline define:vars={{ openFrame }}>
+  // Reduced motion: draw the open box now, before first paint. The module
+  // script then mounts on an already-open box and keeps it in sync.
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const root = document.currentScript && document.currentScript.previousElementSibling;
+    const svg = root && root.matches('[data-hero-box]') ? root.querySelector('svg') : null;
+    if (svg) {
+      svg.querySelectorAll('[data-k]').forEach((el) => {
+        const sh = openFrame.shapes[el.getAttribute('data-k')];
+        if (!sh) return;
+        el.setAttribute('d', sh.d);
+        el.setAttribute('fill', sh.fill);
+        if (sh.opacity !== undefined && sh.opacity !== null) el.setAttribute('opacity', String(sh.opacity));
+        el.style.display = sh.hidden ? 'none' : '';
+      });
+      svg.querySelectorAll('[data-mat]').forEach((g) => {
+        const k = g.getAttribute('data-mat');
+        g.setAttribute('transform', openFrame.mats[k]);
+        g.style.display = openFrame.show[k] ? '' : 'none';
+      });
+      const lid = svg.querySelector('[data-lid]');
+      const slot = svg.querySelector(openFrame.lidFront ? '[data-slot="front"]' : '[data-slot="back"]');
+      if (lid && slot) slot.appendChild(lid);
+      root.setAttribute('data-open', 'true');
+      root.setAttribute('data-progress', '1');
+      root.setAttribute('aria-pressed', 'true');
+    }
+  }
+</script>
 
 <script>
   import { mountHeroBox } from '../../scripts/hero-box';
@@ -209,6 +248,17 @@ const rays = Array.from({ length: 9 }, (_, i) => {
     border-radius: var(--r-lg);
     -webkit-tap-highlight-color: transparent;
     transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
   }
   .hero-box:active {
     transform: scale(0.985);

@@ -31,15 +31,19 @@ const items = categories
   .sort((a, b) => b.volume - a.volume);
 
 // Shared scale: stage px per inch.
-const K = 7.4;
+const K = 6.6;
+// Two staggered rows: the bigger box of each volume pair stands at the back,
+// its partner steps forward into the gap, so every front face stays readable.
+const pairs = Math.ceil(items.length / 2);
 const placed = items.map((it, i) => {
   const width = (VIEWBOX.w * K) / it.scale;
   const height = (VIEWBOX.h * K) / it.scale;
-  const t = i / (items.length - 1);
-  // Walk left to right and from back (high) to front (low).
-  const cx = 170 + t * 860 + (i % 2 ? 26 : -10);
-  const cy = 215 + t * 175 + (i % 2 ? 30 : 0);
-  return { ...it, width, height, x: cx - width / 2, y: cy - height / 2 };
+  const row = i % 2; // 0 back, 1 front
+  const k = Math.floor(i / 2);
+  const t = k / Math.max(1, pairs - 1);
+  const cx = row === 0 ? 150 + t * 880 : 262 + t * 846;
+  const cy = row === 0 ? 182 + t * 118 : 338 + t * 78;
+  return { ...it, width, height, x: cx - width / 2, y: cy - height / 2, z: row * items.length + k + 1 };
 });
 ---
 
@@ -47,10 +51,11 @@ const placed = items.map((it, i) => {
   <div class="stage" style={`aspect-ratio:${STAGE.w}/${STAGE.h}`}>
     <div class="floor"></div>
     {
-      placed.map((p, i) => (
+      placed.map((p) => (
         <div
           class="slot"
-          style={`left:${(p.x / STAGE.w) * 100}%;top:${(p.y / STAGE.h) * 100}%;width:${(p.width / STAGE.w) * 100}%;z-index:${i + 1}`}
+          style={`left:${(p.x / STAGE.w) * 100}%;top:${(p.y / STAGE.h) * 100}%;width:${(p.width / STAGE.w) * 100}%;z-index:${p.z}`}
+          aria-hidden="true"
         >
           <IsoBox style={p.c.style} l={p.size.l} w={p.size.w} h={p.size.h} colorway={p.colorway} branding="foldwise" />
         </div>

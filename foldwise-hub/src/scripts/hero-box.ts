@@ -434,7 +434,6 @@ export function mountHeroBox(root: HTMLElement): void {
     target = open ? 1 : 0;
     root.dataset.open = open ? 'true' : 'false';
     root.setAttribute('aria-pressed', open ? 'true' : 'false');
-    root.setAttribute('aria-label', open ? 'Cerrar la caja' : 'Abrir la caja');
     if (hint) hint.textContent = open ? 'Toca la caja para cerrarla' : 'Toca la caja para abrirla';
     if (!open) root.dataset.celebrate = 'false';
     if (reduce) {

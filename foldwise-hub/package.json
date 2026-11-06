@@ -11,7 +11,8 @@
     "preview": "astro preview",
     "astro": "astro",
     "test:unit": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "export:pdf": "node --experimental-strip-types --no-warnings=ExperimentalWarning scripts/export-pdf.ts"
   },
   "dependencies": {
     "astro": "^6.4.8",

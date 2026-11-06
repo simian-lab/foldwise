@@ -1,9 +1,321 @@
 ---
+/**
+ * Hub entry: the front door of the brand proposal. The animated logo tells
+ * the idea (the f folds into a box), then two doors split the visit:
+ * the brand itself, and the shop site that puts it to work.
+ */
 import HubLayout from '../layouts/HubLayout.astro';
+import AnimatedLogo from '../components/brand/AnimatedLogo.astro';
+import Pattern from '../components/brand/Pattern.astro';
+import { palette, taglines } from '../data/brand';
+
+const brandLinks = [
+  { label: 'Manual', href: '/marca', text: 'Nombre, logo, color, tipografía y voz, con el porqué de cada decisión.' },
+  { label: 'Marca en acción', href: '/marca/en-accion', text: 'Cajas, cinta, tarjetas, redes y reparto con la marca puesta.' },
+  { label: 'Cajas', href: '/marca/cajas', text: 'Las 12 familias de cajas con la marca, y todas juntas.' },
+];
 ---
 
-<HubLayout title="Foldwise · Hub de marca">
-  <main>
-    <h1 style="font-size: var(--fs-hero); padding: var(--s-16) var(--s-8);">foldwise</h1>
+<HubLayout title="Foldwise · Propuesta de marca">
+  <main class="hub">
+    <section class="hero" data-hub-hero aria-labelledby="hub-title">
+      <div class="hero__mark">
+        <AnimatedLogo variant="crema" size={540} trigger="load" loop />
+      </div>
+      <div class="hero__copy">
+        <h1 id="hub-title" class="hero__word">foldwise</h1>
+        <p class="hero__tagline">{taglines.principal}</p>
+        <p class="hero__lede">
+          Una marca nueva de cajas de cartón corrugado para los negocios que están arrancando en Estados Unidos. Aquí
+          está la marca completa y el sitio que la pone a trabajar.
+        </p>
+      </div>
+    </section>
+
+    <section class="doors" aria-label="Por dónde empezar">
+      <article class="door door--marca">
+        <div class="door__pattern" aria-hidden="true">
+          <Pattern kind="troquel" color={palette.ciruelaClaro} bg={palette.ciruela} scale={1.4} label="" />
+        </div>
+        <a class="door__main" href="/marca" data-door="marca">
+          <span class="door__title">La marca</span>
+          <span class="door__text">La identidad de Foldwise, de la idea a cada aplicación.</span>
+        </a>
+        <ul class="door__links" data-door-links role="list">
+          {
+            brandLinks.map((l) => (
+              <li>
+                <a href={l.href}>{l.label}</a>
+                <span>{l.text}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </article>
+
+      <article class="door door--sitio">
+        <div class="door__pattern" aria-hidden="true">
+          <Pattern kind="flauta" color={palette.kraftSombra} bg={palette.kraft} scale={1.2} label="" />
+        </div>
+        <a class="door__main door__main--full" href="/tienda" data-door="sitio">
+          <span class="door__head">
+            <span class="door__title">El sitio</span>
+            <span class="door__text">
+              La tienda en línea de Foldwise: catálogo, fichas de producto con tu logo en la caja y guías de armado.
+            </span>
+          </span>
+          <span class="door__cta">Entrar a la tienda</span>
+        </a>
+      </article>
+    </section>
+
+    <footer class="credit">
+      <p>Propuesta de marca por Simian</p>
+      <p class="credit__date">Noviembre de 2026</p>
+    </footer>
   </main>
 </HubLayout>
+
+<style>
+  .hub {
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: var(--s-6) var(--s-12) var(--s-8);
+    display: grid;
+    gap: var(--s-12);
+  }
+
+  /* Hero: the logo is the protagonist, the wordmark answers it. */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+    align-items: center;
+    gap: var(--s-12);
+    min-height: 0;
+  }
+  .hero__mark {
+    display: grid;
+    place-items: center;
+    min-width: 0;
+  }
+  .hero__mark :global(.al) {
+    width: min(100%, 540px);
+    height: auto;
+  }
+  .hero__copy {
+    min-width: 0;
+  }
+  .hero__word {
+    font-family: var(--f-display);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    font-size: clamp(4rem, 1.4rem + 8vw, 8.75rem);
+    line-height: 0.86;
+    color: var(--c-ciruela);
+    margin: 0 0 var(--s-6);
+  }
+  .hero__tagline {
+    font-family: var(--f-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-size: var(--fs-xl);
+    line-height: 1.1;
+    margin: 0 0 var(--s-4);
+    color: var(--c-ciruela);
+  }
+  .hero__lede {
+    max-width: 46ch;
+    margin: 0;
+    color: var(--c-ciruela-claro);
+  }
+
+  /* Doors: two die-cut panels with the tuck-flap chamfer. */
+  .doors {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s-6);
+  }
+  .door {
+    --chamfer: 36px;
+    position: relative;
+    isolation: isolate;
+    display: grid;
+    align-content: space-between;
+    gap: var(--s-8);
+    min-height: 340px;
+    padding: var(--s-12);
+    border-radius: var(--r-lg) 0 var(--r-lg) var(--r-lg);
+    clip-path: polygon(0 0, calc(100% - var(--chamfer)) 0, 100% var(--chamfer), 100% 100%, 0 100%);
+    overflow: hidden;
+  }
+  .door--marca {
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .door--sitio {
+    background: var(--c-kraft);
+    color: var(--c-ciruela);
+  }
+  .door__pattern {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    opacity: 0.55;
+    mask-image: linear-gradient(115deg, transparent 35%, #000 100%);
+  }
+  .door__pattern :global(svg) {
+    width: 100%;
+    height: 100%;
+  }
+  .door__main {
+    display: grid;
+    gap: var(--s-3);
+    text-decoration: none;
+    max-width: 30ch;
+  }
+  .door__main--full {
+    max-width: none;
+    height: 100%;
+    align-content: space-between;
+    gap: var(--s-8);
+  }
+  .door__head {
+    display: grid;
+    gap: var(--s-3);
+    max-width: 30ch;
+  }
+  .door__title {
+    font-family: var(--f-display);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    font-size: var(--fs-2xl);
+    line-height: 1;
+    width: fit-content;
+    padding-bottom: 6px;
+    background: linear-gradient(90deg, var(--c-lima) 60%, transparent 0) 0 100% / 12px 3px repeat-x;
+    background-size: 0 3px;
+    transition: background-size 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .door__main:hover .door__title,
+  .door__main:focus-visible .door__title {
+    background-size: 12px 3px;
+  }
+  .door--sitio .door__title {
+    background-image: linear-gradient(90deg, var(--c-ciruela) 60%, transparent 0);
+  }
+  .door__text {
+    font-size: var(--fs-lg);
+    line-height: 1.35;
+  }
+  .door--marca .door__text {
+    color: rgb(246 241 231 / 0.8);
+  }
+  .door__main:focus-visible,
+  .door__links a:focus-visible {
+    outline: 2px solid var(--c-lima);
+    outline-offset: 4px;
+    border-radius: 4px;
+  }
+  .door--sitio .door__main:focus-visible {
+    outline-color: var(--c-ciruela);
+  }
+
+  .door__links {
+    display: grid;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-top: 1px dashed rgb(246 241 231 / 0.28);
+  }
+  .door__links li {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: var(--s-4);
+    align-items: baseline;
+    padding: var(--s-3) 0;
+    border-bottom: 1px dashed rgb(246 241 231 / 0.28);
+  }
+  .door__links a {
+    font-weight: 700;
+    color: var(--c-crema);
+    text-decoration-color: var(--c-lima);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  .door__links a:hover {
+    color: var(--c-lima);
+  }
+  .door__links span {
+    font-size: var(--fs-sm);
+    color: rgb(246 241 231 / 0.66);
+  }
+
+  .door__cta {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    padding: 14px 24px;
+    border-radius: var(--r-pill);
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+    font-weight: 700;
+    text-decoration: none;
+    box-shadow: 0 10px 24px -14px rgba(42, 20, 48, 0.6);
+    transition: transform 0.2s ease;
+  }
+  .door__main:hover .door__cta {
+    transform: translateY(-2px);
+  }
+
+  .credit {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding-top: var(--s-4);
+    border-top: 1px solid rgb(58 29 63 / 0.14);
+    font-size: var(--fs-sm);
+    color: var(--c-ciruela-claro);
+  }
+  .credit p {
+    margin: 0;
+  }
+  .credit p:first-child {
+    font-weight: 600;
+    color: var(--c-ciruela);
+  }
+
+  @media (max-width: 960px) {
+    .hub {
+      padding: var(--s-8) var(--s-4) var(--s-6);
+      gap: var(--s-8);
+    }
+    .hero {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-6);
+      min-height: 0;
+      text-align: center;
+    }
+    .hero__mark :global(.al) {
+      width: min(100%, 300px);
+    }
+    .hero__lede {
+      margin-inline: auto;
+    }
+    .doors {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .door {
+      --chamfer: 24px;
+      min-height: 0;
+      padding: var(--s-8) var(--s-6);
+    }
+    .door__links li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2px;
+    }
+    .credit {
+      flex-direction: column;
+      gap: var(--s-1);
+    }
+  }
+</style>

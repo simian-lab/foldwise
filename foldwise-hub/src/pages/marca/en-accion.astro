@@ -64,7 +64,7 @@ const icons = [
         </div>
         <figure class="hero__mark">
           <div class="hero__stage">
-            <AnimatedLogo variant="crema" size={440} trigger="load" loop />
+            <AnimatedLogo variant="crema" size={520} trigger="load" loop />
           </div>
           <figcaption>Logo animado: la f se dobla y se vuelve caja.</figcaption>
         </figure>
@@ -326,8 +326,9 @@ const icons = [
   .hero__stage {
     display: grid;
     place-items: center;
-    aspect-ratio: 5 / 4;
-    padding: var(--s-4);
+    aspect-ratio: 1;
+    max-height: 560px;
+    padding: 0;
     background: var(--c-crema);
     border-radius: var(--r-lg);
     /* same chamfered tuck-flap corner as the panels below */
@@ -335,8 +336,9 @@ const icons = [
     box-shadow: inset 0 0 0 1px rgb(58 29 63 / 0.06);
   }
   /* the animated logo ships a fixed px size; let it scale with the stage */
+  /* The box should fill the stage: the drawing sits well inside its square. */
   .hero__stage :global(.al) {
-    width: min(100%, 440px);
+    width: min(100%, 520px);
     height: auto;
   }
   .hero__mark figcaption {
@@ -831,10 +833,10 @@ const icons = [
     }
     .hero__stage {
       aspect-ratio: auto;
-      padding: var(--s-8) var(--s-4);
+      padding: var(--s-2) 0;
     }
     .hero__stage :global(.al) {
-      width: min(100%, 240px);
+      width: min(100%, 330px);
     }
     .panel {
       padding: var(--s-6) var(--s-4);

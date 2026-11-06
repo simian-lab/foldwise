@@ -5,6 +5,8 @@
  *
  * `variant` names the background the mark sits on, not the mark colour.
  */
+import { ISOTYPE_PATH, ISOTYPE_FOLDS } from '../../data/brand';
+
 export type IsotypeVariant = 'crema' | 'ciruela' | 'kraft' | 'lima';
 
 interface Props {
@@ -16,8 +18,6 @@ interface Props {
   class?: string;
 }
 
-const ISOTYPE_PATH = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
-const ISOTYPE_FOLDS = 'M25 4v8 M15 19v8 M25 19v8';
 
 const ISOTYPE_COLORS: Record<IsotypeVariant, { mark: string; folds: string }> = {
   crema: { mark: '#3A1D3F', folds: '#C8F25A' },

@@ -1,0 +1,114 @@
+---
+/**
+ * Slim hub bar on every page: the way back to the hub entry and a two-way
+ * switch between its doors, "La marca" (/marca/*) and "El sitio" (/tienda/*).
+ * It scrolls away with the page, so it never competes with the sticky shop
+ * header, and it is left out of printed exports.
+ */
+import Isotype from '../brand/Isotype.astro';
+
+const path = Astro.url.pathname.replace(/\/$/, '') || '/';
+const active = path.startsWith('/tienda') ? 'sitio' : path.startsWith('/marca') ? 'marca' : null;
+
+const doors = [
+  { id: 'marca', label: 'La marca', href: '/marca' },
+  { id: 'sitio', label: 'El sitio', href: '/tienda' },
+] as const;
+---
+
+<div class="hub-nav" data-hub-nav>
+  <nav class="hub-nav__inner" aria-label="Propuesta de marca">
+    <a class="hub-nav__home" href="/">
+      <Isotype variant="ciruela" size={18} label="" />
+      <span>Foldwise <span class="hub-nav__muted">· propuesta de marca</span></span>
+    </a>
+    <ul class="hub-nav__switch" role="list">
+      {
+        doors.map((d) => (
+          <li>
+            <a href={d.href} data-hub-door={d.id} aria-current={active === d.id ? 'true' : undefined}>
+              {d.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</div>
+
+<style>
+  .hub-nav {
+    background: var(--c-ciruela-sombra);
+    color: var(--c-crema);
+    font-family: var(--f-text);
+    font-size: var(--fs-xs);
+    line-height: 1;
+  }
+  .hub-nav__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    max-width: 1440px;
+    margin: 0 auto;
+    padding: 6px var(--s-6);
+    min-height: 36px;
+  }
+  .hub-nav__home {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    min-width: 0;
+  }
+  .hub-nav__muted {
+    font-weight: 400;
+    color: rgb(246 241 231 / 0.62);
+  }
+  .hub-nav__switch {
+    display: flex;
+    gap: 2px;
+    margin: 0;
+    padding: 2px;
+    list-style: none;
+    border-radius: var(--r-pill);
+    background: rgb(246 241 231 / 0.08);
+  }
+  .hub-nav__switch a {
+    display: block;
+    padding: 6px 12px;
+    border-radius: var(--r-pill);
+    text-decoration: none;
+    font-weight: 600;
+    white-space: nowrap;
+    color: rgb(246 241 231 / 0.78);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .hub-nav__switch a:hover {
+    color: var(--c-crema);
+    background: rgb(246 241 231 / 0.1);
+  }
+  .hub-nav__switch a[aria-current='true'] {
+    background: var(--c-crema);
+    color: var(--c-ciruela);
+  }
+  .hub-nav a:focus-visible {
+    outline: 2px solid var(--c-lima);
+    outline-offset: 2px;
+  }
+  @media (max-width: 480px) {
+    .hub-nav__inner {
+      padding-inline: var(--s-4);
+    }
+    .hub-nav__muted {
+      display: none;
+    }
+  }
+  @media print {
+    .hub-nav {
+      display: none;
+    }
+  }
+</style>

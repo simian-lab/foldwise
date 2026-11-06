@@ -8,6 +8,7 @@
  * box is kraft, the real product.
  */
 import { boxGeometry, pointsOf, tapeAt } from '../../scripts/animated-logo';
+import { ISOTYPE_PATH, ISOTYPE_FOLDS } from '../../data/brand';
 
 type Variant = 'crema' | 'ciruela';
 
@@ -22,7 +23,6 @@ interface Props {
 
 const { size = 240, loop = true, trigger = 'load', variant = 'crema', class: className } = Astro.props;
 
-const ISOTYPE_PATH = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
 
 const PALETTE = {
   crema: {
@@ -124,7 +124,7 @@ const fl = g.floorCenter;
       <g class="al-mark-plane" transform={g.markMatrix}>
         <g data-al-part class="al-mark">
           <path d={ISOTYPE_PATH} fill={c.mark}></path>
-          <path d="M25 4v8 M15 19v8 M25 19v8" fill="none" stroke={c.markFolds} stroke-width={c.markFoldWidth} stroke-dasharray={c.markFoldDash}></path>
+          <path d={ISOTYPE_FOLDS} fill="none" stroke={c.markFolds} stroke-width={c.markFoldWidth} stroke-dasharray={c.markFoldDash}></path>
         </g>
       </g>
       <!-- lime tape: along the lid, over the edge, down the end -->

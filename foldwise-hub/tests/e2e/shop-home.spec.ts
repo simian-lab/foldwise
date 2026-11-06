@@ -86,6 +86,66 @@ test.describe('shop home', () => {
     await ctx.close();
   });
 
+  test('shows the whole family lineup, with each of the first four marks uncovered', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(HOME);
+    const section = page.locator('main section', { has: page.getByRole('heading', { level: 2, name: 'Toda la familia' }) });
+    const lineup = section.locator('[data-lineup]');
+    await expect(lineup).toHaveAttribute('role', 'group');
+    await expect(lineup).toHaveAttribute('aria-label', /familia/i);
+    const boxes = lineup.locator('svg[data-style]');
+    await expect(boxes).toHaveCount(12);
+    // The group carries the name; the 12 renders stay out of the accessibility tree.
+    const exposed = await boxes.evaluateAll((els) => els.filter((e) => !e.closest('[aria-hidden="true"]')).length);
+    expect(exposed).toBe(0);
+
+    await lineup.scrollIntoViewIfNeeded();
+    // The printed mark of each of the back four boxes must be on top at its centre.
+    const covered = await lineup.evaluate((root) => {
+      const svgs = [...root.querySelectorAll('svg[data-style]')].slice(0, 4);
+      return svgs
+        .map((svg, i) => {
+          const mark = svg.querySelector('[data-part="brand"]');
+          if (!mark) return `box ${i}: no brand`;
+          const r = mark.getBoundingClientRect();
+          // first painted shape under the centre (svg roots and slot boxes hit-test as rectangles)
+          const hit = document
+            .elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+            .find((el) => el instanceof SVGGeometryElement || el instanceof SVGTextContentElement);
+          return hit && svg.contains(hit) ? null : `box ${i}`;
+        })
+        .filter(Boolean);
+    });
+    expect(covered).toEqual([]);
+  });
+
+  test('hero box keeps one accessible name while it toggles', async ({ page }) => {
+    await page.goto(HOME);
+    const box = page.locator('[data-hero-box]');
+    await expect(box).toHaveAttribute('aria-label', 'Abrir o cerrar la caja');
+    await expect(box.locator('svg').first()).toHaveAttribute('aria-hidden', 'true');
+    await expect(box).toHaveAttribute('aria-pressed', 'true', { timeout: 5000 });
+    await expect(box).toHaveAttribute('aria-label', 'Abrir o cerrar la caja');
+    await box.click();
+    await expect(box).toHaveAttribute('aria-pressed', 'false');
+    await expect(box).toHaveAttribute('aria-label', 'Abrir o cerrar la caja');
+  });
+
+  test('with reduced motion the hero box is open before any module script runs', async ({ browser }) => {
+    const ctx = await browser.newContext({ reducedMotion: 'reduce' });
+    const page = await ctx.newPage();
+    // Block every script file: only what the server sent (and inline code) can draw the box.
+    await page.route('**/*', (r) => (r.request().resourceType() === 'script' ? r.abort() : r.continue()));
+    await page.goto(HOME);
+    const box = page.locator('[data-hero-box]');
+    await expect(box).toHaveAttribute('data-open', 'true');
+    await expect(box).toHaveAttribute('aria-pressed', 'true');
+    // the open lid hangs behind the tray, and the card face is shown
+    await expect(box.locator('[data-slot="back"] [data-lid]')).toHaveCount(1);
+    await expect(box.locator('[data-mat="card"]')).toBeVisible();
+    await ctx.close();
+  });
+
   test('works at 375 px without horizontal scroll', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto(HOME);

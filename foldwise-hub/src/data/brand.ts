@@ -9,6 +9,11 @@ export const palette = {
   kraftSombra: '#A9845E',
 } as const;
 
+/** Isotype outline (viewBox 0 0 46 46): the lowercase f drawn as a box dieline. */
+export const ISOTYPE_PATH = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
+/** Dashed fold lines where the flaps meet the stem. */
+export const ISOTYPE_FOLDS = 'M25 4v8 M15 19v8 M25 19v8';
+
 export const taglines = {
   principal: 'Pedidos pequeños. Cuidado enorme.',
   secundaria: 'Tu aliado de packaging desde la primera caja.',
