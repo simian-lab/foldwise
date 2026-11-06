@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { categories, getCategory } from '../../src/data/categories';
+import { categories, getCategory, minOrderUnits } from '../../src/data/categories';
 import { palette, taglines, voice } from '../../src/data/brand';
 
 const order = [
@@ -28,6 +28,14 @@ describe('categories', () => {
         expect(c.tiers[i].unitPrice).toBeLessThan(c.tiers[i - 1].unitPrice);
       }
     }
+  });
+  it('every category starts at the same 25-box minimum', () => {
+    for (const c of categories) {
+      expect(c.minUnits, c.slug).toBe(25);
+      expect(c.tiers[0].minQty, c.slug).toBe(25);
+    }
+    expect(minOrderUnits).toBe(25);
+    expect(voice.ejemplos[0].despues).toContain('25 cajas');
   });
   it('only mailer and shipping are featured', () => {
     expect(categories.filter((c) => c.featured).map((c) => c.slug).sort()).toEqual(['cajas-de-envio', 'cajas-mailer']);

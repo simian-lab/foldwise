@@ -9,6 +9,15 @@ const numbers = (d: string) => (d.match(/-?\d+(\.\d+)?/g) ?? []).map(Number);
 describe('dielines', () => {
   const styles = [...new Set(categories.map((c) => c.style))];
 
+  it('only cites real FEFCO codes (0201, 0427); other styles show a plain name', () => {
+    for (const style of styles) {
+      const { code } = getDieline(style);
+      if (code.includes('FEFCO')) expect(['FEFCO 0201', 'FEFCO 0427'], style).toContain(code);
+    }
+    expect(getDieline('rsc').code).toBe('FEFCO 0201');
+    expect(getDieline('mailer').code).toBe('FEFCO 0427');
+  });
+
   it('covers every box style used by the 12 categories with at least one cut and one fold', () => {
     expect(categories).toHaveLength(12);
     for (const style of styles) {

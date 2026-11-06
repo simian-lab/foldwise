@@ -1,3 +1,5 @@
+import { minOrderUnits } from './categories';
+
 export const palette = {
   crema: '#F6F1E7',
   kraft: '#C9A27A',
@@ -42,7 +44,7 @@ export const voice: { si: string[]; no: string[]; ejemplos: VoiceExample[] } = {
   ejemplos: [
     {
       antes: 'Pedido mínimo de 500 unidades por referencia.',
-      despues: 'Empieza con 25 cajas. Cuando crezcas, el precio baja contigo.',
+      despues: `Empieza con ${minOrderUnits} cajas. Cuando crezcas, el precio baja contigo.`,
     },
     {
       antes: 'Su solicitud ha sido recibida y será procesada.',

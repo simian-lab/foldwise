@@ -1,8 +1,8 @@
 ---
 /**
  * Product page, built only for featured families. Live logo preview on the
- * left, configurator on the right, then specs, the dieline slot (Task 9) and
- * related families.
+ * left, configurator on the right, then specs, the dieline and related
+ * families.
  */
 import ShopLayout from '../../../layouts/ShopLayout.astro';
 import LogoPreview from '../../../components/site/LogoPreview.astro';
@@ -135,13 +135,12 @@ const related = [
         </div>
       </dl>
       <ul class="pdp__service">
-        <li><Icon name="rapido" size={22} /> Producción en 3 a 5 días hábiles</li>
-        <li><Icon name="envio" size={22} /> Envío a todo EE. UU.</li>
-        <li><Icon name="eco" size={22} /> Cartón 100 % reciclable</li>
+        <li><Icon name="rapido" size={22} /> Producción y entrega rápida</li>
+        <li><Icon name="envio" size={22} /> Envíos en EE. UU.</li>
+        <li><Icon name="eco" size={22} /> Cartón corrugado de calidad de fábrica</li>
       </ul>
     </section>
 
-    <!-- Task 9: the dieline component replaces the placeholder inside this slot. -->
     <section class="pdp__dieline" aria-labelledby="dieline-title">
       <div data-dieline-slot>
         <h2 id="dieline-title">Despiece</h2>
@@ -362,15 +361,6 @@ const related = [
     max-width: 52ch;
     color: color-mix(in srgb, var(--c-ciruela) 75%, var(--c-crema));
   }
-  .pdp__dieline-placeholder {
-    min-height: 320px;
-    border-radius: 28px;
-    border: 1.5px dashed var(--c-kraft);
-    background:
-      repeating-linear-gradient(0deg, transparent 0 31px, color-mix(in srgb, var(--c-kraft) 18%, transparent) 31px 32px),
-      repeating-linear-gradient(90deg, transparent 0 31px, color-mix(in srgb, var(--c-kraft) 18%, transparent) 31px 32px),
-      color-mix(in srgb, var(--c-crema) 50%, #fff);
-  }
 
   /* related */
   .pdp__related {
@@ -436,10 +426,6 @@ const related = [
     }
     .pdp__related-grid {
       gap: var(--s-3);
-    }
-    .pdp__dieline-placeholder {
-      min-height: 220px;
-      border-radius: 22px;
     }
   }
 </style>

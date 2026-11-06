@@ -5,6 +5,10 @@ export interface PriceTier {
 
 export const MAX_QUANTITY = 100000;
 
+/** Formats a USD amount the way the shop shows it: "US$ 1.65". */
+export const money = (n: number): string =>
+  `US$ ${n.toLocaleString('es-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 /** Normalizes any user input into an integer quantity within [min, MAX_QUANTITY]. */
 export function clampQuantity(raw: unknown, min: number): number {
   const n = typeof raw === 'number' ? raw : parseFloat(String(raw ?? '').trim());

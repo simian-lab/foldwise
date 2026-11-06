@@ -2,6 +2,7 @@
 /** A feed post in the brand's voice: one message, one box, the 80/20 rule. */
 import Isotype from '../Isotype.astro';
 import IsoBox from '../../boxes/IsoBox.astro';
+import { minOrderUnits } from '../../../data/categories';
 
 interface Props {
   class?: string;
@@ -17,7 +18,7 @@ const { class: className } = Astro.props;
   </div>
   <div class="post__media" aria-hidden="true">
     <p class="post__headline">Tu primera caja también cuenta.</p>
-    <span class="post__chip">Desde 25 cajas</span>
+    <span class="post__chip">Desde {minOrderUnits} cajas</span>
     <div class="post__box">
       <IsoBox style="mailer" l={12} w={9} h={4} colorway="kraft" branding="foldwise" open label="" />
     </div>
@@ -34,7 +35,7 @@ const { class: className } = Astro.props;
     </svg>
   </div>
   <p class="post__caption" aria-hidden="true">
-    <b>foldwise</b> Empieza con 25 cajas. Cuando crezcas, el precio baja contigo.
+    <b>foldwise</b> Empieza con {minOrderUnits} cajas. Cuando crezcas, el precio baja contigo.
   </p>
 </div>
 

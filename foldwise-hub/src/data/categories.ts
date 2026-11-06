@@ -103,8 +103,8 @@ export const categories: Category[] = [
     ulineRef: 'Storage & File Boxes',
     style: 'file', flute: 'B', ect: 32,
     sizes: [s('F-1512', 15, 12, 10), s('F-1713', 17, 13, 10), s('F-2012', 20, 12, 10)],
-    minUnits: 10,
-    tiers: [t(10, 2.45), t(50, 1.89), t(200, 1.45)],
+    minUnits: 25,
+    tiers: [t(25, 2.45), t(50, 1.89), t(200, 1.45)],
     featured: false,
   },
   {
@@ -114,8 +114,8 @@ export const categories: Category[] = [
     ulineRef: 'Moving Boxes',
     style: 'rsc', flute: 'C', ect: 32,
     sizes: [s('MV-1612', 16, 12, 12), s('MV-1818', 18, 18, 16), s('MV-2420', 24, 18, 20), s('MV-2424', 24, 24, 24)],
-    minUnits: 10,
-    tiers: [t(10, 2.9), t(50, 2.3), t(200, 1.85)],
+    minUnits: 25,
+    tiers: [t(25, 2.9), t(50, 2.3), t(200, 1.85)],
     featured: false,
   },
   {
@@ -125,8 +125,8 @@ export const categories: Category[] = [
     ulineRef: 'Side Loader Boxes',
     style: 'sideloader', flute: 'C', ect: 44,
     sizes: [s('SL-2410', 24, 10, 8), s('SL-3012', 30, 12, 10), s('SL-3616', 36, 16, 12)],
-    minUnits: 10,
-    tiers: [t(10, 5.6), t(50, 4.35), t(150, 3.5)],
+    minUnits: 25,
+    tiers: [t(25, 5.6), t(50, 4.35), t(150, 3.5)],
     featured: false,
   },
   {
@@ -136,8 +136,8 @@ export const categories: Category[] = [
     ulineRef: 'Wine & Bottle Shippers',
     style: 'wine', flute: 'BC', ect: 44,
     sizes: [s('W-0412', 4, 4, 15), s('W-0815', 8, 8, 15), s('W-1215', 12, 8, 15), s('W-1616', 16, 12, 16)],
-    minUnits: 10,
-    tiers: [t(10, 4.2), t(50, 3.3), t(150, 2.7)],
+    minUnits: 25,
+    tiers: [t(25, 4.2), t(50, 3.3), t(150, 2.7)],
     featured: false,
   },
   {
@@ -163,6 +163,9 @@ export const categories: Category[] = [
     featured: false,
   },
 ];
+
+/** Lowest order minimum across all categories (the "Desde N cajas" figure). */
+export const minOrderUnits = Math.min(...categories.map((c) => c.minUnits));
 
 export function getCategory(slug: string): Category | undefined {
   return categories.find((c) => c.slug === slug);

@@ -7,7 +7,7 @@
  * input[type=file][name=logo], [data-logo-error], [data-quote-cta].
  */
 import type { Category } from '../../data/categories';
-import { unitPrice, orderTotal } from '../../data/pricing';
+import { unitPrice, orderTotal, money } from '../../data/pricing';
 
 interface Props {
   category: Category;
@@ -17,8 +17,6 @@ const { category } = Astro.props;
 const { tiers, minUnits, sizes } = category;
 const qty = minUnits;
 
-const money = (n: number) =>
-  `US$ ${n.toLocaleString('es-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const tierLabel = (i: number) => {
   const next = tiers[i + 1];
   const from = i === 0 ? minUnits : tiers[i].minQty;

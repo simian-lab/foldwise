@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { clampQuantity, unitPrice, orderTotal } from '../../src/data/pricing';
+import { clampQuantity, unitPrice, orderTotal, money } from '../../src/data/pricing';
 
 const tiers = [
   { minQty: 25, unitPrice: 1.85 },
@@ -41,5 +41,13 @@ describe('tier pricing', () => {
   it('computes order total rounded to cents', () => {
     expect(orderTotal(tiers, 500)).toBe(490);
     expect(orderTotal(tiers, 33)).toBe(61.05);
+  });
+});
+
+describe('money', () => {
+  it('formats USD with two decimals and the US$ prefix', () => {
+    expect(money(1.65)).toBe('US$ 1.65');
+    expect(money(0.9)).toBe('US$ 0.90');
+    expect(money(1234.5)).toBe('US$ 1,234.50');
   });
 });

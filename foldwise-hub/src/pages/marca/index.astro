@@ -10,6 +10,7 @@ import Icon from '../../components/brand/Icon.astro';
 import PaletteStudy from '../../components/brand/explored/PaletteStudy.astro';
 import IsotypeStudy from '../../components/brand/explored/IsotypeStudy.astro';
 import { palette, taglines, voice, ISOTYPE_PATH } from '../../data/brand';
+import { minOrderUnits } from '../../data/categories';
 
 const chapters = [
   { id: 'la-marca', num: '01', title: 'La marca' },
@@ -27,12 +28,12 @@ const chapters = [
 const ch = Object.fromEntries(chapters.map((c) => [c.id, c])) as Record<(typeof chapters)[number]['id'], (typeof chapters)[number]>;
 
 const differentiators = [
-  { icon: 'pedido-pequeno', label: 'Pedidos pequeños', text: 'Desde 25 cajas, para que empieces con lo justo.' },
+  { icon: 'pedido-pequeno', label: 'Pedidos pequeños', text: `Desde ${minOrderUnits} cajas, para que empieces con lo justo.` },
   { icon: 'rapido', label: 'Entrega rápida', text: 'Para que tu lanzamiento no espere.' },
   { icon: 'asesoria', label: 'Atención personalizada', text: 'Una persona real que conoce tu pedido.' },
   { icon: 'personaliza', label: 'Personalización', text: 'Tu logo en la caja, desde el primer pedido.' },
   { icon: 'medida', label: 'A la medida', text: 'Si tu producto es raro, la caja no tiene por qué serlo.' },
-  { icon: 'envio', label: 'Precio competitivo', text: 'Precio de fabricante, con descuento por volumen.' },
+  { icon: 'envio', label: 'Precio competitivo', text: 'Precio competitivo, con descuento por volumen.' },
 ] as const;
 
 const versions = [
@@ -919,6 +920,11 @@ const nextSteps = [
     display: grid;
     place-items: center;
     min-width: 0;
+  }
+  /* shrink with the column instead of clipping (the logo's height is fixed by --al-size) */
+  .cover__mark :global([data-animated-logo]) {
+    width: min(100%, 500px);
+    height: auto;
   }
   .cover__credit {
     margin: 0;
@@ -1907,6 +1913,7 @@ const nextSteps = [
     }
     .cover__mark :global([data-animated-logo]) {
       --al-size: 200px !important;
+      width: min(100%, var(--al-size));
     }
     .anim__stage--light :global([data-animated-logo]) {
       --al-size: 260px !important;

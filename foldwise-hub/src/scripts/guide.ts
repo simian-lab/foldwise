@@ -842,8 +842,9 @@ export function mountGuide(root: HTMLElement): void {
   next?.addEventListener('click', () => go(index + 1));
   window.addEventListener('keydown', (e) => {
     if (e.defaultPrevented || e.altKey || e.metaKey || e.ctrlKey) return;
-    const tag = (e.target as HTMLElement | null)?.tagName;
-    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    const target = e.target as HTMLElement | null;
+    const tag = target?.tagName;
+    if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target?.isContentEditable) return;
     if (e.key === 'ArrowRight') { e.preventDefault(); go(index + 1); }
     else if (e.key === 'ArrowLeft') { e.preventDefault(); go(index - 1); }
   });

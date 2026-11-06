@@ -51,7 +51,7 @@ export interface DielineData {
   measures: DielineMeasure[];
   /** Text size in viewBox units, scaled to the sheet. */
   fontSize: number;
-  /** FEFCO-like reference shown in the caption. */
+  /** Structure shown in the caption: a real FEFCO code (0201, 0427) or a plain style name. */
   code: string;
   /** Spanish name of the construction. */
   name: string;
@@ -298,7 +298,7 @@ function trayNet(ox: number, oy: number, l: number, w: number, h: number, name: 
     vLine(x0, y1 + 0.12, y1 + h - 0.1), vLine(x1, y1 + 0.12, y1 + h - 0.1),
   ];
   const labels: DielineLabel[] = [{ x: cx, y: (y0 + y1) / 2, text: name }];
-  return { cuts, folds, labels, box: { x0: ox + h - h, y0: oy, x1: x1 + h, y1: y1 + h } };
+  return { cuts, folds, labels, box: { x0: ox, y0: oy, x1: x1 + h, y1: y1 + h } };
 }
 
 function twoPieceNet({ l, w, h }: Dims, lidH: number, handHoles: boolean): Net {
@@ -351,14 +351,14 @@ function partitions(ox: number, oy: number, l: number, w: number, h: number): { 
 
 const META: Record<BoxStyle, { code: string; name: string }> = {
   rsc: { code: 'FEFCO 0201', name: 'Caja regular ranurada (RSC)' },
-  multidepth: { code: 'FEFCO 0201 con alturas', name: 'Caja ranurada multi-altura' },
-  wine: { code: 'FEFCO 0201 + divisores', name: 'Caja ranurada con divisores' },
-  sideloader: { code: 'FEFCO 0201 de carga lateral', name: 'Caja ranurada de carga lateral' },
+  multidepth: { code: 'Caja multi-altura', name: 'Caja ranurada multi-altura' },
+  wine: { code: 'Caja con divisores', name: 'Caja ranurada con divisores' },
+  sideloader: { code: 'Caja de carga lateral', name: 'Caja ranurada de carga lateral' },
   mailer: { code: 'FEFCO 0427', name: 'Mailer con laterales dobles y solapa de cierre' },
-  easyfold: { code: 'FEFCO serie 04', name: 'Mailer de un pliegue con solapa de cierre' },
-  file: { code: 'FEFCO serie 03', name: 'Base y tapa con manijas' },
-  retail: { code: 'FEFCO serie 03', name: 'Base y tapa de regalo' },
-  apparel: { code: 'FEFCO serie 03', name: 'Base y tapa plana' },
+  easyfold: { code: 'Diseño propio', name: 'Mailer de un pliegue con solapa de cierre' },
+  file: { code: 'Base y tapa', name: 'Base y tapa con manijas' },
+  retail: { code: 'Base y tapa', name: 'Base y tapa de regalo' },
+  apparel: { code: 'Base y tapa', name: 'Base y tapa plana' },
 };
 
 function netFor(style: BoxStyle, d: Dims): Net {
@@ -434,7 +434,6 @@ export function getDieline(style: BoxStyle, dims: Dims = mainSize(style)): Dieli
   ];
   // keep only labels whose panel fits the word
   const labels = net.labels.filter((lb) => lb.text.length * fontSize * 0.55 < span * 0.3);
-  void span;
   return {
     style,
     cuts: net.cuts,

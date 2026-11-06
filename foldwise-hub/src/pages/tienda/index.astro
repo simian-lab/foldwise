@@ -4,10 +4,10 @@ import HeroBox from '../../components/site/HeroBox.astro';
 import CategoryCard from '../../components/site/CategoryCard.astro';
 import BoxLineup from '../../components/boxes/BoxLineup.astro';
 import Icon from '../../components/brand/Icon.astro';
-import { categories } from '../../data/categories';
+import { categories, minOrderUnits } from '../../data/categories';
 import { taglines } from '../../data/brand';
 
-const minUnits = Math.min(...categories.map((c) => c.minUnits));
+const minUnits = minOrderUnits;
 
 const benefits = [
   {
@@ -22,8 +22,8 @@ const benefits = [
   },
   {
     icon: 'rapido',
-    title: 'Listas en días',
-    text: 'Producimos y despachamos tu pedido en 3 a 5 días hábiles.',
+    title: 'Entrega rápida',
+    text: 'Producimos y despachamos tu pedido rápido, para que tu lanzamiento no espere.',
   },
   {
     icon: 'asesoria',
@@ -62,8 +62,8 @@ const steps = [
       </div>
       <ul class="hero__proof">
         <li><Icon name="pedido-pequeno" size={20} /> Desde {minUnits} cajas</li>
-        <li><Icon name="envio" size={20} /> Envío a todo EE. UU.</li>
-        <li><Icon name="asesoria" size={20} /> Asesoría sin costo</li>
+        <li><Icon name="envio" size={20} /> Envíos en EE. UU.</li>
+        <li><Icon name="asesoria" size={20} /> Atención personalizada</li>
       </ul>
     </div>
 

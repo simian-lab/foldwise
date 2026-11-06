@@ -9,7 +9,7 @@
  * local blob: URL in the same group, then hide the placeholder. Nothing leaves
  * the browser; the previous object URL is revoked on every change.
  */
-import { clampQuantity, unitPrice, orderTotal, type PriceTier } from '../data/pricing';
+import { clampQuantity, unitPrice, orderTotal, money, type PriceTier } from '../data/pricing';
 
 export const LOGO_ERROR = 'Sube una imagen PNG, JPG o SVG de hasta 5 MB.';
 export const MAX_LOGO_BYTES = 5 * 1024 * 1024;
@@ -17,8 +17,7 @@ const LOGO_TYPES = new Set(['image/png', 'image/jpeg', 'image/svg+xml']);
 const LOGO_EXT = /\.(png|jpe?g|svg)$/i;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 
-export const money = (n: number) =>
-  `US$ ${n.toLocaleString('es-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+export { money };
 
 /** Accepts PNG/JPG/SVG up to 5 MB (MIME type, or extension when the browser gives none). */
 export function isAcceptedLogo(file: Pick<File, 'name' | 'type' | 'size'>): boolean {
