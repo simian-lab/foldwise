@@ -1,0 +1,529 @@
+---
+/**
+ * Step-by-step assembly guide: an isometric box on a cutting mat that folds
+ * itself into each step's pose, a step list, prev / next, ← → keys, a counter
+ * and a lime progress bar. First paint is drawn here from the same geometry
+ * the browser tweens (src/scripts/guide.ts).
+ */
+import { guides, guideInfo, type GuideSlug } from '../../data/guides';
+import { buildFrame, poseParams, viewOf, matOf, MAT_COLORS, readout } from '../../scripts/guide';
+
+interface Props {
+  slug: GuideSlug;
+}
+
+const { slug } = Astro.props;
+const info = guideInfo[slug];
+const steps = guides[slug];
+const params = poseParams(info.kind, steps[0].pose);
+const frame = buildFrame(info.kind, params, info.dims);
+const view = viewOf(info.kind, params, info.dims);
+const mat = matOf(info.kind, info.dims);
+// blur sized to the finished box, so the closed pose gets a soft contact shadow
+const closedView = viewOf(info.kind, poseParams(info.kind, steps[steps.length - 1].pose), info.dims);
+const blur = Math.max(0.2, closedView.w * 0.012);
+const uid = `gd-${slug}`;
+---
+
+<div class="guide" data-guide data-kind={info.kind} data-dims={JSON.stringify(info.dims)}>
+  <div class="guide__stage">
+    <figure class="guide__card" data-guide-figure data-pose={steps[0].pose} data-animating="false" data-done="false">
+      <header class="guide__card-head">
+        <span class="guide__counter" data-guide-counter>Paso 1 de {steps.length}</span>
+        <span class="guide__size">{info.sizeCode}, {info.dims.l} × {info.dims.w} × {info.dims.h} in</span>
+      </header>
+
+      <svg
+        class="guide__svg"
+        viewBox={`${view.x} ${view.y} ${view.w} ${view.h}`}
+        role="img"
+        aria-label={`Caja en isométrico que se arma paso a paso: ${info.titulo.toLowerCase()}`}
+        focusable="false"
+      >
+        <defs>
+          <filter id={`${uid}-blur`} x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation={blur}></feGaussianBlur>
+          </filter>
+        </defs>
+        <g class="guide__mat" aria-hidden="true">
+          <path d={mat.side} fill={MAT_COLORS.side}></path>
+          <path d={mat.front} fill={MAT_COLORS.front}></path>
+          <path d={mat.top} fill={MAT_COLORS.top} stroke={MAT_COLORS.line} stroke-opacity="0.5" vector-effect="non-scaling-stroke"></path>
+          <path d={mat.minor} fill="none" stroke={MAT_COLORS.line} stroke-opacity="0.2" stroke-width="0.6" vector-effect="non-scaling-stroke"></path>
+          <path d={mat.major} fill="none" stroke={MAT_COLORS.line} stroke-opacity="0.42" stroke-width="0.8" vector-effect="non-scaling-stroke"></path>
+          <path d={mat.ticks} fill="none" stroke={MAT_COLORS.line} stroke-opacity="0.75" stroke-width="0.8" vector-effect="non-scaling-stroke"></path>
+        </g>
+        <path data-shadow d={frame.shadow} fill="#2A1430" opacity={frame.shadowOpacity} filter={`url(#${uid}-blur)`}></path>
+        <g data-faces>
+          {
+            frame.faces.map((f) => (
+              <g data-poly={f.id} style={f.hidden ? 'display:none' : f.opacity !== undefined ? `opacity:${f.opacity}` : undefined}>
+                <path data-face={f.id} d={f.d} fill={f.fill} class="guide__face" vector-effect="non-scaling-stroke" />
+                {f.hinge && <path data-hinge d={f.hinge} class:list={['guide__hinge', { 'is-active': f.active }]} vector-effect="non-scaling-stroke" />}
+              </g>
+            ))
+          }
+        </g>
+      </svg>
+
+      <div class="guide__done" data-guide-done aria-hidden="true">
+        <span class="guide__burst">
+          {Array.from({ length: 10 }, (_, i) => <i style={`--a:${i * 36}deg`}></i>)}
+        </span>
+        <span class="guide__badge">
+          <svg viewBox="0 0 20 20" focusable="false"><path d="M5 10.5l3.2 3.2L15 6.8"></path></svg>
+          ¡Lista para enviar!
+        </span>
+      </div>
+
+      <footer class="guide__card-foot">
+        <span class="guide__hint">
+          <kbd aria-hidden="true">←</kbd><kbd aria-hidden="true">→</kbd> para avanzar o volver
+        </span>
+        <span class="guide__readout" data-guide-readout>{readout(info.kind, undefined, params)}</span>
+      </footer>
+    </figure>
+
+    <div class="guide__controls">
+      <button type="button" class="guide__btn" data-guide-prev disabled>
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M12 4.5L6.5 10l5.5 5.5"></path></svg>
+        Anterior
+      </button>
+      <div
+        class="guide__progress"
+        data-guide-progress
+        role="progressbar"
+        aria-label="Progreso de la guía"
+        aria-valuemin="1"
+        aria-valuemax={steps.length}
+        aria-valuenow="1"
+      >
+        <span data-guide-bar style={`transform:scaleX(${1 / steps.length})`}></span>
+      </div>
+      <button type="button" class="guide__btn guide__btn--next" data-guide-next>
+        Siguiente
+        <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M8 4.5l5.5 5.5L8 15.5"></path></svg>
+      </button>
+    </div>
+    <p class="sr-only" aria-live="polite" data-guide-live></p>
+  </div>
+
+  <ol class="guide__steps">
+    {
+      steps.map((s, i) => (
+        <li>
+          <button
+            type="button"
+            class="guide__step"
+            data-guide-step
+            data-pose={s.pose}
+            data-state={i === 0 ? 'current' : 'todo'}
+            aria-current={i === 0 ? 'step' : undefined}
+          >
+            <span class="guide__num" aria-hidden="true">
+              <span class="guide__num-n">{s.n}</span>
+              <svg viewBox="0 0 20 20" focusable="false"><path d="M5 10.5l3.2 3.2L15 6.8"></path></svg>
+            </span>
+            <span class="guide__step-body">
+              <span class="guide__step-title" data-step-title>{s.titulo}</span>
+              <span class="guide__step-text">{s.texto}</span>
+            </span>
+          </button>
+        </li>
+      ))
+    }
+  </ol>
+</div>
+
+<script>
+  import { mountGuide } from '../../scripts/guide';
+  document.querySelectorAll<HTMLElement>('[data-guide]').forEach(mountGuide);
+</script>
+
+<style>
+  .guide {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    gap: var(--s-8) var(--s-12);
+    align-items: start;
+  }
+  .guide__stage {
+    position: sticky;
+    top: 150px;
+    display: grid;
+    gap: var(--s-4);
+  }
+
+  /* figure card */
+  .guide__card {
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    border-radius: 32px;
+    background: color-mix(in srgb, var(--c-crema) 55%, #fff);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-kraft) 38%, transparent);
+  }
+  .guide__card-head,
+  .guide__card-foot {
+    position: absolute;
+    inset-inline: 0;
+    z-index: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--s-4);
+    padding: var(--s-4) var(--s-6);
+    pointer-events: none;
+  }
+  .guide__card-head {
+    top: 0;
+  }
+  .guide__card-foot {
+    bottom: 0;
+  }
+  .guide__counter {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-lg);
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .guide__size,
+  .guide__hint,
+  .guide__readout {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: color-mix(in srgb, var(--c-ciruela) 66%, var(--c-crema));
+    font-variant-numeric: tabular-nums;
+  }
+  .guide__readout {
+    padding: 0.3rem 0.7rem;
+    border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--c-crema) 70%, #fff);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-kraft) 45%, transparent);
+    color: var(--c-ciruela);
+  }
+  .guide__hint kbd {
+    display: inline-grid;
+    place-items: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    margin-right: 0.2rem;
+    border-radius: 6px;
+    background: #fff;
+    box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--c-kraft) 45%, transparent), inset 0 0 0 1px color-mix(in srgb, var(--c-kraft) 45%, transparent);
+    font: inherit;
+    color: var(--c-ciruela);
+  }
+  .guide__svg {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1.3;
+    height: auto;
+  }
+  .guide__face {
+    stroke: #7e5e3e;
+    stroke-width: 0.9;
+    stroke-linejoin: round;
+  }
+  .guide__hinge {
+    fill: none;
+    stroke: #7e5e3e;
+    stroke-opacity: 0.7;
+    stroke-width: 0.9;
+    stroke-linecap: round;
+    transition: stroke 0.4s ease, stroke-opacity 0.4s ease, stroke-width 0.4s ease;
+  }
+  .guide__hinge.is-active {
+    stroke: var(--c-lima);
+    stroke-opacity: 1;
+    stroke-width: 3;
+    filter: drop-shadow(0 0 0.6px rgba(42, 20, 48, 0.55));
+  }
+
+  /* celebration */
+  .guide__done {
+    position: absolute;
+    inset: auto 0 18% 0;
+    z-index: 3;
+    display: none;
+    justify-items: center;
+    pointer-events: none;
+  }
+  [data-done='true'] .guide__done {
+    display: grid;
+  }
+  .guide__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: 0.6rem 1.1rem 0.6rem 0.75rem;
+    border-radius: var(--r-pill);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-body);
+    letter-spacing: -0.01em;
+    box-shadow: 0 10px 30px -12px rgba(42, 20, 48, 0.55);
+    animation: guide-pop 0.6s cubic-bezier(0.2, 1.4, 0.4, 1) both;
+  }
+  .guide__badge svg {
+    width: 22px;
+    height: 22px;
+    padding: 3px;
+    border-radius: 50%;
+    background: var(--c-lima);
+    fill: none;
+    stroke: var(--c-ciruela);
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .guide__burst {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+  }
+  .guide__burst i {
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    width: 4px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--c-lima);
+    transform: rotate(var(--a)) translateY(-70px) scaleY(0.2);
+    opacity: 0;
+    animation: guide-burst 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) 0.1s both;
+  }
+  @keyframes guide-pop {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.85);
+    }
+  }
+  @keyframes guide-burst {
+    30% {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+      transform: rotate(var(--a)) translateY(-120px) scaleY(1);
+    }
+  }
+
+  /* controls */
+  .guide__controls {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-4);
+  }
+  .guide__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 48px;
+    padding: 0 1.15rem;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: transparent;
+    box-shadow: inset 0 0 0 1.5px var(--c-ciruela);
+    color: var(--c-ciruela);
+    font: 600 var(--fs-sm) / 1 var(--f-text);
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, opacity 0.2s ease;
+  }
+  .guide__btn svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .guide__btn--next {
+    background: var(--c-lima);
+    box-shadow: none;
+  }
+  .guide__btn:not(:disabled):hover {
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .guide__btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+  .guide__btn:focus-visible,
+  .guide__step:focus-visible {
+    outline: 3px solid var(--c-ciruela);
+    outline-offset: 3px;
+  }
+  .guide__progress {
+    height: 8px;
+    border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--c-kraft) 26%, transparent);
+    overflow: hidden;
+  }
+  .guide__progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--c-lima);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c-ciruela) 18%, transparent);
+    transform-origin: left center;
+    transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  /* step list */
+  .guide__steps {
+    display: grid;
+    gap: var(--s-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+  }
+  .guide__step {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--s-4);
+    width: 100%;
+    padding: var(--s-4) var(--s-4) var(--s-4) var(--s-3);
+    border: 0;
+    border-radius: 20px;
+    background: transparent;
+    color: var(--c-ciruela);
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  .guide__step:hover {
+    background: color-mix(in srgb, var(--c-kraft-claro) 32%, transparent);
+  }
+  .guide__num {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--c-kraft) 80%, transparent);
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    font-variant-numeric: tabular-nums;
+    transition: background 0.3s ease, box-shadow 0.3s ease;
+  }
+  .guide__num svg {
+    display: none;
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .guide__step-body {
+    display: grid;
+    gap: var(--s-1);
+    padding-top: 0.45rem;
+  }
+  .guide__step-title {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: 1.2rem;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+  .guide__step-text {
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-ciruela) 72%, var(--c-crema));
+  }
+  .guide__step[data-state='done'] .guide__num {
+    background: color-mix(in srgb, var(--c-kraft-claro) 55%, transparent);
+    box-shadow: none;
+  }
+  .guide__step[data-state='done'] .guide__num-n {
+    display: none;
+  }
+  .guide__step[data-state='done'] .guide__num svg {
+    display: block;
+  }
+  .guide__step[data-state='todo'] .guide__step-text {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .guide__step[aria-current='step'] {
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .guide__step[aria-current='step'] .guide__num {
+    background: var(--c-lima);
+    box-shadow: none;
+    color: var(--c-ciruela);
+  }
+  .guide__step[aria-current='step'] .guide__step-text {
+    color: color-mix(in srgb, var(--c-crema) 82%, var(--c-ciruela));
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .guide__badge,
+    .guide__burst i {
+      animation: none;
+    }
+    .guide__burst {
+      display: none;
+    }
+    .guide__progress span,
+    .guide__hinge {
+      transition: none;
+    }
+  }
+
+  @media (max-width: 1000px) {
+    .guide {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .guide__stage {
+      position: static;
+    }
+  }
+  @media (max-width: 560px) {
+    .guide__card {
+      border-radius: 22px;
+    }
+    .guide__card-head,
+    .guide__card-foot {
+      padding: var(--s-3) var(--s-4);
+    }
+    .guide__svg {
+      aspect-ratio: 1.05;
+    }
+    .guide__hint,
+    .guide__size {
+      display: none;
+    }
+    .guide__btn {
+      padding: 0 0.9rem;
+    }
+  }
+</style>

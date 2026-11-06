@@ -1,0 +1,256 @@
+---
+/**
+ * Flat dieline (despiece) of a box style: cut lines solid, creases dashed in
+ * die-maker red, overall blank size in inches and a Spanish legend.
+ * Geometry lives in src/data/dielines.ts.
+ */
+import type { BoxStyle } from '../../data/categories';
+import { getDieline, formatInches, type Dims } from '../../data/dielines';
+
+interface Props {
+  style: BoxStyle;
+  /** Inside dimensions in inches; defaults to the style's main size. */
+  dims?: Dims;
+  /** Size code shown in the caption, e.g. "M-0906". */
+  code?: string;
+  class?: string;
+}
+
+const { style, dims, code, class: className } = Astro.props;
+const d = getDieline(style, dims);
+const FOLD = '#D6453D'; // die-maker red: functional colour, used only inside dielines
+const fs = d.fontSize;
+const [vx, vy, vw, vh] = d.viewBox.split(' ').map(Number);
+const inside = `${formatInches(d.dims.l).replace(' in', '')} × ${formatInches(d.dims.w).replace(' in', '')} × ${formatInches(d.dims.h)}`;
+const flat = `${formatInches(d.flat.w).replace(' in', '')} × ${formatInches(d.flat.h)}`;
+const name = `Despiece de ${d.name.toLowerCase()}, caja armada de ${inside}, plancha de ${flat}`;
+const tick = fs * 0.55;
+---
+
+<figure class:list={['dieline', className]} data-dieline-figure data-style={style}>
+  <div class="dieline__sheet">
+    <svg
+      viewBox={d.viewBox}
+      role="img"
+      aria-label={name}
+      data-dieline
+      data-style={style}
+      preserveAspectRatio="xMidYMid meet"
+      focusable="false"
+    >
+      <defs>
+        <pattern id={`dl-grid-${style}`} width="1" height="1" patternUnits="userSpaceOnUse">
+          <path d="M1 0H0V1" fill="none" stroke="#C9A27A" stroke-opacity="0.22" stroke-width="0.6" vector-effect="non-scaling-stroke"></path>
+        </pattern>
+      </defs>
+      <rect x={vx} y={vy} width={vw} height={vh} fill={`url(#dl-grid-${style})`}></rect>
+
+      <!-- board: every cut joined, holes knocked out -->
+      <path class="dieline__board" d={d.cuts.join(' ')} fill-rule="evenodd"></path>
+
+      <g class="dieline__labels" font-size={fs}>
+        {
+          d.labels.map((lb) =>
+            lb.vertical ? (
+              <text x={lb.x} y={lb.y} transform={`rotate(-90 ${lb.x} ${lb.y})`} text-anchor="middle" dominant-baseline="central">
+                {lb.text}
+              </text>
+            ) : (
+              <text x={lb.x} y={lb.y} text-anchor="middle" dominant-baseline="central">
+                {lb.text}
+              </text>
+            ),
+          )
+        }
+      </g>
+
+      <g class="dieline__folds" stroke={FOLD}>
+        {d.folds.map((p) => <path d={p} data-fold vector-effect="non-scaling-stroke" />)}
+      </g>
+      <g class="dieline__cuts">
+        {d.cuts.map((p) => <path d={p} data-cut vector-effect="non-scaling-stroke" />)}
+      </g>
+
+      <g class="dieline__measures" font-size={fs * 0.92}>
+        {
+          d.measures.map((m) =>
+            m.axis === 'x' ? (
+              <g data-measure="ancho">
+                <path
+                  d={`M${m.from} ${m.at}H${m.to} M${m.from} ${m.at - tick}V${m.at + tick} M${m.to} ${m.at - tick}V${m.at + tick}`}
+                  vector-effect="non-scaling-stroke"
+                />
+                <rect x={(m.from + m.to) / 2 - fs * 3.2} y={m.at - fs * 0.75} width={fs * 6.4} height={fs * 1.5} rx={fs * 0.3} />
+                <text x={(m.from + m.to) / 2} y={m.at} text-anchor="middle" dominant-baseline="central">
+                  {m.text}
+                </text>
+              </g>
+            ) : (
+              <g data-measure="alto">
+                <path
+                  d={`M${m.at} ${m.from}V${m.to} M${m.at - tick} ${m.from}H${m.at + tick} M${m.at - tick} ${m.to}H${m.at + tick}`}
+                  vector-effect="non-scaling-stroke"
+                />
+                <g transform={`rotate(-90 ${m.at} ${(m.from + m.to) / 2})`}>
+                  <rect x={m.at - fs * 3.2} y={(m.from + m.to) / 2 - fs * 0.75} width={fs * 6.4} height={fs * 1.5} rx={fs * 0.3} />
+                  <text x={m.at} y={(m.from + m.to) / 2} text-anchor="middle" dominant-baseline="central">
+                    {m.text}
+                  </text>
+                </g>
+              </g>
+            ),
+          )
+        }
+      </g>
+    </svg>
+  </div>
+
+  <figcaption class="dieline__legend">
+    <ul>
+      <li>
+        <svg viewBox="0 0 36 8" aria-hidden="true" focusable="false"><path d="M1 4H35" class="dieline__key-cut"></path></svg>
+        <span>Corte</span>
+      </li>
+      <li>
+        <svg viewBox="0 0 36 8" aria-hidden="true" focusable="false"><path d="M1 4H35" stroke={FOLD} class="dieline__key-fold"></path></svg>
+        <span>Pliegue</span>
+      </li>
+    </ul>
+    <dl>
+      <div>
+        <dt>Caja armada{code ? ` ${code}` : ''}</dt>
+        <dd>{inside}</dd>
+      </div>
+      <div>
+        <dt>Plancha</dt>
+        <dd>{flat}</dd>
+      </div>
+      <div>
+        <dt>Estructura</dt>
+        <dd>{d.code}</dd>
+      </div>
+    </dl>
+    <slot />
+  </figcaption>
+</figure>
+
+<style>
+  .dieline {
+    margin: 0;
+    display: grid;
+    gap: var(--s-4);
+  }
+  .dieline__sheet {
+    padding: clamp(0.75rem, 2.5vw, 2.25rem);
+    border-radius: 28px;
+    background: color-mix(in srgb, var(--c-crema) 45%, #fff);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--c-kraft) 40%, transparent),
+      0 1px 0 color-mix(in srgb, var(--c-kraft-claro) 60%, transparent);
+  }
+  .dieline svg[data-dieline] {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 620px;
+  }
+  .dieline__board {
+    fill: color-mix(in srgb, var(--c-kraft-claro) 42%, var(--c-crema));
+  }
+  .dieline__cuts path {
+    fill: none;
+    stroke: var(--c-ciruela);
+    stroke-width: 1.35;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+  }
+  .dieline__folds path {
+    fill: none;
+    stroke-width: 1.15;
+    stroke-dasharray: 6 4;
+    stroke-linecap: butt;
+  }
+  .dieline__labels text {
+    font-family: var(--f-text);
+    font-weight: 600;
+    fill: var(--c-ciruela);
+    fill-opacity: 0.42;
+  }
+  .dieline__measures path {
+    fill: none;
+    stroke: var(--c-ciruela-claro);
+    stroke-width: 1;
+  }
+  .dieline__measures rect {
+    fill: color-mix(in srgb, var(--c-crema) 45%, #fff);
+  }
+  .dieline__measures text {
+    font-family: var(--f-text);
+    font-weight: 700;
+    fill: var(--c-ciruela);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .dieline__legend {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3) var(--s-8);
+    font-size: var(--fs-sm);
+  }
+  .dieline__legend ul {
+    display: flex;
+    gap: var(--s-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-weight: 600;
+  }
+  .dieline__legend li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .dieline__legend li svg {
+    width: 36px;
+    height: 8px;
+  }
+  .dieline__key-cut {
+    stroke: var(--c-ciruela);
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+  .dieline__key-fold {
+    stroke-width: 2;
+    stroke-dasharray: 6 4;
+  }
+  .dieline__legend dl {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-6);
+    margin: 0;
+  }
+  .dieline__legend dl div {
+    display: flex;
+    gap: var(--s-2);
+    align-items: baseline;
+  }
+  .dieline__legend dt {
+    color: color-mix(in srgb, var(--c-ciruela) 62%, var(--c-crema));
+    font-weight: 500;
+  }
+  .dieline__legend dd {
+    margin: 0;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  @media (max-width: 760px) {
+    .dieline__sheet {
+      border-radius: 20px;
+    }
+    .dieline__measures {
+      display: none;
+    }
+  }
+</style>

@@ -9,6 +9,8 @@ import LogoPreview from '../../../components/site/LogoPreview.astro';
 import Configurator from '../../../components/site/Configurator.astro';
 import CategoryCard from '../../../components/site/CategoryCard.astro';
 import Icon from '../../../components/brand/Icon.astro';
+import Dieline from '../../../components/boxes/Dieline.astro';
+import { hasGuide } from '../../../data/guides';
 import { categories, type Category } from '../../../data/categories';
 
 export function getStaticPaths() {
@@ -146,7 +148,15 @@ const related = [
         <p class="pdp__dieline-lede">
           La caja extendida, con sus cortes y pliegues, para que tu diseñador ubique el logo con precisión.
         </p>
-        <div class="pdp__dieline-placeholder" data-dieline-placeholder aria-hidden="true"></div>
+        <Dieline style={category.style} dims={category.sizes[0]} code={category.sizes[0].code}>
+          {
+            hasGuide(category.slug) && (
+              <a class="pdp__link" href={`/tienda/guia/${category.slug}`}>
+                Ver guía de armado
+              </a>
+            )
+          }
+        </Dieline>
       </div>
     </section>
 

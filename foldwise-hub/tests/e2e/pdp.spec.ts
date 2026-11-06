@@ -133,6 +133,22 @@ test.describe('product pages scope', () => {
     await expect(page.locator('[data-unit-price]')).toHaveText('US$ 1.37');
   });
 
+  for (const slug of ['cajas-mailer', 'cajas-de-envio']) {
+    test(`${slug}: the dieline renders in the slot, with cut and fold paths, and links to its guide`, async ({ page }) => {
+      await page.goto(`/tienda/producto/${slug}`);
+      const slot = page.locator('main [data-dieline-slot]');
+      await expect(slot.locator('h2')).toHaveText('Despiece');
+      const svg = slot.locator('svg[data-dieline]');
+      await expect(svg).toBeVisible();
+      expect(await svg.locator('path[data-cut]').count()).toBeGreaterThanOrEqual(1);
+      expect(await svg.locator('path[data-fold]').count()).toBeGreaterThanOrEqual(1);
+      await expect(slot.getByText('Corte', { exact: true })).toBeVisible();
+      await expect(slot.getByText('Pliegue', { exact: true })).toBeVisible();
+      const link = slot.getByRole('link', { name: 'Ver guía de armado' });
+      await expect(link).toHaveAttribute('href', `/tienda/guia/${slug}`);
+    });
+  }
+
   test('non-featured families have no product page', async ({ request }) => {
     const res = await request.get('/tienda/producto/cajas-ropa');
     expect(res.status()).toBe(404);

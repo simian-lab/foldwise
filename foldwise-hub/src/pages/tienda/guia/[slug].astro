@@ -1,0 +1,255 @@
+---
+/**
+ * Assembly guide page, built only for the three families with a full guide.
+ * The folding figure and step list come from AssemblyGuide; the flat dieline
+ * closes the page so the guide and the die agree.
+ */
+import ShopLayout from '../../../layouts/ShopLayout.astro';
+import AssemblyGuide from '../../../components/boxes/AssemblyGuide.astro';
+import Dieline from '../../../components/boxes/Dieline.astro';
+import Icon from '../../../components/brand/Icon.astro';
+import { getCategory } from '../../../data/categories';
+import { GUIDE_SLUGS, guideInfo, guides, type GuideSlug } from '../../../data/guides';
+
+export function getStaticPaths() {
+  return GUIDE_SLUGS.map((slug) => ({ params: { slug }, props: { slug } }));
+}
+
+interface Props {
+  slug: GuideSlug;
+}
+
+const { slug } = Astro.props;
+const info = guideInfo[slug];
+const category = getCategory(slug)!;
+const steps = guides[slug];
+---
+
+<ShopLayout
+  title={`${info.titulo} · Foldwise`}
+  description={`${info.titulo} en ${steps.length} pasos. ${info.lede}`}
+>
+  <div class="gpage">
+    <nav class="crumbs" aria-label="Ruta de navegación">
+      <ol>
+        <li><a href="/tienda">Tienda</a></li>
+        <li><a href="/tienda/catalogo">Catálogo</a></li>
+        <li>{info.producto ? <a href={info.producto}>{category.nameEs}</a> : category.nameEs}</li>
+        <li aria-current="page">Guía de armado</li>
+      </ol>
+    </nav>
+
+    <header class="gpage__head">
+      <h1 class="gpage__title">{info.titulo}</h1>
+      <div class="gpage__intro">
+        <p class="gpage__lede">{info.lede}</p>
+        <dl class="gpage__facts">
+          <div>
+            <dt><Icon name="rapido" size={20} /> Tiempo</dt>
+            <dd>{info.minutos}</dd>
+          </div>
+          <div>
+            <dt><Icon name="armado" size={20} /> Necesitas</dt>
+            <dd>{info.necesitas.join(', ')}</dd>
+          </div>
+        </dl>
+      </div>
+    </header>
+
+    <AssemblyGuide slug={slug} />
+
+    <section class="gpage__flat" aria-labelledby="flat-title">
+      <div class="gpage__flat-head">
+        <h2 id="flat-title">Así llega, plana</h2>
+        <p>
+          El despiece de la caja que acabas de armar. Las líneas rojas punteadas son los pliegues de cada paso.
+        </p>
+      </div>
+      <Dieline style={category.style} dims={info.dims} code={info.sizeCode} />
+    </section>
+
+    <aside class="gpage__cta">
+      <p>¿Lista la caja? Ahora imagina tu logo en ella.</p>
+      {
+        info.producto ? (
+          <a class="gpage__btn" href={info.producto}>
+            Diseñar la mía
+          </a>
+        ) : (
+          <a class="gpage__btn" href="/tienda/catalogo">
+            Ver el catálogo
+          </a>
+        )
+      }
+    </aside>
+  </div>
+</ShopLayout>
+
+<style>
+  .gpage {
+    max-width: 1360px;
+    margin-inline: auto;
+    padding: 0 var(--s-8) var(--s-16);
+  }
+  .crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin: 0;
+    padding: var(--s-6) 0 var(--s-4);
+    list-style: none;
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: color-mix(in srgb, var(--c-ciruela) 65%, var(--c-crema));
+  }
+  .crumbs li + li::before {
+    content: '/';
+    margin-right: var(--s-2);
+    color: var(--c-kraft);
+  }
+  .crumbs a {
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: var(--c-ciruela);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .crumbs [aria-current] {
+    color: var(--c-ciruela);
+    font-weight: 600;
+  }
+
+  .gpage__head {
+    display: grid;
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+    gap: var(--s-6) var(--s-12);
+    align-items: end;
+    margin-bottom: var(--s-12);
+  }
+  .gpage__title {
+    max-width: 14ch;
+    font-size: clamp(2.5rem, 1.3rem + 3.6vw, 4.6rem);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+  .gpage__lede {
+    margin: 0;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-ciruela) 80%, var(--c-crema));
+  }
+  .gpage__facts {
+    display: grid;
+    gap: var(--s-2);
+    margin: var(--s-6) 0 0;
+    padding-top: var(--s-4);
+    border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+    font-size: var(--fs-sm);
+  }
+  .gpage__facts div {
+    display: grid;
+    grid-template-columns: 9.5rem minmax(0, 1fr);
+    gap: var(--s-3);
+  }
+  .gpage__facts dt {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-weight: 500;
+    color: color-mix(in srgb, var(--c-ciruela) 66%, var(--c-crema));
+  }
+  .gpage__facts dt :global(.fw-icon) {
+    color: var(--c-ciruela-claro);
+  }
+  .gpage__facts dd {
+    margin: 0;
+    font-weight: 600;
+  }
+
+  .gpage__flat {
+    margin-top: var(--s-24);
+    padding-top: var(--s-12);
+    border-top: 1px solid color-mix(in srgb, var(--c-kraft) 35%, transparent);
+  }
+  .gpage__flat-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--s-3) var(--s-8);
+    margin-bottom: var(--s-6);
+  }
+  .gpage__flat-head h2 {
+    font-size: var(--fs-xl);
+  }
+  .gpage__flat-head p {
+    margin: 0;
+    max-width: 52ch;
+    color: color-mix(in srgb, var(--c-ciruela) 75%, var(--c-crema));
+  }
+
+  .gpage__cta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4) var(--s-8);
+    margin-top: var(--s-16);
+    padding: var(--s-8) var(--s-8) var(--s-8) var(--s-12);
+    border-radius: 32px;
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .gpage__cta p {
+    margin: 0;
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-lg);
+    letter-spacing: -0.02em;
+  }
+  .gpage__btn {
+    display: inline-flex;
+    align-items: center;
+    min-height: 52px;
+    padding: 0 1.6rem;
+    border-radius: var(--r-pill);
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+    font-weight: 700;
+    text-decoration: none;
+  }
+  .gpage__btn:hover {
+    background: var(--c-crema);
+  }
+  .gpage__btn:focus-visible {
+    outline: 3px solid var(--c-lima);
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 1000px) {
+    .gpage__head {
+      grid-template-columns: minmax(0, 1fr);
+      align-items: start;
+    }
+  }
+  @media (max-width: 760px) {
+    .gpage {
+      padding-inline: var(--s-4);
+    }
+    .gpage__head {
+      margin-bottom: var(--s-8);
+    }
+    .gpage__facts div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-1);
+    }
+    .gpage__flat {
+      margin-top: var(--s-16);
+    }
+    .gpage__cta {
+      padding: var(--s-6);
+      border-radius: 22px;
+    }
+  }
+</style>
