@@ -45,10 +45,11 @@ Log in once (interactive):
 sf auth login
 ```
 
-Publish the built folder as a **preview** that only the team can open:
+Publish the built folder as a **preview** that only the team can open. Run it **from `foldwise-hub/`** (where step 1 left you), so the path is `dist`:
 
 ```bash
-sf publish foldwise-hub/dist \
+# cwd: foldwise-hub/
+sf publish dist \
   --target preview \
   --access team \
   -m "Foldwise preview: feature/foldwise-realista"
@@ -58,9 +59,10 @@ sf publish foldwise-hub/dist \
 - Use `--access private` to keep it to yourself, or `--access public` only if the link may circulate freely.
 - To publish the illustrated version for side-by-side comparison, build from `v1-ilustrado` and publish it as a separate space (e.g. `--name foldwise-v1`).
 
-Alternatively, let Spacefast run the build itself:
+Alternatively, let Spacefast run the build itself (from the **repository root**):
 
 ```bash
+# cwd: repository root
 sf publish foldwise-hub --build \
   --build-command "npm run build" \
   --output-directory dist \
@@ -72,7 +74,8 @@ sf publish foldwise-hub --build \
 Create an API key (`sf api-keys create`) and expose it as `SPACEFAST_TOKEN`:
 
 ```bash
-SPACEFAST_TOKEN=*** sf publish foldwise-hub/dist --target preview --access team --json
+# cwd: foldwise-hub/
+SPACEFAST_TOKEN=*** sf publish dist --target preview --access team --json
 ```
 
 Never commit the token.
