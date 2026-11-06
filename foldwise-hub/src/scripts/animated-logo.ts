@@ -1,269 +1,531 @@
 /**
- * Foldwise animated logo.
+ * Foldwise animated logo: the true fold ("Pliegue real").
  *
- * The story (about 7 s per cycle, stylized rather than a literal dieline):
- *   1. the flat "f" draws its lime fold lines            data-state="flat"
- *   2. the three flaps fold over the stem, staggered,
- *      while the whole mark tilts in 3D                   data-state="folding"
- *   3. the f collapses into an isometric box that lands
- *      with an overshoot; lime tape runs along the lid
- *      seam and down the end, the isotype appears on
- *      the long side                                      data-state="box"
- *   4. the box lifts away and the flat f returns          data-state="flat"
+ * One piece of board, never a crossfade. The flat "f" is a die-cut: each flap
+ * turns in 3D on its own dashed crease and the stem wraps into the walls of a
+ * small box (geometry in ./fold-geometry.ts). Every frame is computed from
+ * the 3D pose: panels are projected with an orthographic camera that eases
+ * from top-down (the flat isotype, pixel-exact) to the isometric 3/4 view,
+ * and painted back to front with plane tests (Newell) on the overlapping
+ * faces. Every free cut edge carries a band of board thickness.
  *
- * Reduced motion: no timeline is built and the root shows the static isotype
- * (data-state="static").
+ *   0.0  the dashed folds draw on                    data-state="flat"
+ *   0.8  crossbar flaps rise, the stem walls fold,
+ *        the top tucks over (pushing the dust flap
+ *        in), the end lid closes                      data-state="folding"
+ *   3.4  the box is closed: lime tape seals the top
+ *        edge, the f prints on the front, a small
+ *        settle on its contact shadow                 data-state="box"
+ *   5.85 the box unfolds back into the flat f         data-state="folding" -> "flat"
  *
- * `loop` applies only to trigger="load". Hover and view triggers always play
- * exactly once. A single play rests on the complete flat isotype (fold lines
- * drawn), because the story itself ends by returning to the f.
+ * Triggers (same contract as the earlier AnimatedLogo):
+ *   load  plays on load; with `loop` it repeats (fold, hold, unfold, pause).
+ *   hover plays once per hover and returns to the flat f.
+ *   view  plays once, the first time it enters the viewport, and returns to
+ *         the flat f.
+ * Looping logos pause offscreen. Reduced motion builds no timeline and shows
+ * the static isotype (data-state="static").
+ *
+ * Small sizes (data-compact, under COMPACT_BELOW px) drop the detail that
+ * cannot read there: no fibre, stem scores, flute lines or printed f, no
+ * settle, a shorter hold and a quicker unfold. The fold itself is identical.
  */
 import { gsap } from 'gsap';
+import {
+  PANELS,
+  CREASES,
+  EDGES,
+  TAPE_EDGE,
+  CLOSED,
+  BOARD,
+  pose,
+  apply,
+  camera,
+  project,
+  affineOf,
+  paintOrder,
+  shade,
+  mix,
+  v3,
+  applyR,
+  rfPushed,
+} from './fold-geometry';
+import type { Tones, Vec3, Face, Pt } from './fold-geometry';
 
 export type AnimatedLogoTrigger = 'load' | 'hover' | 'view';
 export type AnimatedLogoState = 'static' | 'flat' | 'folding' | 'box';
+type Variant = 'crema' | 'ciruela';
 
-export interface AnimatedLogoOptions {
-  loop?: boolean;
-  trigger?: AnimatedLogoTrigger;
+/** Below this rendered size (px) the logo runs its compact version. */
+export const COMPACT_BELOW = 96;
+
+/** Key times in seconds (of the fold itself; the unfold follows END). */
+export const FOLD_TIMES = {
+  ready: 0.8, // the flat isotype is complete (folds drawn)
+  fold: 0.82,
+  box: 3.4,
+  end: 5.85,
+  compactEnd: 4.45,
+} as const;
+
+/** The unfold back runs this much faster than the fold. */
+const BACK_SPEED = { full: 1.35, compact: 1.6 } as const;
+
+export interface FoldMaterial {
+  outer: Tones;
+  inner: Tones;
+  /** Dashed creases on the inside face: the isotype's own fold colour. */
+  creases: string;
+  grain: number;
+  shadow: string;
+  shadowAlpha: number;
+  rim: string;
+}
+
+const KRAFT: Tones = { top: '#E2C7A0', front: '#C9A27A', side: '#A9845E', inner: '#8C6B49', edge: '#7E5E3E' };
+
+/**
+ * `variant` names the background. Both close into a kraft box (the product)
+ * printed with the plum f; only the inside face, the flat f, changes so it
+ * matches the static isotype on that background: plum on crema, crema on
+ * ciruela.
+ */
+export const FOLD_MATERIALS: Record<Variant, FoldMaterial> = {
+  crema: {
+    outer: KRAFT,
+    inner: { top: '#3A1D3F', front: '#32193A', side: '#2A1430', inner: '#1D0D21', edge: '#160818' },
+    creases: '#C8F25A',
+    grain: 0.9,
+    shadow: '#2A1430',
+    shadowAlpha: 0.42,
+    rim: '#FFF8EC',
+  },
+  ciruela: {
+    outer: KRAFT,
+    inner: { top: '#F6F1E7', front: '#E9DFCB', side: '#DED2BC', inner: '#C7B89D', edge: '#B3A386' },
+    creases: '#3A1D3F',
+    grain: 0.9,
+    shadow: '#0E0411',
+    shadowAlpha: 0.7,
+    rim: '#FFF8EC',
+  },
+};
+
+/**
+ * The f printed on the box: plum ink with lime folds (lime reads on plum where
+ * a same-colour fold would vanish). The folds are finer than the isotype's
+ * so they mark the creases without cutting the crossbars off the stem.
+ */
+export const PRINT = { ink: '#3A1D3F', folds: '#C8F25A', foldWidth: 1.2, foldDash: '2.2 2' } as const;
+
+/**
+ * Placement of the printed f on the front wall (P4: x 15..25, flat y 27 at
+ * the floor to 34 at the top), left of the tape, as an SVG matrix in P4's
+ * flat coordinates. y is flipped because the outside face is seen mirrored.
+ */
+export function printMatrix(): string {
+  const K = 6 / 38; // the f is 38 tall on its 46 grid: 6 units on a 7-high wall
+  const left = 18.25 - (28 * K) / 2; // centred between the wall's edge and the tape
+  const top = 33.5;
+  return `matrix(${K.toFixed(5)} 0 0 ${(-K).toFixed(5)} ${(left - 8 * K).toFixed(4)} ${(top + 4 * K).toFixed(4)})`;
 }
 
 /* ------------------------------------------------------------------ */
-/* Isometric box geometry (shared by the SSR markup and the timeline)  */
+/* Fibre grain: one seeded tile, baked once per page                  */
 /* ------------------------------------------------------------------ */
 
-type Pt = readonly [number, number];
-
-const COS30 = Math.cos(Math.PI / 6);
-const U_R: Pt = [COS30, 0.5]; // long axis, runs down to the right
-const U_L: Pt = [-COS30, 0.5]; // short axis, runs down to the left
-
-const add = (p: Pt, q: Pt): Pt => [p[0] + q[0], p[1] + q[1]];
-const mul = (p: Pt, k: number): Pt => [p[0] * k, p[1] * k];
-const mid = (p: Pt, q: Pt): Pt => [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
-const down = (p: Pt, h: number): Pt => [p[0], p[1] + h];
-const fmt = (p: Pt) => `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
-export const pointsOf = (pts: readonly Pt[]) => pts.map(fmt).join(' ');
-
-/** Box in a 200 x 200 viewBox: short side L, long side R, height H. */
-export function boxGeometry() {
-  const L = 56;
-  const R = 74;
-  const H = 58;
-  const T: Pt = [92.2, 32];
-  const Lc = add(T, mul(U_L, L));
-  const Rc = add(T, mul(U_R, R));
-  const F = add(Lc, mul(U_R, R));
-
-  // Lid seam where the two major flaps meet, along the long axis.
-  const seamA = mid(T, Lc);
-  const seamB = mid(Rc, F);
-
-  const tapeHalf = 6.2;
-  const tapeDrop = 27;
-
-  // Mark on the long (front-left) face, mapped onto the face plane.
-  const markScale = 0.9;
-  const markCenter = down(add(Lc, mul(U_R, R / 2)), H / 2 + 1);
-  const a = U_R[0] * markScale;
-  const b = U_R[1] * markScale;
-  const d = markScale;
-  const markMatrix = `matrix(${a.toFixed(4)} ${b.toFixed(4)} 0 ${d.toFixed(4)} ${(markCenter[0] - a * 22).toFixed(2)} ${(markCenter[1] - b * 22 - d * 23).toFixed(2)})`;
-
-  const floorCenter = mid(down(Lc, H), down(Rc, H));
-
-  return {
-    L,
-    R,
-    H,
-    top: [T, Rc, F, Lc] as Pt[],
-    left: [Lc, F, down(F, H), down(Lc, H)] as Pt[],
-    right: [F, Rc, down(Rc, H), down(F, H)] as Pt[],
-    rimEdges: [Lc, F, Rc] as Pt[],
-    cornerEdge: [F, down(F, H)] as Pt[],
-    seam: [seamA, seamB] as Pt[],
-    seamA,
-    seamB,
-    tapeHalf,
-    tapeDrop,
-    markMatrix,
-    floorCenter,
-    origin: `${floorCenter[0].toFixed(2)} ${floorCenter[1].toFixed(2)}`,
+let grainUrl: string | null = null;
+function grainTile(): string {
+  if (grainUrl) return grainUrl;
+  const N = 160;
+  const c = document.createElement('canvas');
+  c.width = c.height = N;
+  const g = c.getContext('2d');
+  if (!g) return (grainUrl = '');
+  let seed = 7;
+  const rnd = () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
+  // speckle
+  const img = g.createImageData(N, N);
+  for (let i = 0; i < N * N; i++) {
+    const r = rnd();
+    const dark = r < 0.5;
+    img.data[i * 4] = dark ? 70 : 255;
+    img.data[i * 4 + 1] = dark ? 46 : 249;
+    img.data[i * 4 + 2] = dark ? 22 : 232;
+    img.data[i * 4 + 3] = Math.round(rnd() * (dark ? 34 : 22));
+  }
+  g.putImageData(img, 0, 0);
+  // fine fibres, mostly along the board's machine direction, wrapped
+  g.lineCap = 'round';
+  for (let i = 0; i < 900; i++) {
+    const x = rnd() * N;
+    const y = rnd() * N;
+    const len = 2 + rnd() * 7;
+    const a = (rnd() - 0.5) * 0.9;
+    const dark = rnd() < 0.6;
+    g.strokeStyle = dark ? `rgba(78,52,26,${0.08 + rnd() * 0.14})` : `rgba(255,248,230,${0.07 + rnd() * 0.12})`;
+    g.lineWidth = 0.5 + rnd() * 0.6;
+    for (const ox of [-N, 0, N])
+      for (const oy of [-N, 0, N]) {
+        g.beginPath();
+        g.moveTo(x + ox, y + oy);
+        g.lineTo(x + ox + Math.cos(a) * len, y + oy + Math.sin(a) * len);
+        g.stroke();
+      }
+  }
+  return (grainUrl = c.toDataURL('image/png'));
 }
 
-/** Tape polygons for a draw progress p in [0, 1]: along the lid, then down the end face. */
-export function tapeAt(p: number) {
-  const g = boxGeometry();
-  const total = g.R + g.tapeDrop;
-  const run = Math.max(0, Math.min(1, p)) * total;
-  const along = Math.min(run, g.R);
-  const drop = Math.max(0, run - g.R);
-  const w = mul(U_L, g.tapeHalf);
-  const nw = mul(U_L, -g.tapeHalf);
-  const a0 = add(g.seamA, w);
-  const a1 = add(g.seamA, nw);
-  const end = add(g.seamA, mul(U_R, along));
-  const top = [a0, a1, add(end, nw), add(end, w)] as Pt[];
-  const side =
-    drop > 0
-      ? ([add(g.seamB, w), add(g.seamB, nw), down(add(g.seamB, nw), drop), down(add(g.seamB, w), drop)] as Pt[])
-      : ([g.seamB, g.seamB, g.seamB, g.seamB] as Pt[]);
-  const sheen = [add(g.seamA, mul(U_L, g.tapeHalf * 0.55)), add(end, mul(U_L, g.tapeHalf * 0.55))] as Pt[];
-  return { top: pointsOf(top), side: pointsOf(side), sheen: pointsOf(sheen) };
+/* ------------------------------------------------------------------ */
+/* Renderer                                                            */
+/* ------------------------------------------------------------------ */
+
+type FoldState = {
+  cam: number;
+  P1: number;
+  P2: number;
+  P4: number;
+  P5: number;
+  LF: number;
+  RF: number;
+  TF: number;
+  TK: number;
+  b0: number;
+  b1: number;
+  b2: number;
+  score: number;
+  tape: number;
+  ink: number;
+  lift: number;
+};
+
+const ZERO: FoldState = {
+  cam: 0, P1: 0, P2: 0, P4: 0, P5: 0, LF: 0, RF: 0, TF: 0, TK: 0,
+  b0: 0, b1: 0, b2: 0, score: 0, tape: 0, ink: 0, lift: 0,
+};
+
+const f2 = (n: number) => (Math.abs(n) < 1e-9 ? '0' : n.toFixed(3));
+const pts = (p: Pt[]) => p.map((q) => `${f2(q[0])},${f2(q[1])}`).join(' ');
+const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
+const clamp1 = (x: number) => Math.max(-1, Math.min(1, x));
+
+/** Panels that end up inside the closed box. */
+const INTERIOR = new Set(['P5', 'RF', 'TK']);
+
+const TAPE = { x0: 21.4, x1: 23.4, topFrom: 8.4, top: 4.4, front: 3.4 } as const;
+
+function createRenderer(el: HTMLElement, mat: FoldMaterial) {
+  const svg = el.querySelector<SVGSVGElement>('.alf-scene')!;
+  const facesG = svg.querySelector<SVGGElement>('.alf-faces')!;
+  const groups = new Map<string, SVGGElement>();
+  facesG.querySelectorAll<SVGGElement>('[data-face]').forEach((g) => groups.set(g.dataset.face!, g));
+  const grain = svg.querySelector<SVGImageElement>('.alf-grain-img');
+  if (grain) grain.setAttribute('href', grainTile());
+
+  const panel = PANELS.map((p) => {
+    const g = groups.get(p.id)!;
+    return {
+      def: p,
+      g,
+      base: g.querySelector<SVGPolygonElement>('.alf-base')!,
+      inner: g.querySelector<SVGGElement>('.alf-in')!,
+      outer: g.querySelector<SVGGElement>('.alf-out')!,
+      side: '' as '' | 'in' | 'out',
+      fill: '',
+    };
+  });
+  const creaseLines = Array.from(svg.querySelectorAll<SVGLineElement>('[data-crease]')).map((ln) => {
+    const c = CREASES[Number(ln.dataset.crease)];
+    const sgn = ln.dataset.half === 'c' ? 1 : -1;
+    const w = Number(ln.dataset.w);
+    const off: Pt = [c.toChild[0] * sgn * (w / 2), c.toChild[1] * sgn * (w / 2)];
+    return { ln, c, off, idx: Number(ln.dataset.crease) };
+  });
+  const bands = EDGES.map((e) => {
+    const g = groups.get(e.id)!;
+    return {
+      def: e,
+      g,
+      band: g.querySelector<SVGPolygonElement>('.alf-strip')!,
+      flute: g.querySelector<SVGPolylineElement>('.alf-flute'),
+      tape: g.querySelector<SVGPolygonElement>('.alf-tape-strip'),
+      // a band shows over a coplanar face of a lower panel (the top's front
+      // edge on the front wall) but never over the outside from a panel that
+      // ends up inside the box (glue flap, dust flap, tuck)
+      layer: PANELS.find((p) => p.id === e.panel)!.layer + (INTERIOR.has(e.panel) ? -1 : 0.5),
+      shown: true,
+      fill: '',
+    };
+  });
+  const tapeTop = svg.querySelectorAll<SVGPolygonElement>('[data-tape="top"]');
+  const tapeFront = svg.querySelectorAll<SVGPolygonElement>('[data-tape="front"]');
+  const print = svg.querySelector<SVGGElement>('.alf-print');
+  const rims = svg.querySelectorAll<SVGElement>('.alf-rim');
+  const shContact = svg.querySelector<SVGPolygonElement>('.alf-shadow-contact')!;
+  const shWide = svg.querySelector<SVGPolygonElement>('.alf-shadow-wide')!;
+  const bandTones: Tones = {
+    top: mix(mat.outer.side, mat.outer.edge, 0.2),
+    front: mix(mat.outer.side, mat.outer.edge, 0.35),
+    side: mat.outer.edge,
+    inner: mix(mat.outer.edge, '#000000', 0.25),
+    edge: mix(mat.outer.edge, '#000000', 0.35),
+  };
+  let lastOrder = '';
+
+  return function render(S: FoldState) {
+    const cam = camera(S.cam);
+    // the closing top pushes the upright dust flap in
+    const RF = Math.max(S.RF, rfPushed(S.P1));
+    const angles = { P1: S.P1, P2: S.P2, P4: S.P4, P5: S.P5, LF: S.LF, RF, TF: S.TF, TK: S.TK };
+    const T = pose(angles, S.lift);
+    const faces: Face[] = [];
+    /** How much each panel shows its inside face (+1) or outside (-1); 0 is edge-on. */
+    const facing = new Map<string, number>();
+
+    for (const p of panel) {
+      const A = affineOf(cam, T[p.def.id]);
+      p.g.setAttribute('transform', `matrix(${A.map(f2).join(' ')})`);
+      const det = A[0] * A[3] - A[1] * A[2];
+      const side = det >= 0 ? 'in' : 'out';
+      const up = applyR(T[p.def.id].R, [0, 0, 1]);
+      facing.set(p.def.id, v3.dot(up, cam.v));
+      const n: Vec3 = side === 'in' ? up : v3.mul(up, -1);
+      const tones = side === 'in' ? mat.inner : mat.outer;
+      const fill = shade(n, tones);
+      if (fill !== p.fill || side !== p.side) {
+        p.fill = fill;
+        p.base.setAttribute('fill', fill);
+        // inside: a wide stroke in its own colour closes the antialiasing seams
+        // between coplanar panels; outside: a darker tonal edge
+        p.base.setAttribute('stroke', side === 'in' ? fill : mix(fill, tones.edge, 0.5));
+      }
+      if (side !== p.side) {
+        p.side = side;
+        p.inner.style.display = side === 'in' ? '' : 'none';
+        p.outer.style.display = side === 'out' ? '' : 'none';
+        p.base.setAttribute('stroke-width', side === 'in' ? '1.4' : '0.6');
+      }
+      faces.push({ key: p.def.id, layer: p.def.layer, pts: p.def.poly.map((q) => apply(T[p.def.id], [q[0], q[1], 0])) });
+    }
+
+    // dashed creases draw on from their first point
+    const prog = [S.b0, S.b1, S.b2];
+    for (const c of creaseLines) {
+      const k = c.c.brand ? prog[c.idx] : S.score;
+      const a = c.c.a;
+      const b = c.c.b;
+      c.ln.setAttribute('x1', f2(a[0] + c.off[0]));
+      c.ln.setAttribute('y1', f2(a[1] + c.off[1]));
+      c.ln.setAttribute('x2', f2(a[0] + (b[0] - a[0]) * k + c.off[0]));
+      c.ln.setAttribute('y2', f2(a[1] + (b[1] - a[1]) * k + c.off[1]));
+      // a crease folded shut hides inside the fold (no hairline at the seam)
+      const shut = (angles[c.c.child as keyof typeof angles] ?? 0) > 75;
+      c.ln.style.visibility = k > 0.001 && !shut ? '' : 'hidden';
+    }
+
+    // tape: along the top, over the cut edge, down the front
+    const total = TAPE.top + BOARD + TAPE.front;
+    const run = clamp01(S.tape) * total;
+    const dTop = Math.min(run, TAPE.top);
+    const dEdge = Math.max(0, Math.min(run - TAPE.top, BOARD));
+    const dFront = Math.max(0, run - TAPE.top - BOARD);
+    const y0 = TAPE.topFrom;
+    const topQuad: Pt[] = [[TAPE.x0, y0], [TAPE.x1, y0], [TAPE.x1, y0 - dTop], [TAPE.x0, y0 - dTop]];
+    const frontQuad: Pt[] = [[TAPE.x0, 34], [TAPE.x1, 34], [TAPE.x1, 34 - dFront], [TAPE.x0, 34 - dFront]];
+    tapeTop.forEach((e) => {
+      e.setAttribute('points', pts(topQuad));
+      e.style.visibility = dTop > 0.01 ? '' : 'hidden';
+    });
+    tapeFront.forEach((e) => {
+      e.setAttribute('points', pts(frontQuad));
+      e.style.visibility = dFront > 0.01 ? '' : 'hidden';
+    });
+
+    // board thickness on every free cut edge. The band sits behind the face
+    // the camera sees (no lip in front of it) and swaps sides smoothly as the
+    // panel passes edge-on; it is drawn only when its outer side faces us.
+    for (const s of bands) {
+      const Tp = T[s.def.panel];
+      const outW = applyR(Tp.R, [s.def.out[0], s.def.out[1], 0]);
+      // a panel tucked inside the closed box shows none of its edges
+      const id = s.def.panel as keyof typeof angles;
+      const tucked = INTERIOR.has(id) && angles[id] >= CLOSED[id] - 4;
+      const show = !tucked && v3.dot(outW, cam.v) > 0.015;
+      if (show !== s.shown) {
+        s.shown = show;
+        s.g.style.visibility = show ? '' : 'hidden';
+      }
+      if (!show) continue;
+      const k = clamp1((facing.get(s.def.panel) ?? 1) / 0.25);
+      const lo = (-BOARD * (1 + k)) / 2;
+      const hi = (BOARD * (1 - k)) / 2;
+      // exactly on the edge, so a band lying in another panel's plane is
+      // coplanar with it and the layer rule decides
+      const eps = 0.03;
+      const [ax, ay] = s.def.a;
+      const [bx, by] = s.def.b;
+      const quad3: Vec3[] = ([[ax, ay, lo], [bx, by, lo], [bx, by, hi], [ax, ay, hi]] as Vec3[]).map((q) => apply(Tp, q));
+      s.band.setAttribute('points', pts(quad3.map((q) => project(cam, q))));
+      const fill = shade(outW, bandTones);
+      if (fill !== s.fill) {
+        s.fill = fill;
+        s.band.setAttribute('fill', fill);
+      }
+      if (s.flute) {
+        // flute: a wave between the two liners
+        const len = Math.hypot(bx - ax, by - ay);
+        const nSeg = Math.max(4, Math.round(len / 0.32));
+        const wave: Pt[] = [];
+        for (let i = 0; i <= nSeg; i++) {
+          const t = i / nSeg;
+          const z = lo + (hi - lo) * (i % 2 ? 0.78 : 0.22);
+          wave.push(project(cam, apply(Tp, [ax + (bx - ax) * t, ay + (by - ay) * t, z])));
+        }
+        s.flute.setAttribute('points', pts(wave));
+      }
+      if (s.tape) {
+        // the tape wraps the top's front edge from the outside face inward
+        const from = k < 0 ? lo : hi;
+        const to = from + (k < 0 ? 1 : -1) * dEdge;
+        const tq: Vec3[] = [
+          [TAPE.x0, 4 - eps * 1.5, from],
+          [TAPE.x1, 4 - eps * 1.5, from],
+          [TAPE.x1, 4 - eps * 1.5, to],
+          [TAPE.x0, 4 - eps * 1.5, to],
+        ];
+        s.tape.setAttribute('points', pts(tq.map((q) => project(cam, apply(Tp, q)))));
+        s.tape.style.visibility = dEdge > 0.01 ? '' : 'hidden';
+      }
+      faces.push({ key: s.def.id, layer: s.layer, pts: quad3 });
+    }
+
+    if (print) print.style.opacity = f2(clamp01(S.ink));
+    const rim = clamp01((S.TF - 70) / 20);
+    rims.forEach((r) => (r.style.opacity = f2(rim * Number(r.dataset.rim ?? 0.3))));
+
+    // painter's order (hidden bands keep their place at the back)
+    const order = paintOrder(cam, faces);
+    const key = order.join(',');
+    if (key !== lastOrder) {
+      lastOrder = key;
+      for (const k of order) facesG.appendChild(groups.get(k)!);
+    }
+
+    // contact shadow: grows as the walls rise, spreads and fades on the lift
+    const walls = clamp01((S.P2 + S.P4 + S.LF + Math.min(S.RF, 90)) / 360);
+    const foot = (grow: number): Pt[] =>
+      ([
+        [15 - grow, 19 - grow, 0],
+        [25 + grow, 19 - grow, 0],
+        [25 + grow, 27 + grow, 0],
+        [15 - grow, 27 + grow, 0],
+      ] as Vec3[]).map((q) => project(cam, q));
+    shContact.setAttribute('points', pts(foot(0.15 + S.lift * 0.5)));
+    shContact.style.opacity = f2(walls * mat.shadowAlpha * (1 - S.lift * 0.7));
+    shWide.setAttribute('points', pts(foot(1.3 + S.lift * 0.8)));
+    shWide.style.opacity = f2(walls * mat.shadowAlpha * 0.55 * (1 - S.lift * 0.35));
+  };
 }
 
 /* ------------------------------------------------------------------ */
 /* Timeline                                                            */
 /* ------------------------------------------------------------------ */
 
-/** Key times in seconds. */
-export const TIMES = {
-  fold: 0.8, // flaps start folding
-  box: 2.15, // the box has landed enough to read as a box
-  back: 5.85, // the box has left; the flat f is returning
-  end: 7.0,
-} as const;
-
 function stateAt(t: number): AnimatedLogoState {
-  if (t < TIMES.fold) return 'flat';
-  if (t < TIMES.box) return 'folding';
-  if (t < TIMES.back) return 'box';
-  return 'flat';
+  if (t < FOLD_TIMES.fold) return 'flat';
+  if (t < FOLD_TIMES.box) return 'folding';
+  return 'box';
 }
 
-function setState(el: HTMLElement, state: AnimatedLogoState) {
-  if (el.dataset.state !== state) el.dataset.state = state;
+export interface AnimatedLogoOptions {
+  loop?: boolean;
+  trigger?: AnimatedLogoTrigger;
 }
 
-/** Front face darkens as it turns away; at edge-on the kraft back shows, lit, then settles. */
-type FoldTone = { shade: string; mid: string; end: string };
-
+/**
+ * Builds the logo's timeline. The fold itself is one seekable timeline; the
+ * returned master drives it forward to the closed box and back again, so a
+ * single play always ends on the flat f.
+ */
 export function initAnimatedLogo(el: HTMLElement, opts: AnimatedLogoOptions = {}): gsap.core.Timeline {
-  // Only load-triggered logos loop; hover and view always play once.
-  const loop = (opts.trigger ?? 'load') === 'load' && (opts.loop ?? true);
-  const q = <T extends Element = SVGElement>(sel: string) => el.querySelector(sel) as T;
-  const qa = (sel: string) => Array.from(el.querySelectorAll(sel)) as SVGElement[];
+  const trigger = opts.trigger ?? 'load';
+  const loop = trigger === 'load' && (opts.loop ?? true);
+  const variant = (el.dataset.variant === 'ciruela' ? 'ciruela' : 'crema') as Variant;
+  const compact = el.dataset.compact !== undefined;
+  const render = createRenderer(el, FOLD_MATERIALS[variant]);
+  const S: FoldState = { ...ZERO };
 
-  const flat = q<HTMLElement>('.al-flat');
-  const whole = q('[data-isotype-shape]');
-  const pieces = q('.al-pieces');
-  const flaps = {
-    top: q('.al-flap--top'),
-    left: q('.al-flap--left'),
-    right: q('.al-flap--right'),
-  };
-  const folds = qa('.al-fold');
-  const box = q('.al-box-body');
-  const shadow = q('.al-shadow');
-  const tapeTop = q('.al-tape-top');
-  const tapeSide = q('.al-tape-side');
-  const tapeSheen = q('.al-tape-sheen');
-  const seam = q('.al-seam');
-  const mark = q('.al-mark');
-
-  const g = boxGeometry();
-  const markFill = getComputedStyle(flaps.top).fill;
-  const tone: FoldTone = {
-    shade: el.dataset.foldShade ?? '#2A1430',
-    mid: el.dataset.foldMid ?? '#E2C7A0',
-    end: el.dataset.foldEnd ?? '#C9A27A',
-  };
-
-  // Hinges in the 46 x 46 isotype grid.
-  gsap.set(flaps.top, { svgOrigin: '25 8' });
-  gsap.set(flaps.left, { svgOrigin: '15 23' });
-  gsap.set(flaps.right, { svgOrigin: '25 23' });
-  const foldOrigins = ['25 4', '15 19', '25 19'];
-  folds.forEach((f, i) => gsap.set(f, { svgOrigin: foldOrigins[i] }));
-  gsap.set(box, { svgOrigin: g.origin });
-  gsap.set(shadow, { svgOrigin: g.origin });
-  gsap.set(flat, { transformPerspective: 640, transformOrigin: '50% 55%' });
-
-  const tape = { p: 0 };
-  const drawTape = () => {
-    const t = tapeAt(tape.p);
-    tapeTop.setAttribute('points', t.top);
-    tapeSide.setAttribute('points', t.side);
-    tapeSheen.setAttribute('points', t.sheen);
-  };
-
-  const tl = gsap.timeline({
+  const fold = gsap.timeline({
     paused: true,
-    repeat: loop ? -1 : 0,
-    defaults: { ease: 'power2.inOut' },
+    defaults: { ease: 'power2.inOut', immediateRender: false },
     onUpdate() {
-      setState(el, stateAt(tl.time()));
+      render(S);
+      const st = stateAt(fold.time());
+      if (el.dataset.state !== st) el.dataset.state = st;
     },
   });
 
-  // 0 · reset everything the cycle touches, so every repeat starts clean.
-  tl.set(flat, { autoAlpha: 1, scale: 1, rotationX: 0, rotationY: 0, y: 0 }, 0)
-    .set(whole, { opacity: 1 }, 0)
-    .set(pieces, { opacity: 0 }, 0)
-    .set(Object.values(flaps), { scaleX: 1, skewY: 0, fill: markFill }, 0)
-    .set(box, { opacity: 0, scale: 0.45, y: 16 }, 0)
-    .set(shadow, { opacity: 0, scale: 0.6 }, 0)
-    .set(mark, { opacity: 0, y: 3 }, 0)
-    .set(seam, { opacity: 0.55 }, 0)
-    .set(tape, { p: 0, onComplete: drawTape }, 0);
+  const to = (vars: Partial<FoldState>, at: number, dur: number, ease = 'power2.inOut') => {
+    const from = Object.fromEntries(Object.keys(vars).map((k) => [k, S[k as keyof FoldState]]));
+    fold.fromTo(S, from, { ...vars, duration: dur, ease }, at);
+    Object.assign(S, vars);
+  };
 
-  // 1 · the fold lines draw, top to bottom, staggered.
-  tl.fromTo(
-    folds,
-    { scaleY: 0, opacity: 1 },
-    { scaleY: 1, duration: 0.5, ease: 'power3.out', stagger: 0.12 },
-    0.08,
-  );
+  // 1 · the isotype's dashed folds draw on, then the quieter stem scores
+  to({ b0: 1 }, 0.08, 0.45, 'power3.out');
+  to({ b1: 1 }, 0.2, 0.45, 'power3.out');
+  to({ b2: 1 }, 0.32, 0.45, 'power3.out');
+  to({ score: 1 }, 0.42, 0.38, 'power2.out');
 
-  // 2 · flaps fold over the stem while the mark tilts into space.
-  tl.addLabel('fold', TIMES.fold)
-    .set(whole, { opacity: 0 }, 'fold')
-    .set(pieces, { opacity: 1 }, 'fold')
-    .to(flat, { rotationX: 18, rotationY: -26, scale: 0.96, duration: 1.0, ease: 'power2.inOut' }, 'fold')
-    // the creases are consumed by the fold: each line retracts into its hinge
-    .to(folds, { scaleY: 0, duration: 0.3, ease: 'power2.in', stagger: 0.12 }, 'fold+=0.02');
+  // 2 · camera: from top-down to the 3/4 view, pushing in as the box forms
+  to({ cam: 1 }, 0.85, 2.65, 'power2.inOut');
+  // the crossbar flaps turn on their creases; the right one stands upright
+  // as a dust flap until the closing top pushes it in (see rfPushed)
+  to({ LF: CLOSED.LF }, 0.85, 0.8);
+  to({ RF: 90 }, 0.97, 0.9);
+  // the stem folds into the walls
+  to({ P2: CLOSED.P2, P4: CLOSED.P4 }, 1.35, 0.8);
+  to({ P5: CLOSED.P5 }, 1.8, 0.65);
+  to({ P1: CLOSED.P1 }, 2.4, 0.65);
+  // the top flap closes the end and its tongue tucks in
+  to({ TF: CLOSED.TF }, 2.6, 0.72);
+  to({ TK: CLOSED.TK }, 3.0, 0.45, 'power2.out');
 
-  const foldFlap = (flap: SVGElement, at: number, dir: 1 | -1) =>
-    tl.to(
-      flap,
-      {
-        keyframes: [
-          { scaleX: 0, skewY: dir * 9, fill: tone.shade, duration: 0.36, ease: 'power2.in' },
-          { fill: tone.mid, duration: 0 },
-          { scaleX: -1, skewY: 0, fill: tone.end, duration: 0.42, ease: 'back.out(1.6)' },
-        ],
-      },
-      at,
-    );
-  foldFlap(flaps.top, TIMES.fold + 0.1, -1);
-  foldFlap(flaps.left, TIMES.fold + 0.28, 1);
-  foldFlap(flaps.right, TIMES.fold + 0.44, -1);
+  // 3 · tape seals the edge; at full size the f prints and the box settles
+  to({ tape: 1 }, 3.5, 0.6, 'power2.inOut');
+  if (!compact) {
+    to({ ink: 1 }, 4.0, 0.55, 'power2.out');
+    to({ lift: 0.8 }, 4.4, 0.22, 'power2.out');
+    to({ lift: 0 }, 4.62, 0.2, 'power2.in');
+    to({ lift: 0.14 }, 4.82, 0.13, 'power1.out');
+    to({ lift: 0 }, 4.95, 0.13, 'power1.in');
+  }
+  const end = compact ? FOLD_TIMES.compactEnd : FOLD_TIMES.end;
+  fold.set({}, {}, end);
 
-  // 3 · collapse into the box, which lands with an overshoot.
-  tl.to(flat, { scale: 0.5, autoAlpha: 0, y: 6, duration: 0.36, ease: 'power2.in' }, 1.82)
-    .to(box, { opacity: 1, duration: 0.18, ease: 'none' }, 2.02)
-    .to(box, { scale: 1, y: 0, duration: 0.8, ease: 'back.out(2.1)' }, 2.02)
-    .to(shadow, { opacity: 1, scale: 1, duration: 0.7, ease: 'power2.out' }, 2.08)
-    // tape: along the lid seam, over the edge, down the end face
-    .to(tape, { p: 1, duration: 0.75, ease: 'power2.inOut', onUpdate: drawTape }, 2.75)
-    .to(seam, { opacity: 0, duration: 0.3, ease: 'none' }, 3.1)
-    .to(mark, { opacity: 1, y: 0, duration: 0.5, ease: 'power3.out' }, 3.35)
-    // a calm breath while it rests
-    .to(box, { y: -3.5, duration: 0.85, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 3.95)
-    .to(shadow, { scale: 0.92, opacity: 0.8, duration: 0.85, ease: 'sine.inOut', yoyo: true, repeat: 1 }, 3.95)
-    // 4 · the box lifts away, the f comes back
-    .to(box, { opacity: 0, scale: 0.9, y: -6, duration: 0.42, ease: 'power2.in' }, 5.6)
-    .to(shadow, { opacity: 0, scale: 0.7, duration: 0.42, ease: 'power2.in' }, 5.6)
-    .set(Object.values(flaps), { scaleX: 1, skewY: 0, fill: markFill }, TIMES.back)
-    .set(pieces, { opacity: 0 }, TIMES.back)
-    .set(whole, { opacity: 1 }, TIMES.back)
-    .set(folds, { scaleY: 0, opacity: 1 }, TIMES.back)
-    .set(flat, { rotationX: 0, rotationY: 0, y: 4, scale: 0.9 }, TIMES.back)
-    .to(flat, { autoAlpha: 1, scale: 1, y: 0, duration: 0.65, ease: 'power3.out' }, TIMES.back + 0.1)
-    .set({}, {}, TIMES.end);
+  // first frame: flat, nothing drawn yet
+  Object.assign(S, ZERO);
+  fold.totalTime(0);
+  render(S);
 
-  return tl;
+  // master: fold forward, then unfold back (to the complete flat isotype for
+  // a single play, to the blank start for a loop that redraws its folds)
+  const back = compact ? BACK_SPEED.compact : BACK_SPEED.full;
+  const home = loop ? 0 : FOLD_TIMES.ready;
+  const head = { t: 0 };
+  const drive = () => {
+    fold.totalTime(head.t);
+  };
+  const master = gsap.timeline({ paused: true, repeat: loop ? -1 : 0, repeatDelay: loop ? 0.35 : 0 });
+  master.to(head, { t: end, duration: end, ease: 'none', onUpdate: drive });
+  master.to(head, { t: home, duration: (end - home) / back, ease: 'none', onUpdate: drive });
+  master.addLabel('ready', FOLD_TIMES.ready);
+  return master;
 }
 
 /* ------------------------------------------------------------------ */
@@ -275,31 +537,30 @@ type LogoHost = HTMLElement & { _timeline?: gsap.core.Timeline | null };
 function mount(el: LogoHost) {
   const trigger = (el.dataset.trigger ?? 'load') as AnimatedLogoTrigger;
   const loop = trigger === 'load' && el.dataset.loop !== 'false';
-  const folds = Array.from(el.querySelectorAll('.al-fold')) as SVGElement[];
   let ctx: gsap.Context | null = null;
   let io: IntersectionObserver | null = null;
   let onEnter: (() => void) | null = null;
-  let inView = false;
-
-  const rest = () => {
-    // After a single play, finish on the complete isotype: redraw the folds.
-    // Created inside the context so stop() reverts and kills it too.
-    ctx?.add(() => gsap.to(folds, { scaleY: 1, duration: 0.45, ease: 'power3.out', stagger: 0.1 }));
-  };
+  let viewed = false;
 
   const play = () => {
     const tl = el._timeline;
     if (!tl || tl.isActive()) return;
-    // Hover and view plays begin on a complete isotype, so skip the redraw intro.
-    if (trigger === 'load') tl.restart();
-    else tl.play('fold');
+    if (trigger === 'load') {
+      tl.restart();
+      return;
+    }
+    // hover and view start from the complete flat isotype and come back to it
+    tl.play('ready');
   };
 
   const start = () => {
+    viewed = false;
+    el.dataset.alfLive = '';
     el.dataset.state = 'flat';
     ctx = gsap.context(() => {
       const tl = initAnimatedLogo(el, { loop, trigger });
-      if (!loop) tl.eventCallback('onComplete', rest);
+      // hover and view wait on the complete flat isotype
+      if (trigger !== 'load') tl.seek('ready', false);
       el._timeline = tl;
     }, el);
 
@@ -313,10 +574,11 @@ function mount(el: LogoHost) {
       ([entry]) => {
         const tl = el._timeline;
         if (!tl) return;
-        inView = entry.isIntersecting;
-        if (inView) {
-          if (trigger === 'view' && tl.progress() === 0) play();
-          else if (loop && tl.paused() && tl.progress() > 0) tl.resume();
+        if (entry.isIntersecting) {
+          if (trigger === 'view' && !viewed) {
+            viewed = true;
+            play();
+          } else if (loop && tl.paused() && tl.progress() > 0 && el.dataset.alfHeld === undefined) tl.resume();
         } else if (loop && tl.isActive()) {
           tl.pause();
         }
@@ -338,6 +600,7 @@ function mount(el: LogoHost) {
     ctx?.revert();
     ctx = null;
     el._timeline = null;
+    delete el.dataset.alfLive;
     el.dataset.state = 'static';
   };
 
@@ -349,8 +612,8 @@ function mount(el: LogoHost) {
 
 /** Mounts every `[data-animated-logo]` on the page once. */
 export function mountAnimatedLogos(root: ParentNode = document) {
-  root.querySelectorAll<LogoHost>('[data-animated-logo]:not([data-al-mounted])').forEach((el) => {
-    el.dataset.alMounted = '';
+  root.querySelectorAll<LogoHost>('[data-animated-logo]:not([data-alf-mounted])').forEach((el) => {
+    el.dataset.alfMounted = '';
     mount(el);
   });
 }

@@ -1,28 +1,29 @@
 ---
 /**
- * Side-by-side review of the animated logo: the current crossfade version
- * against the true-fold prototype ("A · Pliegue real"), on both backgrounds,
- * with shared playback controls. Not linked from the manual yet.
+ * Side-by-side review of the animated logo: the earlier crossfade version
+ * (AnimatedLogoClassic, kept only for this page) against the true fold now
+ * used across the site (AnimatedLogo), on both backgrounds, with shared
+ * playback controls.
  */
 import HubLayout from '../../layouts/HubLayout.astro';
+import AnimatedLogoClassic from '../../components/brand/AnimatedLogoClassic.astro';
 import AnimatedLogo from '../../components/brand/AnimatedLogo.astro';
-import AnimatedLogoFold from '../../components/brand/AnimatedLogoFold.astro';
 
 const rows = [
   { variant: 'crema', title: 'Sobre crema', note: 'Caja kraft con la f en tinta ciruela.' },
-  { variant: 'ciruela', title: 'Sobre ciruela', note: 'Caja ciruela con la f en tinta crema.' },
+  { variant: 'ciruela', title: 'Sobre ciruela', note: 'La f plana es crema; la caja, kraft con la f en tinta ciruela.' },
 ] as const;
 ---
 
-<HubLayout title="Foldwise · Logo animado" description="El logo animado actual frente al nuevo pliegue real, lado a lado.">
+<HubLayout title="Foldwise · Logo animado" description="El logo animado anterior frente al pliegue real que usa hoy el sitio, lado a lado.">
   <main class="page">
     <header class="head">
-      <p class="eyebrow">Logo animado · prototipo</p>
+      <p class="eyebrow">Logo animado · antes y ahora</p>
       <h1>Del pliegue a la caja, en una sola pieza.</h1>
       <p class="lede">
-        El logo actual funde la f y hace aparecer una caja. La propuesta A la dobla de verdad: cada solapa gira sobre su
+        El logo anterior fundía la f y hacía aparecer una caja. El de ahora la dobla de verdad: cada solapa gira sobre su
         línea punteada y el tronco forma las paredes. Al cerrar, la cinta lima sella el borde y la f queda impresa en el
-        costado.
+        costado. Es el que se usa en todo el sitio.
       </p>
     </header>
 
@@ -42,18 +43,18 @@ const rows = [
           <div class="pair">
             <figure class="cell">
               <div class="stage">
-                <AnimatedLogo variant={r.variant} size={300} trigger="load" loop />
+                <AnimatedLogoClassic variant={r.variant} size={300} trigger="load" loop />
               </div>
               <figcaption>
-                <strong>Actual</strong> · fundido de la f a una caja
+                <strong>Antes</strong> · fundido de la f a una caja
               </figcaption>
             </figure>
             <figure class="cell cell--new">
               <div class="stage">
-                <AnimatedLogoFold variant={r.variant} size={300} trigger="load" loop />
+                <AnimatedLogo variant={r.variant} size={300} trigger="load" loop />
               </div>
               <figcaption>
-                <strong>Nuevo · pliegue real</strong> · {r.note}
+                <strong>Ahora · pliegue real</strong> · {r.note}
               </figcaption>
             </figure>
           </div>
@@ -66,24 +67,24 @@ const rows = [
       <ul>
         <li><strong>Un pliegue, no un fundido.</strong> La f es el troquel: nada aparece ni desaparece, cada panel gira sobre su pliegue en 3D.</li>
         <li><strong>La pieza es real.</strong> Las solapas de la barra cierran los extremos, el tronco se enrolla en las paredes y la solapa superior baja como tapa con su lengüeta.</li>
-        <li><strong>El material se revela al doblar.</strong> La cara de adentro es la f impresa; la de afuera es kraft (o ciruela), con fibra, luz desde arriba a la izquierda y canto con flauta.</li>
+        <li><strong>El material se revela al doblar.</strong> La cara de adentro es la f impresa; la de afuera es kraft, con fibra, luz desde arriba a la izquierda y canto con flauta.</li>
         <li><strong>Tiene un final.</strong> La cinta lima sella, la f se imprime en el costado y la caja se asienta sobre su sombra.</li>
       </ul>
     </section>
 
     <section class="triggers" aria-labelledby="triggers">
       <h2 id="triggers">Al pasar el cursor y al entrar en pantalla</h2>
-      <p class="hint">Se reproducen una vez y quedan en la caja cerrada.</p>
+      <p class="hint">Se reproducen una vez, se cierran en caja y vuelven a la f.</p>
       <div class="pair pair--small">
         <figure class="cell">
           <div class="stage stage--small" data-trigger-demo="hover">
-            <AnimatedLogoFold variant="crema" size={180} trigger="hover" loop={false} />
+            <AnimatedLogo variant="crema" size={180} trigger="hover" loop={false} />
           </div>
           <figcaption>Al pasar el cursor</figcaption>
         </figure>
         <figure class="cell">
           <div class="stage stage--small stage--ciruela" data-trigger-demo="view">
-            <AnimatedLogoFold variant="ciruela" size={180} trigger="view" loop />
+            <AnimatedLogo variant="ciruela" size={180} trigger="view" loop />
           </div>
           <figcaption>Al entrar en pantalla</figcaption>
         </figure>
@@ -102,7 +103,7 @@ const rows = [
     totalTime(v: number): void;
   };
   const hosts = () =>
-    Array.from(document.querySelectorAll<Host>('[data-compare-row] [data-animated-logo], [data-compare-row] [data-animated-logo-fold]'));
+    Array.from(document.querySelectorAll<Host>('[data-compare-row] [data-animated-logo], [data-compare-row] [data-animated-logo-classic]'));
   const tlOf = (h: Host) => (h as unknown as { _timeline?: Tl | null })._timeline ?? null;
 
   const play = document.querySelector<HTMLButtonElement>('[data-ctl-play]');

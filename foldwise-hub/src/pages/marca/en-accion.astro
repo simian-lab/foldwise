@@ -432,7 +432,7 @@ const icons = [
   }
   /* the animated logo ships a fixed px size; let it scale with the stage */
   /* The box should fill the stage: the drawing sits well inside its square. */
-  .hero__stage :global(.al) {
+  .hero__stage :global([data-animated-logo]) {
     width: min(100%, 520px);
     height: auto;
   }
@@ -1079,7 +1079,7 @@ const icons = [
       aspect-ratio: auto;
       padding: var(--s-2) 0;
     }
-    .hero__stage :global(.al) {
+    .hero__stage :global([data-animated-logo]) {
       width: min(100%, 330px);
     }
     .panel {

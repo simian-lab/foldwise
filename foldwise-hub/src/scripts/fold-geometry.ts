@@ -21,8 +21,9 @@
  * The closed box is 10 long (x 15..25), 8 deep (y 19..27) and 7 high. The
  * stem wraps into the tube (P2, P1/P5, P4 around P3), the crossbar flaps and
  * the top flap close its two ends, exactly along the isotype's dashed folds.
- * The right crossbar is 8 wide for a 7-high end, so it closes as a dust flap
- * leaning in until its tip meets the top: hidden behind the lid.
+ * The right crossbar is 8 wide for a 7-high end: it stands upright as a dust
+ * flap (filling the open end) until the closing top pushes it in, leaning
+ * until its tip meets the top, hidden behind the end lid.
  *
  * The unfolded face (flat side up) is the board's inside, printed solid in
  * the isotype colour; the underside is the box material. Folding up reveals
@@ -71,7 +72,8 @@ export const CLOSED: Record<Exclude<PanelId, 'P3'>, number> = {
   P4: 90,
   P5: 90,
   LF: 90,
-  // 8-wide dust flap on a 7-high end: lean in until the tip touches the top.
+  // 8-wide dust flap on a 7-high end: once the top closes it leans in until
+  // the tip touches the top (see rfPushed).
   RF: 180 - (Math.asin(7 / 8) * 180) / Math.PI,
   TF: 90,
   TK: 90,
@@ -102,8 +104,13 @@ export const CREASES: CreaseDef[] = [
   { a: [32, 5], b: [32, 12], parent: 'TF', child: 'TK', toChild: [1, 0], brand: false },
 ];
 
-/** Cut edges that show once the box is closed: drawn as thin flute strips. */
-export interface StripDef {
+/**
+ * Cut edges: every outline edge of every panel that is not a crease. Each is
+ * drawn as a thin band of board thickness (with its flute) standing on the
+ * panel's inner side, so the board reads as board on every free edge while it
+ * folds. A band is only drawn when its outward side faces the camera.
+ */
+export interface EdgeDef {
   id: string;
   panel: PanelId;
   a: Pt;
@@ -111,10 +118,55 @@ export interface StripDef {
   /** In-plane outward direction (away from the panel), flat coords. */
   out: Pt;
 }
-export const STRIPS: StripDef[] = [
-  { id: 'P1-edge', panel: 'P1', a: [15, 4], b: [25, 4], out: [0, -1] },
-  { id: 'TF-edge', panel: 'TF', a: [25, 4], b: [31, 4], out: [0, -1] },
+
+const onSegment = (q: Pt, a: Pt, b: Pt) => {
+  const cross = (b[0] - a[0]) * (q[1] - a[1]) - (b[1] - a[1]) * (q[0] - a[0]);
+  if (Math.abs(cross) > 1e-9) return false;
+  const t = ((q[0] - a[0]) * (b[0] - a[0]) + (q[1] - a[1]) * (b[1] - a[1])) / ((b[0] - a[0]) ** 2 + (b[1] - a[1]) ** 2);
+  return t > -1e-9 && t < 1 + 1e-9;
+};
+
+export const EDGES: EdgeDef[] = PANELS.flatMap((p) => {
+  const cx = p.poly.reduce((s, q) => s + q[0], 0) / p.poly.length;
+  const cy = p.poly.reduce((s, q) => s + q[1], 0) / p.poly.length;
+  const out: EdgeDef[] = [];
+  p.poly.forEach((a, i) => {
+    const b = p.poly[(i + 1) % p.poly.length];
+    const creased = CREASES.some((c) => (c.parent === p.id || c.child === p.id) && onSegment(a, c.a, c.b) && onSegment(b, c.a, c.b));
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+    // creases are not cut; the lid's tiny shoulder chamfer reads as a crevice
+    if (creased || len < 1.5) return;
+    let n: Pt = [(b[1] - a[1]) / len, -(b[0] - a[0]) / len];
+    const mx = (a[0] + b[0]) / 2;
+    const my = (a[1] + b[1]) / 2;
+    if (n[0] * (mx - cx) + n[1] * (my - cy) < 0) n = [-n[0], -n[1]];
+    out.push({ id: `${p.id}-e${i}`, panel: p.id, a, b, out: n });
+  });
+  return out;
+});
+
+/** The front cut edge of the top, where the tape runs over the board. */
+export const TAPE_EDGE = EDGES.find((e) => e.panel === 'P1' && e.a[1] === 4 && e.b[1] === 4)!.id;
+
+/**
+ * The dust flap (RF) stands upright while the end is open, then the closing
+ * top pushes it in: the smallest lean (deg) that keeps it under the top for a
+ * given top angle. Sampled from the geometry (no panel ever crosses the top).
+ */
+const RF_PUSH: [number, number][] = [
+  [60, 90], [65, 98.5], [70, 106], [75, 111], [80, 114.5], [85, 117.5], [90, 0],
 ];
+RF_PUSH[RF_PUSH.length - 1][1] = 180 - (Math.asin(7 / 8) * 180) / Math.PI;
+export function rfPushed(p1: number): number {
+  if (p1 <= RF_PUSH[0][0]) return 0;
+  for (let i = 1; i < RF_PUSH.length; i++) {
+    const [x0, y0] = RF_PUSH[i - 1];
+    const [x1, y1] = RF_PUSH[i];
+    if (p1 <= x1) return y0 + ((y1 - y0) * (p1 - x0)) / (x1 - x0);
+  }
+  return RF_PUSH[RF_PUSH.length - 1][1];
+}
+
 export const BOARD = 0.45; // board thickness, grid units
 
 /* ---------------------------------------------------------------- */

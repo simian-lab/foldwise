@@ -110,7 +110,7 @@ const guideLinks = GUIDE_SLUGS.map((slug) => ({ label: guideInfo[slug].titulo, h
     place-items: center;
     min-width: 0;
   }
-  .hero__mark :global(.al) {
+  .hero__mark :global([data-animated-logo]) {
     width: min(100%, 540px);
     height: auto;
   }
@@ -323,7 +323,7 @@ const guideLinks = GUIDE_SLUGS.map((slug) => ({ label: guideInfo[slug].titulo, h
       min-height: 0;
       text-align: center;
     }
-    .hero__mark :global(.al) {
+    .hero__mark :global([data-animated-logo]) {
       width: min(100%, 300px);
     }
     .hero__lede {

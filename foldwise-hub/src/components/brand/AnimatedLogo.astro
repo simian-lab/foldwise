@@ -1,20 +1,30 @@
 ---
 /**
- * Foldwise animated logo: the flat "f" folds its flaps and becomes a taped
- * isometric box, then returns to the f. See src/scripts/animated-logo.ts for
- * the timeline, triggers and reduced-motion behaviour.
+ * Foldwise animated logo: the true fold ("Pliegue real"). The flat "f" is a
+ * die-cut that folds, panel by panel on its dashed creases, into a small
+ * closed kraft box, taped and printed with the f, then unfolds back into the
+ * f. One piece of board, no fades. Geometry: src/scripts/fold-geometry.ts.
+ * Timeline, triggers, small sizes and reduced motion:
+ * src/scripts/animated-logo.ts.
  *
- * `variant` names the background: on crema the box is ciruela; on ciruela the
- * box is kraft, the real product.
+ * Contract: root `data-animated-logo`, data-state flat | folding | box
+ * (static under reduced motion), trigger load | hover | view, loop only for
+ * load; hover and view play once and rest on the flat f.
+ *
+ * `variant` names the background. The box is kraft with the plum f on both;
+ * the flat f is plum on crema and crema on ciruela, as the static isotype.
+ * The earlier crossfade version lives on as AnimatedLogoClassic, used only by
+ * /marca/logo-animado for comparison.
  */
-import { boxGeometry, pointsOf, tapeAt } from '../../scripts/animated-logo';
 import { ISOTYPE_PATH, ISOTYPE_FOLDS } from '../../data/brand';
+import { PANELS, CREASES, EDGES, TAPE_EDGE, VIEW } from '../../scripts/fold-geometry';
+import { FOLD_MATERIALS, PRINT, COMPACT_BELOW, printMatrix } from '../../scripts/animated-logo';
 
 type Variant = 'crema' | 'ciruela';
 
 interface Props {
   size?: number;
-  /** Repeat forever. Applies to trigger="load" only; hover and view always play once. */
+  /** Repeat forever (fold, hold, unfold). Applies to trigger="load" only; hover and view play once. */
   loop?: boolean;
   trigger?: 'load' | 'hover' | 'view';
   variant?: Variant;
@@ -22,56 +32,21 @@ interface Props {
 }
 
 const { size = 240, loop = true, trigger = 'load', variant = 'crema', class: className } = Astro.props;
+const m = FOLD_MATERIALS[variant];
+// small logos (the header) drop the detail that cannot read at that size
+const compact = size < COMPACT_BELOW;
+// the static isotype follows the Isotype component's colours for this background
+const staticColors = variant === 'crema' ? { mark: '#3A1D3F', folds: '#C8F25A' } : { mark: '#F6F1E7', folds: '#3A1D3F' };
+const uid = `alf-${variant}-${Math.random().toString(36).slice(2, 8)}`;
+const poly = (p: [number, number][]) => p.map((q) => q.join(',')).join(' ');
 
-
-const PALETTE = {
-  crema: {
-    f: '#3A1D3F',
-    folds: '#C8F25A',
-    // The back of the printed board is kraft: folded flaps show it.
-    foldMid: '#E2C7A0',
-    foldEnd: '#C9A27A',
-    top: '#5A3360',
-    left: '#3A1D3F',
-    right: '#2A1430',
-    rim: '#F6F1E7',
-    seam: '#2A1430',
-    mark: '#F6F1E7',
-    // lime creases on the printed side, heavy enough to survive the iso skew
-    markFolds: '#C8F25A',
-    markFoldWidth: 1.9,
-    markFoldDash: '3.2 2.2',
-    shadow: '58, 29, 63',
-    shadowAlpha: 0.32,
-    sideFalloff: 0.14,
-    foldShade: '#2A1430',
-  },
-  ciruela: {
-    f: '#F6F1E7',
-    folds: '#C8F25A',
-    foldMid: '#E2C7A0',
-    foldEnd: '#C9A27A',
-    top: '#E2C7A0',
-    left: '#C9A27A',
-    right: '#A9845E',
-    rim: '#F6F1E7',
-    seam: '#A9845E',
-    mark: '#3A1D3F',
-    markFolds: '#C9A27A',
-    markFoldWidth: 1.3,
-    markFoldDash: '2.4 2',
-    shadow: '18, 6, 22',
-    shadowAlpha: 0.55,
-    sideFalloff: 0.1,
-    foldShade: '#E2C7A0',
-  },
-} as const;
-
-const c = PALETTE[variant];
-const g = boxGeometry();
-const tape0 = tapeAt(0);
-const gradId = `al-shadow-${variant}-${Math.random().toString(36).slice(2, 8)}`;
-const fl = g.floorCenter;
+const crease = (i: number) => {
+  const c = CREASES[i];
+  return c.brand
+    ? { w: 0.8, dash: '2.2 2', opacity: 1 }
+    : { w: 0.3, dash: '1 1.2', opacity: 0.42 };
+};
+const creases = CREASES.map((c, i) => ({ c, i })).filter(({ c }) => !compact || c.brand);
 ---
 
 <div
@@ -80,76 +55,121 @@ const fl = g.floorCenter;
   data-trigger={trigger}
   data-loop={String(loop)}
   data-variant={variant}
-  data-fold-mid={c.foldMid}
-  data-fold-end={c.foldEnd}
-  data-fold-shade={c.foldShade}
-  class:list={['al', className]}
+  data-compact={compact ? '' : undefined}
+  class:list={['alf', className]}
   style={`--al-size:${size}px`}
   role="img"
   aria-label="Foldwise"
 >
-  <svg class="al-box" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
-    <defs>
-      <radialGradient id={gradId}>
-        <stop offset="0" stop-color={`rgb(${c.shadow})`} stop-opacity={c.shadowAlpha}></stop>
-        <stop offset="0.55" stop-color={`rgb(${c.shadow})`} stop-opacity={c.shadowAlpha * 0.45}></stop>
-        <stop offset="1" stop-color={`rgb(${c.shadow})`} stop-opacity="0"></stop>
-      </radialGradient>
-      <linearGradient id={`${gradId}-side`} x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#000" stop-opacity="0"></stop>
-        <stop offset="1" stop-color="#000" stop-opacity={c.sideFalloff}></stop>
-      </linearGradient>
-    </defs>
-    <ellipse
-      data-al-part
-      class="al-shadow"
-      cx={fl[0]}
-      cy={fl[1] + 3}
-      rx="72"
-      ry="15"
-      fill={`url(#${gradId})`}></ellipse>
-    <g data-al-part class="al-box-body">
-      <polygon points={pointsOf(g.left)} fill={c.left}></polygon>
-      <polygon points={pointsOf(g.right)} fill={c.right}></polygon>
-      <!-- ambient falloff: the sides darken a little toward the floor -->
-      <polygon points={pointsOf(g.left)} fill={`url(#${gradId}-side)`}></polygon>
-      <polygon points={pointsOf(g.right)} fill={`url(#${gradId}-side)`}></polygon>
-      <polygon points={pointsOf(g.top)} fill={c.top}></polygon>
-      <!-- lid seam where the major flaps meet; the tape covers it -->
-      <polyline class="al-seam" points={pointsOf(g.seam)} fill="none" stroke={c.seam} stroke-width="1.1"></polyline>
-      <!-- rim light on the two front lid edges and the front corner -->
-      <polyline points={pointsOf(g.rimEdges)} fill="none" stroke={c.rim} stroke-opacity="0.32" stroke-width="0.9" stroke-linejoin="round"></polyline>
-      <polyline points={pointsOf(g.cornerEdge)} fill="none" stroke={c.rim} stroke-opacity="0.14" stroke-width="0.8"></polyline>
-      <!-- the isotype printed on the long side -->
-      <g class="al-mark-plane" transform={g.markMatrix}>
-        <g data-al-part class="al-mark">
-          <path d={ISOTYPE_PATH} fill={c.mark}></path>
-          <path d={ISOTYPE_FOLDS} fill="none" stroke={c.markFolds} stroke-width={c.markFoldWidth} stroke-dasharray={c.markFoldDash}></path>
-        </g>
-      </g>
-      <!-- lime tape: along the lid, over the edge, down the end -->
-      <polygon class="al-tape-side" points={tape0.side} fill="#A9CB46"></polygon>
-      <polygon class="al-tape-top" points={tape0.top} fill="#C8F25A"></polygon>
-      <polyline class="al-tape-sheen" points={tape0.sheen} fill="none" stroke="#EDFFC2" stroke-opacity="0.75" stroke-width="0.8" stroke-linecap="round"></polyline>
-    </g>
+  <svg data-al-part class="alf-static" viewBox="0 0 46 46" aria-hidden="true" focusable="false">
+    <path data-isotype-shape d={ISOTYPE_PATH} fill={staticColors.mark}></path>
+    <path d={ISOTYPE_FOLDS} fill="none" stroke={staticColors.folds} stroke-width="1.6" stroke-dasharray="2.2 2"></path>
   </svg>
 
-  <div data-al-part class="al-flat">
-    <svg viewBox="0 0 46 46" aria-hidden="true" focusable="false">
-      <path data-isotype-shape d={ISOTYPE_PATH} fill={c.f}></path>
-      <g data-al-part class="al-pieces" opacity="0">
-        <path d="M15 4h10v38h-10z" fill={c.f}></path>
-        <path data-al-part class="al-flap al-flap--left" d="M15 19h-5l-2 2v4l2 2h5z" fill={c.f}></path>
-        <path data-al-part class="al-flap al-flap--right" d="M25 19h6l2 2v4l-2 2h-6z" fill={c.f}></path>
-        <path data-al-part class="al-flap al-flap--top" d="M25 4h6l5 5v3H25z" fill={c.f}></path>
-      </g>
-      <g fill="none" stroke={c.folds} stroke-width="1.6" stroke-dasharray="2.2 2">
-        <path data-al-part class="al-fold" d="M25 4v8"></path>
-        <path data-al-part class="al-fold" d="M15 19v8"></path>
-        <path data-al-part class="al-fold" d="M25 19v8"></path>
-      </g>
-    </svg>
-  </div>
+  <svg data-al-part class="alf-scene" viewBox={`0 0 ${VIEW} ${VIEW}`} aria-hidden="true" focusable="false">
+    <defs>
+      {
+        !compact && (
+          <pattern id={`${uid}-grain`} patternUnits="userSpaceOnUse" width="6" height="6">
+            <image class="alf-grain-img" width="6" height="6" preserveAspectRatio="none" />
+          </pattern>
+        )
+      }
+      {
+        PANELS.map((p) => (
+          <linearGradient id={`${uid}-light-${p.id}`} gradientUnits="userSpaceOnUse" x1={p.light[0]} y1={p.light[1]} x2={p.light[2]} y2={p.light[3]}>
+            <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.16" />
+            <stop offset="0.45" stop-color="#FFFFFF" stop-opacity="0" />
+            <stop offset="0.88" stop-color="#2A1430" stop-opacity="0.1" />
+            <stop offset="1" stop-color="#2A1430" stop-opacity="0.2" />
+          </linearGradient>
+        ))
+      }
+      <linearGradient id={`${uid}-gloss`} x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0.2" stop-color="#FFFFFF" stop-opacity="0" />
+        <stop offset="0.38" stop-color="#FFFFFF" stop-opacity="0.42" />
+        <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0.06" />
+        <stop offset="0.72" stop-color="#FFFFFF" stop-opacity="0.22" />
+        <stop offset="0.86" stop-color="#FFFFFF" stop-opacity="0" />
+      </linearGradient>
+      <filter id={`${uid}-blur`} x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="5" />
+      </filter>
+      <filter id={`${uid}-blur-s`} x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="1.6" />
+      </filter>
+    </defs>
+
+    <g class="alf-shadow">
+      <polygon class="alf-shadow-wide" fill={m.shadow} filter={`url(#${uid}-blur)`} style="opacity:0"></polygon>
+      <polygon class="alf-shadow-contact" fill={m.shadow} filter={`url(#${uid}-blur-s)`} style="opacity:0"></polygon>
+    </g>
+
+    <g class="alf-faces">
+      {
+        PANELS.map((p) => (
+          <g data-face={p.id}>
+            <polygon class="alf-base" points={poly(p.poly)} fill={m.inner.top} stroke={m.inner.top} stroke-width="0.6" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
+            <g class="alf-in">
+              {creases.map(({ c, i }) =>
+                c.parent === p.id || c.child === p.id ? (
+                  <line
+                    data-crease={i}
+                    data-half={c.child === p.id ? 'c' : 'p'}
+                    stroke={m.creases}
+                    data-w={crease(i).w}
+                    stroke-width={crease(i).w + 0.14}
+                    stroke-dasharray={crease(i).dash}
+                    stroke-opacity={crease(i).opacity}
+                    style="visibility:hidden"
+                  />
+                ) : null,
+              )}
+            </g>
+            <g class="alf-out" style="display:none">
+              {!compact && <polygon points={poly(p.poly)} fill={`url(#${uid}-grain)`} opacity={m.grain} />}
+              {p.id === 'P4' && !compact && (
+                <g class="alf-print" style="opacity:0">
+                  <g transform={printMatrix()}>
+                    <path d={ISOTYPE_PATH} fill={PRINT.ink} shape-rendering="geometricPrecision" />
+                    <path d={ISOTYPE_FOLDS} fill="none" stroke={PRINT.folds} stroke-width={PRINT.foldWidth} stroke-dasharray={PRINT.foldDash} />
+                  </g>
+                </g>
+              )}
+              <polygon points={poly(p.poly)} fill={`url(#${uid}-light-${p.id})`} />
+              {p.id === 'TF' && (
+                // the lid's shoulder cut: a shadowed crevice, not a bright gap
+                <polygon class="alf-rim" data-rim="0.9" points="31,4 32,4 32,5" fill={m.outer.edge} style="opacity:0" />
+              )}
+              {p.id === 'P1' && (
+                <>
+                  <polygon data-tape="top" fill="#C8F25A" stroke="#A6CE3E" stroke-width="0.5" vector-effect="non-scaling-stroke" style="visibility:hidden" />
+                  {!compact && <polygon data-tape="top" fill={`url(#${uid}-gloss)`} style="visibility:hidden" />}
+                  <polyline class="alf-rim" data-rim="0.4" points="15,4 25,4 25,12" fill="none" stroke={m.rim} stroke-width="0.9" vector-effect="non-scaling-stroke" stroke-linejoin="round" style="opacity:0" />
+                </>
+              )}
+              {p.id === 'P4' && (
+                <>
+                  <polygon data-tape="front" fill="#B4DA4C" stroke="#97BC36" stroke-width="0.5" vector-effect="non-scaling-stroke" style="visibility:hidden" />
+                  {!compact && <polygon data-tape="front" fill={`url(#${uid}-gloss)`} style="visibility:hidden" />}
+                  <line class="alf-rim" data-rim="0.18" x1="25" y1="27" x2="25" y2="34" stroke={m.rim} stroke-width="0.8" vector-effect="non-scaling-stroke" style="opacity:0" />
+                </>
+              )}
+            </g>
+          </g>
+        ))
+      }
+      {
+        EDGES.map((e) => (
+          <g data-face={e.id} style="visibility:hidden">
+            <polygon class="alf-strip" fill={m.outer.side} stroke={m.outer.edge} stroke-width="0.4" vector-effect="non-scaling-stroke" stroke-linejoin="round" />
+            {!compact && <polyline class="alf-flute" fill="none" stroke={m.outer.inner} stroke-width="0.5" vector-effect="non-scaling-stroke" stroke-linejoin="round" />}
+            {e.id === TAPE_EDGE && <polygon class="alf-tape-strip" fill="#A9CB46" style="visibility:hidden" />}
+          </g>
+        ))
+      }
+    </g>
+  </svg>
 </div>
 
 <script>
@@ -158,7 +178,7 @@ const fl = g.floorCenter;
 </script>
 
 <style>
-  .al {
+  .alf {
     position: relative;
     display: inline-block;
     width: var(--al-size);
@@ -168,35 +188,32 @@ const fl = g.floorCenter;
     flex: none;
   }
 
-  .al-box {
+  .alf-static,
+  .alf-scene {
     position: absolute;
+    display: block;
+    overflow: visible;
+  }
+
+  /* The static isotype sits on the same 12 % inset the scene starts from. */
+  .alf-static {
+    inset: 12%;
+    width: 76%;
+    height: 76%;
+  }
+
+  .alf-scene {
     inset: 0;
     width: 100%;
     height: 100%;
-    overflow: visible;
+    display: none;
   }
 
-  /* The box only exists while the story plays. */
-  .al-box-body,
-  .al-shadow {
-    opacity: 0;
-  }
-
-  .al-flat {
-    position: absolute;
-    inset: 12%;
-    will-change: transform;
-  }
-
-  .al-flat svg {
+  .alf[data-alf-live] .alf-scene {
     display: block;
-    width: 100%;
-    height: 100%;
-    overflow: visible;
   }
 
-  /* Under reduced motion the root is the static isotype, nothing else. */
-  .al[data-state='static'] .al-box {
+  .alf[data-alf-live] .alf-static {
     display: none;
   }
 </style>
