@@ -1,0 +1,268 @@
+---
+/**
+ * Shop header: animated logo (plays on hover), a visual-only search field,
+ * the dead institutional links and the category navigation row. No cart.
+ */
+import AnimatedLogo from '../brand/AnimatedLogo.astro';
+import { categories } from '../../data/categories';
+
+const NAV_SLUGS = [
+  'cajas-de-envio',
+  'cajas-mailer',
+  'mailers-faciles',
+  'cajas-regalo-retail',
+  'cajas-ropa',
+  'cajas-vino-botellas',
+  'cajas-de-mudanza',
+];
+const nav = NAV_SLUGS.map((slug) => categories.find((c) => c.slug === slug)!).map((c) => ({
+  label: c.nameEs,
+  href: c.featured ? `/tienda/producto/${c.slug}` : `/tienda/catalogo#${c.slug}`,
+}));
+const path = Astro.url.pathname.replace(/\/$/, '');
+---
+
+<header class="shop-header" data-shop-header>
+  <div class="shop-header__bar">
+    <a href="/tienda" class="shop-header__brand" aria-label="Foldwise, inicio de la tienda">
+      <AnimatedLogo size={44} trigger="hover" loop={false} variant="crema" />
+      <span class="shop-header__word" aria-hidden="true">foldwise</span>
+    </a>
+
+    <form class="shop-search" role="search" action="#" onsubmit="return false">
+      <label class="visually-hidden" for="shop-search">Buscar cajas</label>
+      <input id="shop-search" type="search" name="q" placeholder="Busca por tipo de caja, medida o uso" autocomplete="off" />
+      <svg class="shop-search__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <circle cx="10.5" cy="10.5" r="6" fill="none" stroke="currentColor" stroke-width="2"></circle>
+        <path d="M15 15l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+      </svg>
+    </form>
+
+    <nav class="shop-header__links" aria-label="Foldwise">
+      <a href="#">Nosotros</a>
+      <a href="#">Blog</a>
+      <a href="#">Contacto</a>
+      <a href="#" class="shop-header__cta">Habla con un asesor</a>
+    </nav>
+  </div>
+
+  <nav class="shop-nav" data-shop-nav aria-label="Categorías">
+    <ul>
+      <li>
+        <a href="/tienda/catalogo" class="shop-nav__all" aria-current={path === '/tienda/catalogo' ? 'page' : undefined}>
+          Todas las cajas
+        </a>
+      </li>
+      {nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+    </ul>
+  </nav>
+</header>
+
+<script>
+  const header = document.querySelector<HTMLElement>('[data-shop-header]');
+  if (header) {
+    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+  }
+</script>
+
+<style>
+  .shop-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: color-mix(in srgb, var(--c-crema) 88%, transparent);
+    backdrop-filter: saturate(1.4) blur(14px);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .shop-header:global(.is-scrolled) {
+    border-bottom-color: color-mix(in srgb, var(--c-kraft) 35%, transparent);
+    box-shadow: 0 10px 30px -24px rgba(42, 20, 48, 0.5);
+  }
+  .shop-header__bar {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: var(--s-4) var(--s-8) var(--s-3);
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-8);
+  }
+  .shop-header__brand {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-1);
+    text-decoration: none;
+    color: var(--c-ciruela);
+  }
+  .shop-header__word {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.7rem;
+    letter-spacing: -0.035em;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
+
+  .shop-search {
+    position: relative;
+    max-width: 520px;
+    width: 100%;
+    justify-self: center;
+  }
+  .shop-search input {
+    width: 100%;
+    height: 46px;
+    padding: 0 var(--s-4) 0 2.9rem;
+    font: inherit;
+    font-size: var(--fs-sm);
+    color: var(--c-ciruela);
+    background: color-mix(in srgb, var(--c-crema) 40%, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--c-kraft) 45%, transparent);
+    border-radius: var(--r-pill);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .shop-search input::placeholder {
+    color: color-mix(in srgb, var(--c-ciruela) 50%, var(--c-crema));
+  }
+  .shop-search input:focus {
+    border-color: var(--c-ciruela);
+    background: #fff;
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-lima) 55%, transparent);
+  }
+  .shop-search__icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translateY(-50%);
+    color: var(--c-ciruela-claro);
+    pointer-events: none;
+  }
+
+  .shop-header__links {
+    display: flex;
+    align-items: center;
+    gap: var(--s-6);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+  .shop-header__links a {
+    text-decoration: none;
+    position: relative;
+  }
+  .shop-header__links a:not(.shop-header__cta)::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -4px;
+    height: 2px;
+    background: var(--c-ciruela);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.25s ease;
+  }
+  .shop-header__links a:not(.shop-header__cta):hover::after {
+    transform: scaleX(1);
+  }
+  .shop-header__cta {
+    padding: 0.65rem 1.1rem;
+    border-radius: var(--r-pill);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    font-weight: 600;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .shop-header__cta:hover {
+    background: var(--c-ciruela-claro);
+  }
+  .shop-header__cta:active {
+    transform: scale(0.96);
+  }
+
+  .shop-nav {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 0 var(--s-8);
+  }
+  .shop-nav ul {
+    display: flex;
+    gap: var(--s-1);
+    margin: 0;
+    padding: 0 0 var(--s-3);
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .shop-nav ul::-webkit-scrollbar {
+    display: none;
+  }
+  .shop-nav a {
+    display: block;
+    white-space: nowrap;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--r-pill);
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    color: color-mix(in srgb, var(--c-ciruela) 82%, var(--c-crema));
+    transition: background 0.2s, color 0.2s;
+  }
+  .shop-nav a:hover {
+    background: color-mix(in srgb, var(--c-kraft-claro) 55%, transparent);
+    color: var(--c-ciruela);
+  }
+  .shop-nav__all {
+    font-weight: 600;
+    color: var(--c-ciruela) !important;
+    border: 1px solid color-mix(in srgb, var(--c-ciruela) 25%, transparent);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  @media (max-width: 1100px) {
+    .shop-header__links a:not(.shop-header__cta) {
+      display: none;
+    }
+  }
+  @media (max-width: 760px) {
+    .shop-header {
+      position: relative;
+    }
+    .shop-header__bar {
+      grid-template-columns: auto auto;
+      gap: var(--s-3);
+      padding: var(--s-3) var(--s-4) var(--s-2);
+    }
+    .shop-search {
+      grid-column: 1 / -1;
+      grid-row: 2;
+      max-width: none;
+    }
+    .shop-header__links {
+      justify-self: end;
+    }
+    .shop-header__cta {
+      padding: 0.5rem 0.9rem;
+      font-size: var(--fs-xs);
+    }
+    .shop-header__word {
+      font-size: 1.45rem;
+    }
+    .shop-nav {
+      padding: 0 var(--s-2);
+    }
+  }
+</style>

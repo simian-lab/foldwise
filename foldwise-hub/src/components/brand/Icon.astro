@@ -1,0 +1,87 @@
+---
+/**
+ * Foldwise icon set: rounded line icons on a 24 grid, 2px stroke, each with
+ * one small dashed fold detail (the brand's die-line language). Inherits
+ * `currentColor`.
+ */
+export type IconName = 'envio' | 'personaliza' | 'rapido' | 'asesoria' | 'pedido-pequeno' | 'eco' | 'medida' | 'armado';
+
+interface Props {
+  name: IconName;
+  size?: number;
+  /** Accessible name. Omit for decorative icons. */
+  label?: string;
+  class?: string;
+}
+
+const { name, size = 24, label, class: className } = Astro.props;
+
+// `solid` is the 2px outline, `fold` the dashed detail.
+const ICONS: Record<IconName, { solid: string; fold: string }> = {
+  envio: {
+    solid:
+      'M2.5 6.5h11v9h-11z M13.5 9.5h4.2l2.8 3.2v2.8h-7 M5.2 17.4a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0 M15.2 17.4a1.8 1.8 0 1 0 3.6 0a1.8 1.8 0 1 0-3.6 0',
+    fold: 'M8 6.5v5',
+  },
+  personaliza: {
+    solid:
+      'M4 9.5h16v9.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z M4 9.5l2.2-5h11.6l2.2 5 M12 18s-3.4-2-3.4-4.2a1.7 1.7 0 0 1 3.4-.6a1.7 1.7 0 0 1 3.4.6C15.4 16 12 18 12 18z',
+    fold: 'M12 4.5v5',
+  },
+  rapido: {
+    solid: 'M7 13.5a7 7 0 1 0 14 0a7 7 0 1 0-14 0 M14 10v3.5l2.4 1.8 M12 3.5h4 M14 3.5v3',
+    fold: 'M1.8 10.5h3.4 M1.8 14h2.6 M1.8 17.5h3.4',
+  },
+  asesoria: {
+    solid:
+      'M4.5 4.5h15A1.5 1.5 0 0 1 21 6v9a1.5 1.5 0 0 1-1.5 1.5H11l-4.5 3.5v-3.5h-2A1.5 1.5 0 0 1 3 15V6a1.5 1.5 0 0 1 1.5-1.5z',
+    fold: 'M7 9h10 M7 12.5h6',
+  },
+  'pedido-pequeno': {
+    solid: 'M12 3.5l7.5 4v9L12 20.5l-7.5-4v-9z M4.5 7.5L12 11.5l7.5-4 M12 11.5v9',
+    fold: 'M8.2 5.5l7.5 4',
+  },
+  eco: {
+    solid: 'M5 19C5 10.5 10 5 20 4.5c0 9.5-5.5 15-14 15z M5 19l-1.5 1.5',
+    fold: 'M7 17.2l8.5-8.4',
+  },
+  medida: {
+    solid: 'M3.5 3.5h4.5v12.5h12.5v4.5h-17z M8 7.5H6 M8 11.5H6 M12 20.5v-2 M16 20.5v-2',
+    fold: 'M11.5 13V7.5H17v5.5',
+  },
+  armado: {
+    solid:
+      'M5 10v9a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-9 M5 10L2.5 5.5h4L9 10 M19 10l2.5-4.5h-4L15 10',
+    fold: 'M5 10h14',
+  },
+};
+
+const icon = ICONS[name];
+---
+
+<svg
+  class:list={['fw-icon', className]}
+  data-icon={name}
+  viewBox="0 0 24 24"
+  width={size}
+  height={size}
+  fill="none"
+  stroke="currentColor"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+  role={label ? 'img' : undefined}
+  aria-label={label}
+  aria-hidden={label ? undefined : 'true'}
+  focusable="false"
+>
+  <path d={icon.solid} stroke-width="2"></path>
+  <path d={icon.fold} stroke-width="1.6" stroke-dasharray="1.6 2.2" class="fw-icon__fold"></path>
+</svg>
+
+<style>
+  .fw-icon {
+    display: inline-block;
+    flex: none;
+    overflow: visible;
+  }
+</style>

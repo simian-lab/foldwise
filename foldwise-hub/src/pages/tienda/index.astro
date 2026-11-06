@@ -1,0 +1,676 @@
+---
+import ShopLayout from '../../layouts/ShopLayout.astro';
+import HeroBox from '../../components/site/HeroBox.astro';
+import CategoryCard from '../../components/site/CategoryCard.astro';
+import Icon from '../../components/brand/Icon.astro';
+import { categories } from '../../data/categories';
+import { taglines } from '../../data/brand';
+
+const minUnits = Math.min(...categories.map((c) => c.minUnits));
+
+const benefits = [
+  {
+    icon: 'pedido-pequeno',
+    title: 'Pedidos pequeños de verdad',
+    text: `Pide desde ${minUnits} cajas. Cuando crezcas, el precio baja contigo.`,
+  },
+  {
+    icon: 'personaliza',
+    title: 'Con tu logo',
+    text: 'Imprimimos tu marca para que cada envío se vea tuyo desde la puerta.',
+  },
+  {
+    icon: 'rapido',
+    title: 'Listas en días',
+    text: 'Producimos y despachamos tu pedido en 3 a 5 días hábiles.',
+  },
+  {
+    icon: 'asesoria',
+    title: 'Una persona real te ayuda',
+    text: 'Te orientamos con la medida y el cartón, sin tecnicismos.',
+  },
+] as const;
+
+const starters = [
+  { icon: 'medida', title: 'A tu medida', text: '¿Tu producto no cabe en una caja estándar? La hacemos a la medida.' },
+  { icon: 'armado', title: 'Fáciles de armar', text: 'Pliegues claros y guías paso a paso para armar en segundos.' },
+  { icon: 'eco', title: 'Cartón reciclable', text: 'Corrugado que se recicla con el resto del papel, sin plásticos.' },
+] as const;
+
+const steps = [
+  { title: 'Elige tu caja', text: 'Explora las 12 familias y escoge la medida que le queda a tu producto.' },
+  { title: 'Ponle tu marca', text: 'Sube tu logo y mira cómo se ve en la caja antes de pedirla.' },
+  { title: 'Recíbela en tu puerta', text: 'Te llega lista para empacar, con la guía de armado incluida.' },
+];
+---
+
+<ShopLayout title="Foldwise · Tienda de cajas para emprendedores">
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero__copy">
+      <p class="hero__kicker">
+        <span class="hero__dot" aria-hidden="true"></span>
+        Cajas de cartón corrugado desde {minUnits} unidades
+      </p>
+      <h1 id="hero-title" class="hero__title">{taglines.principal}</h1>
+      <p class="hero__lede">
+        Cajas para tu tienda en línea, con tu logo y en la medida justa. {taglines.secundaria}
+      </p>
+      <div class="hero__actions">
+        <a href="#categorias" class="btn btn--lime">Explora las cajas</a>
+        <a href="/tienda/producto/cajas-mailer" class="btn btn--ghost">Personaliza tu mailer</a>
+      </div>
+      <ul class="hero__proof">
+        <li><Icon name="pedido-pequeno" size={20} /> Desde {minUnits} cajas</li>
+        <li><Icon name="envio" size={20} /> Envío a todo EE. UU.</li>
+        <li><Icon name="asesoria" size={20} /> Asesoría sin costo</li>
+      </ul>
+    </div>
+
+    <div class="hero__stage" data-hero-scope>
+      <svg class="hero__flutes" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+        <defs>
+          <pattern id="flute" width="28" height="18" patternUnits="userSpaceOnUse">
+            <path d="M0 9c7 0 7-7 14-7s7 7 14 7" fill="none" stroke="#A9845E" stroke-width="1.1" opacity="0.35"></path>
+          </pattern>
+        </defs>
+        <rect width="600" height="600" fill="url(#flute)"></rect>
+      </svg>
+      <div class="hero__box">
+        <HeroBox />
+      </div>
+      <div class="hero__caption">
+        <span data-hero-hint>Toca la caja para abrirla</span>
+        <span class="hero__spec">Caja mailer M-1410, 14 × 10 × 4 in</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="benefits" aria-labelledby="benefits-title">
+    <h2 id="benefits-title" class="visually-hidden">Por qué Foldwise</h2>
+    <ul class="benefits__list">
+      {
+        benefits.map((b) => (
+          <li class="benefit" data-reveal>
+            <span class="benefit__icon">
+              <Icon name={b.icon} size={26} />
+            </span>
+            <h3>{b.title}</h3>
+            <p>{b.text}</p>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section id="categorias" class="cats" aria-labelledby="cats-title">
+    <div class="section-head">
+      <div>
+        <h2 id="cats-title">Encuentra tu caja</h2>
+        <p>12 familias de cajas de cartón corrugado, en medidas estándar de EE. UU.</p>
+      </div>
+      <a href="/tienda/catalogo" class="btn btn--ghost">Ver el catálogo completo</a>
+    </div>
+    <div class="cats__grid">
+      {categories.map((c) => <CategoryCard category={c} />)}
+    </div>
+  </section>
+
+  <section class="starters" aria-labelledby="starters-title">
+    <div class="starters__panel">
+      <div class="starters__copy">
+        <h2 id="starters-title">Hecho para los que están arrancando</h2>
+        <p class="starters__lede">
+          Nadie empieza con mil pedidos. Por eso pides las cajas que necesitas hoy, combinas medidas y hablas con alguien
+          que te explica todo en simple. Ser pequeño no te hace cliente secundario.
+        </p>
+        <ul class="starters__list">
+          {
+            starters.map((s) => (
+              <li>
+                <span class="starters__icon">
+                  <Icon name={s.icon} size={24} />
+                </span>
+                <span>
+                  <strong>{s.title}</strong>
+                  {s.text}
+                </span>
+              </li>
+            ))
+          }
+        </ul>
+        <a href="/tienda/catalogo" class="btn btn--lime">Arma tu primer pedido</a>
+      </div>
+      <figure class="starters__photos">
+        <img
+          class="starters__photo starters__photo--main"
+          src="/img/shop-emprendedora.jpg"
+          alt="Emprendedora preparando pedidos de su tienda en línea entre cajas de cartón"
+          width="1600"
+          height="1068"
+          loading="lazy"
+          decoding="async"
+        />
+        <img
+          class="starters__photo starters__photo--side"
+          src="/img/shop-etiquetando.jpg"
+          alt="Dos emprendedoras escriben los datos de envío sobre cajas kraft"
+          width="1600"
+          height="1068"
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption class="starters__note">
+          <span class="starters__note-num">{minUnits}</span>
+          <span>cajas es todo lo que necesitas para empezar</span>
+        </figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="steps" aria-labelledby="steps-title">
+    <img
+      class="steps__photo"
+      src="/img/shop-empacando.jpg"
+      alt="Dos emprendedoras empacan productos con relleno de papel en cajas de cartón"
+      width="1600"
+      height="1068"
+      loading="lazy"
+      decoding="async"
+      data-reveal
+    />
+    <div class="steps__copy">
+      <h2 id="steps-title">Tu primera caja, en tres pasos</h2>
+      <ol class="steps__list">
+        {
+          steps.map((s, i) => (
+            <li data-reveal>
+              <span class="steps__num" aria-hidden="true">{i + 1}</span>
+              <span>
+                <strong>{s.title}</strong>
+                {s.text}
+              </span>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+</ShopLayout>
+
+<style>
+  .hero,
+  .benefits,
+  .cats,
+  .starters,
+  .steps {
+    max-width: 1360px;
+    margin-inline: auto;
+    padding-inline: var(--s-8);
+  }
+
+  /* ───── buttons ───── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s-2);
+    min-height: 50px;
+    padding: 0 1.5rem;
+    border-radius: var(--r-pill);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background 0.2s,
+      box-shadow 0.2s,
+      color 0.2s;
+  }
+  .btn:active {
+    transform: translateY(1px) scale(0.97);
+  }
+  .btn--lime {
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+    box-shadow: inset 0 -2px 0 rgba(42, 20, 48, 0.18);
+  }
+  .btn--lime:hover {
+    box-shadow:
+      inset 0 -2px 0 rgba(42, 20, 48, 0.18),
+      0 10px 24px -12px rgba(110, 150, 20, 0.8);
+    transform: translateY(-1px);
+  }
+  .btn--ghost {
+    color: var(--c-ciruela);
+    border: 1.5px solid color-mix(in srgb, var(--c-ciruela) 30%, transparent);
+  }
+  .btn--ghost:hover {
+    border-color: var(--c-ciruela);
+    background: color-mix(in srgb, var(--c-kraft-claro) 30%, transparent);
+  }
+
+  /* ───── hero ───── */
+  .hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
+    gap: var(--s-8);
+    align-items: stretch;
+    padding-top: var(--s-6);
+  }
+  .hero__copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: var(--s-12) 0 var(--s-12) var(--s-4);
+  }
+  .hero__kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    margin: 0 0 var(--s-6);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--c-ciruela-claro);
+  }
+  .hero__dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--c-lima);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-lima) 35%, transparent);
+  }
+  .hero__title {
+    font-size: clamp(3rem, 1.2rem + 4.6vw, 5.6rem);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    max-width: 10ch;
+    text-wrap: balance;
+  }
+  .hero__lede {
+    margin: var(--s-6) 0 0;
+    max-width: 40ch;
+    font-size: var(--fs-lg);
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-ciruela) 80%, var(--c-crema));
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    margin-top: var(--s-8);
+  }
+  .hero__proof {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-6);
+    margin: var(--s-12) 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+  .hero__proof li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .hero__proof :global(.fw-icon) {
+    color: var(--c-ciruela-claro);
+  }
+
+  .hero__stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 600px;
+    padding: var(--s-12) var(--s-8) var(--s-6);
+    border-radius: 28px;
+    background:
+      radial-gradient(70% 60% at 50% 45%, color-mix(in srgb, var(--c-kraft-claro) 70%, #fff) 0%, var(--c-kraft-claro) 70%);
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .hero__flutes {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    mask-image: radial-gradient(80% 70% at 50% 50%, transparent 30%, #000 85%);
+    -webkit-mask-image: radial-gradient(80% 70% at 50% 50%, transparent 30%, #000 85%);
+  }
+  .hero__box {
+    width: min(100%, 560px);
+    margin-inline: auto;
+  }
+  .hero__caption {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--s-4);
+    margin-top: var(--s-4);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--c-ciruela-claro);
+  }
+  .hero__spec {
+    font-weight: 500;
+    color: color-mix(in srgb, var(--c-ciruela) 65%, var(--c-kraft-claro));
+  }
+
+  /* ───── benefits ───── */
+  .benefits {
+    margin-top: var(--s-12);
+  }
+  .benefits__list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-8);
+    margin: 0;
+    padding: var(--s-8) var(--s-4);
+    list-style: none;
+    border-top: 1px solid color-mix(in srgb, var(--c-kraft) 35%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--c-kraft) 35%, transparent);
+  }
+  .benefit h3 {
+    margin: var(--s-4) 0 var(--s-2);
+    font-size: 1.2rem;
+    letter-spacing: -0.025em;
+  }
+  .benefit p {
+    margin: 0;
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-ciruela) 75%, var(--c-crema));
+  }
+  .benefit__icon {
+    display: inline-grid;
+    place-items: center;
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--c-kraft-claro) 55%, transparent);
+    color: var(--c-ciruela);
+    transition: transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1), background 0.3s;
+  }
+  .benefit:hover .benefit__icon {
+    transform: rotate(-6deg) scale(1.06);
+    background: var(--c-lima);
+  }
+
+  /* ───── categories ───── */
+  .cats {
+    margin-top: var(--s-24);
+    scroll-margin-top: 140px;
+  }
+  .section-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--s-6);
+    margin-bottom: var(--s-8);
+  }
+  .section-head h2 {
+    font-size: var(--fs-2xl);
+  }
+  .section-head p {
+    margin: var(--s-3) 0 0;
+    color: color-mix(in srgb, var(--c-ciruela) 75%, var(--c-crema));
+  }
+  .cats__grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-6);
+  }
+
+  /* ───── starters ───── */
+  .starters {
+    margin-top: var(--s-24);
+  }
+  .starters__panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+    gap: var(--s-12);
+    align-items: center;
+    padding: var(--s-16);
+    border-radius: 28px;
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    overflow: hidden;
+  }
+  .starters__copy h2 {
+    font-size: var(--fs-2xl);
+    max-width: 12ch;
+    color: var(--c-crema);
+  }
+  .starters__lede {
+    margin: var(--s-6) 0 var(--s-8);
+    max-width: 46ch;
+    color: color-mix(in srgb, var(--c-crema) 82%, transparent);
+  }
+  .starters__list {
+    display: grid;
+    gap: var(--s-4);
+    margin: 0 0 var(--s-8);
+    padding: 0;
+    list-style: none;
+  }
+  .starters__list li {
+    display: flex;
+    gap: var(--s-4);
+    align-items: flex-start;
+    font-size: var(--fs-sm);
+    color: color-mix(in srgb, var(--c-crema) 78%, transparent);
+  }
+  .starters__list strong {
+    display: block;
+    color: var(--c-crema);
+    font-size: 1rem;
+  }
+  .starters__icon {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--c-ciruela-claro);
+    color: var(--c-kraft-claro);
+  }
+  .starters__photos {
+    position: relative;
+    margin: 0;
+    min-height: 460px;
+  }
+  .starters__photo {
+    position: absolute;
+    object-fit: cover;
+    border-radius: 20px;
+  }
+  .starters__photo--main {
+    top: 0;
+    right: 0;
+    width: 82%;
+    height: 78%;
+  }
+  .starters__photo--side {
+    left: 0;
+    bottom: 0;
+    width: 50%;
+    height: 46%;
+    border: 6px solid var(--c-ciruela);
+  }
+  .starters__note {
+    position: absolute;
+    right: 4%;
+    bottom: 4%;
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    max-width: 230px;
+    padding: var(--s-3) var(--s-4);
+    border-radius: 16px;
+    background: var(--c-crema);
+    color: var(--c-ciruela);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    line-height: 1.3;
+    box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+  }
+  .starters__note-num {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 2.2rem;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    padding-bottom: 2px;
+    border-bottom: 3px dashed var(--c-lima);
+  }
+
+  /* ───── steps ───── */
+  .steps {
+    margin-top: var(--s-24);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--s-16);
+    align-items: center;
+  }
+  .steps__photo {
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 28px;
+  }
+  .steps__copy h2 {
+    font-size: var(--fs-2xl);
+    max-width: 14ch;
+  }
+  .steps__list {
+    display: grid;
+    gap: var(--s-6);
+    margin: var(--s-8) 0 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: none;
+  }
+  .steps__list li {
+    display: flex;
+    gap: var(--s-6);
+    align-items: flex-start;
+    padding-bottom: var(--s-6);
+    border-bottom: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+    color: color-mix(in srgb, var(--c-ciruela) 75%, var(--c-crema));
+  }
+  .steps__list li:last-child {
+    border-bottom: 0;
+  }
+  .steps__list strong {
+    display: block;
+    margin-bottom: var(--s-1);
+    font-family: var(--f-display);
+    font-size: 1.35rem;
+    letter-spacing: -0.03em;
+    color: var(--c-ciruela);
+  }
+  .steps__num {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 1.5px solid var(--c-ciruela);
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--c-ciruela);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  /* ───── responsive ───── */
+  @media (max-width: 1100px) {
+    .cats__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    .benefits__list {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .starters__panel {
+      padding: var(--s-12);
+    }
+  }
+  @media (max-width: 900px) {
+    .hero,
+    .starters__panel,
+    .steps {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .hero__copy {
+      padding: var(--s-8) 0 0;
+    }
+    .hero__stage {
+      min-height: 0;
+    }
+    .starters__photos {
+      min-height: 380px;
+    }
+  }
+  @media (max-width: 760px) {
+    .hero,
+    .benefits,
+    .cats,
+    .starters,
+    .steps {
+      padding-inline: var(--s-4);
+    }
+    .cats__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s-3);
+    }
+    .section-head {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .hero__stage {
+      padding: var(--s-8) var(--s-4) var(--s-4);
+      border-radius: 22px;
+    }
+    .hero__caption {
+      flex-direction: column;
+      gap: var(--s-1);
+    }
+    .hero__proof {
+      margin-top: var(--s-8);
+    }
+    .benefits__list {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-6);
+      padding-inline: 0;
+    }
+    .starters__panel {
+      padding: var(--s-8) var(--s-6);
+      border-radius: 22px;
+    }
+    .starters__photos {
+      min-height: 300px;
+    }
+    .cats,
+    .starters,
+    .steps {
+      margin-top: var(--s-16);
+    }
+    .steps {
+      gap: var(--s-8);
+    }
+  }
+</style>

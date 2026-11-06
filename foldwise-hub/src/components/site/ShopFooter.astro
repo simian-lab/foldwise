@@ -1,0 +1,158 @@
+---
+/** Shop footer: brand sign-off, a few category links and the dead institutional links. */
+import Isotype from '../brand/Isotype.astro';
+import { categories } from '../../data/categories';
+import { taglines } from '../../data/brand';
+
+const shop = categories.slice(0, 6).map((c) => ({
+  label: c.nameEs,
+  href: c.featured ? `/tienda/producto/${c.slug}` : `/tienda/catalogo#${c.slug}`,
+}));
+---
+
+<footer class="shop-footer">
+  <div class="shop-footer__inner">
+    <div class="shop-footer__brand">
+      <span class="shop-footer__lockup">
+        <Isotype variant="ciruela" size={48} label="" />
+        <span class="shop-footer__word">foldwise</span>
+      </span>
+      <p class="shop-footer__tagline">{taglines.secundaria}</p>
+      <svg class="shop-footer__fold" viewBox="0 0 240 8" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+        <path d="M2 4h236" stroke="#C8F25A" stroke-width="2" stroke-dasharray="8 7" stroke-linecap="round"></path>
+      </svg>
+    </div>
+
+    <nav class="shop-footer__col" aria-label="Tienda">
+      <h2>Tienda</h2>
+      <ul>
+        <li><a href="/tienda/catalogo">Todo el catálogo</a></li>
+        {shop.map((s) => <li><a href={s.href}>{s.label}</a></li>)}
+      </ul>
+    </nav>
+
+    <nav class="shop-footer__col" aria-label="Foldwise en el pie de página">
+      <h2>Foldwise</h2>
+      <ul>
+        <li><a href="#">Nosotros</a></li>
+        <li><a href="#">Blog</a></li>
+        <li><a href="#">Contacto</a></li>
+      </ul>
+    </nav>
+
+    <div class="shop-footer__col">
+      <h2>Hablemos</h2>
+      <p>Te ayudamos a elegir la caja, la medida y la impresión. Sin compromiso y en tu idioma.</p>
+      <a href="#" class="shop-footer__cta">Escríbenos</a>
+    </div>
+  </div>
+  <div class="shop-footer__legal">
+    <span>© 2026 Foldwise. Medidas en pulgadas y precios de muestra en USD.</span>
+    <span>Fotos de estilo de vida: Pexels.</span>
+  </div>
+</footer>
+
+<style>
+  .shop-footer {
+    margin-top: var(--s-24);
+    background: var(--c-ciruela-sombra);
+    color: var(--c-crema);
+  }
+  .shop-footer__inner {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: var(--s-16) var(--s-8) var(--s-12);
+    display: grid;
+    grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
+    gap: var(--s-12);
+  }
+  .shop-footer__lockup {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .shop-footer__word {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 2.2rem;
+    letter-spacing: -0.035em;
+    line-height: 1;
+  }
+  .shop-footer__tagline {
+    margin: var(--s-4) 0 var(--s-4);
+    max-width: 30ch;
+    color: color-mix(in srgb, var(--c-crema) 78%, transparent);
+  }
+  .shop-footer__fold {
+    width: 200px;
+    height: 8px;
+  }
+  .shop-footer__col h2 {
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    margin-bottom: var(--s-4);
+    color: var(--c-kraft-claro);
+  }
+  .shop-footer__col ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--s-2);
+  }
+  .shop-footer__col a {
+    text-decoration: none;
+    color: color-mix(in srgb, var(--c-crema) 85%, transparent);
+    font-size: var(--fs-sm);
+    transition: color 0.2s;
+  }
+  .shop-footer__col a:hover {
+    color: var(--c-lima);
+  }
+  .shop-footer__col p {
+    margin: 0 0 var(--s-4);
+    font-size: var(--fs-sm);
+    color: color-mix(in srgb, var(--c-crema) 78%, transparent);
+  }
+  .shop-footer__col .shop-footer__cta {
+    display: inline-block;
+    padding: 0.6rem 1.2rem;
+    border-radius: var(--r-pill);
+    border: 1px solid color-mix(in srgb, var(--c-crema) 40%, transparent);
+    color: var(--c-crema);
+    font-weight: 600;
+    transition: background 0.2s, color 0.2s, transform 0.15s;
+  }
+  .shop-footer__col .shop-footer__cta:hover {
+    background: var(--c-crema);
+    color: var(--c-ciruela);
+  }
+  .shop-footer__cta:active {
+    transform: scale(0.96);
+  }
+  .shop-footer__legal {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: var(--s-6) var(--s-8) var(--s-8);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-2);
+    font-size: var(--fs-xs);
+    color: color-mix(in srgb, var(--c-crema) 55%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--c-crema) 12%, transparent);
+  }
+  @media (max-width: 900px) {
+    .shop-footer__inner {
+      grid-template-columns: 1fr 1fr;
+      gap: var(--s-8);
+      padding: var(--s-12) var(--s-4) var(--s-8);
+    }
+    .shop-footer__brand {
+      grid-column: 1 / -1;
+    }
+    .shop-footer__legal {
+      padding: var(--s-4);
+    }
+  }
+</style>

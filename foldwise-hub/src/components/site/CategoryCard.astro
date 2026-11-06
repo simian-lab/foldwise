@@ -1,0 +1,188 @@
+---
+/**
+ * Category tile for the shop: an isometric render of the family's smallest
+ * size, its name, a one-line pitch and the entry price. Featured families
+ * link to their product page; the rest to their catalog anchor.
+ */
+import type { Category } from '../../data/categories';
+import IsoBox from '../boxes/IsoBox.astro';
+
+interface Props {
+  category: Category;
+  class?: string;
+}
+
+const { category, class: className } = Astro.props;
+const href = category.featured ? `/tienda/producto/${category.slug}` : `/tienda/catalogo#${category.slug}`;
+const size = category.sizes[0];
+const from = Math.min(...category.tiers.map((t) => t.unitPrice));
+const price = from.toLocaleString('es-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+---
+
+<a
+  href={href}
+  class:list={['cat-card', { 'cat-card--featured': category.featured }, className]}
+  data-category-card
+  data-slug={category.slug}
+  data-reveal
+>
+  <span class="cat-card__corner" aria-hidden="true">
+    <svg viewBox="0 0 40 40" focusable="false">
+      <path d="M0 0h40v40z" fill="#F6F1E7"></path>
+      <path d="M0 0l40 40H6a6 6 0 0 1-6-6z" fill="#C8F25A"></path>
+      <path d="M1 1l38 38" stroke="#3A1D3F" stroke-width="1.6" stroke-dasharray="3 3"></path>
+    </svg>
+  </span>
+  <span class="cat-card__stage">
+    <IsoBox
+      style={category.style}
+      l={size.l}
+      w={size.w}
+      h={size.h}
+      colorway="kraft"
+      branding={category.featured ? 'foldwise' : 'none'}
+      label={`${category.nameEs} Foldwise de ${size.l} × ${size.w} × ${size.h} pulgadas`}
+      class="cat-card__box"
+    />
+  </span>
+  <span class="cat-card__body">
+    <span class="cat-card__name">{category.nameEs}</span>
+    <span class="cat-card__short">{category.shortEs}</span>
+    <span class="cat-card__meta">
+      <span>Desde {category.minUnits} unidades</span>
+      <span class="cat-card__price">desde US$ {price} c/u</span>
+    </span>
+  </span>
+  {category.featured && <span class="cat-card__tag">Ficha completa</span>}
+</a>
+
+<style>
+  .cat-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: var(--c-ciruela);
+    background: color-mix(in srgb, var(--c-crema) 55%, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--c-kraft) 28%, transparent);
+    border-radius: var(--r-lg);
+    overflow: hidden;
+    isolation: isolate;
+    transition:
+      transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.35s cubic-bezier(0.2, 0.8, 0.2, 1),
+      border-color 0.35s;
+  }
+  .cat-card:hover,
+  .cat-card:focus-visible {
+    transform: translateY(-6px);
+    border-color: color-mix(in srgb, var(--c-kraft) 60%, transparent);
+    box-shadow:
+      0 1px 0 rgba(42, 20, 48, 0.04),
+      0 18px 36px -18px rgba(42, 20, 48, 0.35);
+  }
+  .cat-card:active {
+    transform: translateY(-2px) scale(0.99);
+  }
+  .cat-card:focus-visible {
+    outline: 2px solid var(--c-ciruela);
+    outline-offset: 3px;
+  }
+
+  .cat-card__corner {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    z-index: 2;
+    transform-origin: top right;
+    transform: scale(0);
+    transition: transform 0.35s cubic-bezier(0.3, 1.4, 0.5, 1);
+  }
+  .cat-card__corner svg {
+    width: 100%;
+    height: 100%;
+  }
+  .cat-card:hover .cat-card__corner,
+  .cat-card:focus-visible .cat-card__corner {
+    transform: scale(1);
+  }
+
+  .cat-card__stage {
+    display: block;
+    padding: var(--s-6) var(--s-8) var(--s-2);
+    background:
+      radial-gradient(60% 55% at 50% 62%, color-mix(in srgb, var(--c-kraft-claro) 45%, transparent), transparent 70%);
+  }
+  .cat-card :global(.cat-card__box) {
+    width: 100%;
+    max-width: 230px;
+    margin-inline: auto;
+    aspect-ratio: 400 / 340;
+    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .cat-card:hover :global(.cat-card__box) {
+    transform: translateY(-4px) rotate(-1.5deg);
+  }
+
+  .cat-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-2);
+    padding: var(--s-4) var(--s-6) var(--s-6);
+    flex: 1;
+  }
+  .cat-card__name {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.3rem;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+  }
+  .cat-card__short {
+    font-size: var(--fs-sm);
+    line-height: 1.45;
+    color: color-mix(in srgb, var(--c-ciruela) 78%, var(--c-crema));
+  }
+  .cat-card__meta {
+    margin-top: auto;
+    padding-top: var(--s-3);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--s-1) var(--s-3);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+  }
+  .cat-card__price {
+    color: var(--c-ciruela-claro);
+  }
+  .cat-card__tag {
+    position: absolute;
+    top: var(--s-4);
+    left: var(--s-4);
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--r-pill);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+
+  @media (max-width: 560px) {
+    .cat-card__stage {
+      padding: var(--s-4) var(--s-4) 0;
+    }
+    .cat-card__body {
+      padding: var(--s-3) var(--s-4) var(--s-4);
+    }
+    .cat-card__name {
+      font-size: 1.05rem;
+    }
+    .cat-card__short {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,240 @@
+---
+/**
+ * Interactive hero mailer. The first paint is the closed box rendered on the
+ * server from the same geometry the browser animates (src/scripts/hero-box.ts).
+ */
+import { heroStatic, heroFrame, STATIC_MATS, VIEW, LIME } from '../../scripts/hero-box';
+
+const ISOTYPE = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
+const FOLDS = 'M25 4v8 M15 19v8 M25 19v8';
+
+const st = heroStatic();
+const fr = heroFrame(0);
+
+const TRAY_BACK = ['shadow', 'contact', 'floor', 'innerBack', 'innerLeft', 'tissueBack', 'tissueLeft', 'tissue', 'tissueCreases', 'seal', 'sealRing'];
+const JAR = ['jarShadow', 'jarBody', 'jarGlint', 'jarLabel', 'jarLabelLine', 'jarLabelLine2', 'jarCap', 'jarCapTop'];
+const TRAY_FRONT = ['front', 'frontShade', 'side', 'sideShade', 'rim', 'edgeLight', 'cornerLight'];
+const LID_A = ['lidOuter', 'lidOuterShade', 'lidEdge', 'hingeFold', 'lidInner', 'lipBottom', 'lidSide', 'lip'];
+const CARD = ['cardShadow', 'cardBack', 'cardFace'];
+
+const sh = (k: string) => {
+  const s = st[k] ?? fr.shapes[k];
+  return {
+    'data-k': k in fr.shapes ? k : undefined,
+    d: s.d,
+    fill: s.fill,
+    stroke: s.stroke,
+    'stroke-width': s.sw,
+    'stroke-dasharray': s.dash,
+    'stroke-linejoin': 'round',
+    'stroke-linecap': 'round',
+    opacity: s.opacity,
+    filter: k === 'shadow' || k === 'contact' || k === 'jarShadow' || k === 'cardShadow' ? 'url(#hb-blur)' : undefined,
+    style: (fr.shapes[k] as { hidden?: boolean } | undefined)?.hidden ? 'display:none' : undefined,
+  };
+};
+
+// Burst of lime fold dashes above the open box.
+const cx = VIEW.w * 0.5;
+const cy = VIEW.h * 0.2;
+const rays = Array.from({ length: 9 }, (_, i) => {
+  const a = (-160 + (i * 140) / 8) * (Math.PI / 180);
+  return { x1: cx + Math.cos(a) * 34, y1: cy + Math.sin(a) * 34, x2: cx + Math.cos(a) * 58, y2: cy + Math.sin(a) * 58, i };
+});
+---
+
+<button
+  type="button"
+  class="hero-box"
+  data-hero-box
+  data-open="false"
+  data-progress="0"
+  data-motion="pending"
+  aria-pressed="false"
+  aria-label="Abrir la caja"
+>
+  <svg
+    viewBox={`0 0 ${VIEW.w} ${VIEW.h}`}
+    role="img"
+    aria-label="Caja mailer Foldwise color ciruela que se abre y muestra papel de seda, una tarjeta de agradecimiento y una vela"
+    focusable="false"
+  >
+    <defs>
+      <filter id="hb-blur" x="-30%" y="-30%" width="160%" height="160%">
+        <feGaussianBlur stdDeviation="7"></feGaussianBlur>
+      </filter>
+      <linearGradient id="hb-vshade" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.05"></stop>
+        <stop offset="0.6" stop-color="#000000" stop-opacity="0"></stop>
+        <stop offset="1" stop-color="#160818" stop-opacity="0.28"></stop>
+      </linearGradient>
+      <linearGradient id="hb-lidshade" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.08"></stop>
+        <stop offset="1" stop-color="#160818" stop-opacity="0.18"></stop>
+      </linearGradient>
+      <linearGradient id="hb-glass" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#A9845E"></stop>
+        <stop offset="0.45" stop-color="#C9A27A"></stop>
+        <stop offset="1" stop-color="#7E5E3E"></stop>
+      </linearGradient>
+      <linearGradient id="hb-cap" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stop-color="#5A3360"></stop>
+        <stop offset="1" stop-color="#2A1430"></stop>
+      </linearGradient>
+    </defs>
+
+    <g data-slot="back"></g>
+
+    <g data-part="tray">
+      {TRAY_BACK.map((k) => <path {...sh(k)} />)}
+      <g transform={STATIC_MATS.seal}>
+        <g transform="translate(0.2 0.18) scale(0.0115)">
+          <path d={ISOTYPE} fill="#3A1D3F"></path>
+        </g>
+      </g>
+      <g data-part="card">
+        {CARD.map((k) => <path {...sh(k)} />)}
+        <g data-mat="card" transform={fr.mats.card} style={fr.cardFront ? undefined : 'display:none'}>
+          <g transform="translate(0.45 0.45) scale(0.0165)">
+            <path d={ISOTYPE} fill="#3A1D3F"></path>
+            <path d={FOLDS} fill="none" stroke={LIME} stroke-width="2.4" stroke-dasharray="3 2.5"></path>
+          </g>
+          <text
+            x="0.45"
+            y="1.86"
+            font-family="'Bricolage Grotesque', sans-serif"
+            font-weight="800"
+            font-size="0.6"
+            letter-spacing="-0.02em"
+            fill="#3A1D3F"
+          ><tspan x="0.45">¡Gracias por </tspan><tspan x="0.45" dy="0.66">apoyar lo pequeño!</tspan></text>
+          <path d="M0.45 2.86h3.3" stroke={LIME} stroke-width="0.13" stroke-linecap="round" stroke-dasharray="0.32 0.18"></path>
+          <text x="0.45" y="3.26" font-family="'Figtree', sans-serif" font-weight="500" font-size="0.26" fill="#5A3360">Con cariño, desde nuestro taller</text>
+        </g>
+      </g>
+      {JAR.map((k) => <path {...sh(k)} />)}
+      {TRAY_FRONT.map((k) => <path {...sh(k)} />)}
+      <g transform={STATIC_MATS.front} data-part="front-print">
+        <text x="0.8" y="3.2" font-family="'Figtree', sans-serif" font-weight="600" font-size="0.46" fill="#F6F1E7" opacity="0.92">
+          Pedidos pequeños. Cuidado enorme.
+        </text>
+      </g>
+      <g transform={STATIC_MATS.side} data-part="side-print">
+        <g transform="translate(3.9 1.25) scale(0.05)">
+          <path d={ISOTYPE} fill="#F6F1E7" opacity="0.9"></path>
+          <path d={FOLDS} fill="none" stroke="#3A1D3F" stroke-width="2" stroke-dasharray="3 2.5"></path>
+        </g>
+      </g>
+    </g>
+
+    <g data-slot="front">
+      <g data-lid>
+        {LID_A.slice(0, 4).map((k) => <path {...sh(k)} />)}
+        <g data-mat="lidOuter" transform={fr.mats.lidOuter}>
+          <g transform="translate(2.3 3.55) scale(0.058)">
+            <path d={ISOTYPE} fill="#F6F1E7"></path>
+            <path d={FOLDS} fill="none" stroke={LIME} stroke-width="2.2" stroke-dasharray="3 2.5"></path>
+          </g>
+          <text
+            x="5.35"
+            y="5.95"
+            font-family="'Bricolage Grotesque', sans-serif"
+            font-weight="800"
+            font-size="2.05"
+            letter-spacing="-0.035em"
+            fill="#F6F1E7"
+          >foldwise</text>
+        </g>
+        <path {...sh('lidInner')} />
+        <g data-mat="lidInner" transform={fr.mats.lidInner} style="display:none">
+          <g transform="translate(6.35 1.7) scale(0.028)">
+            <path d={ISOTYPE} fill="#3A1D3F"></path>
+          </g>
+          <text
+            x="7"
+            y="4.35"
+            text-anchor="middle"
+            font-family="'Bricolage Grotesque', sans-serif"
+            font-weight="800"
+            font-size="0.72"
+            letter-spacing="-0.02em"
+            fill="#3A1D3F"
+          >Lo pequeño se cuida en grande.</text>
+          <text x="7" y="5.2" text-anchor="middle" font-family="'Figtree', sans-serif" font-weight="500" font-size="0.36" fill="#5A3360">
+            Tu aliado de packaging desde la primera caja.
+          </text>
+        </g>
+        {LID_A.slice(5).map((k) => <path {...sh(k)} />)}
+        <g data-mat="lip" transform={fr.mats.lip}>
+          <circle cx="7" cy="0.47" r="0.36" fill={LIME}></circle>
+          <circle cx="7" cy="0.47" r="0.27" fill="none" stroke="#3A1D3F" stroke-width="0.04" stroke-dasharray="0.08 0.07"></circle>
+          <g transform="translate(6.85 0.32) scale(0.0068)">
+            <path d={ISOTYPE} fill="#3A1D3F"></path>
+          </g>
+        </g>
+      </g>
+    </g>
+
+    <g class="hero-box__burst" aria-hidden="true">
+      {
+        rays.map((r) => (
+          <line
+            x1={r.x1}
+            y1={r.y1}
+            x2={r.x2}
+            y2={r.y2}
+            stroke={LIME}
+            stroke-width="4"
+            stroke-linecap="round"
+            stroke-dasharray={r.i % 2 ? '6 6' : undefined}
+            style={`--i:${r.i}`}
+          />
+        ))
+      }
+    </g>
+  </svg>
+</button>
+
+<script>
+  import { mountHeroBox } from '../../scripts/hero-box';
+  document.querySelectorAll<HTMLElement>('[data-hero-box]').forEach(mountHeroBox);
+</script>
+
+<style>
+  .hero-box {
+    all: unset;
+    display: block;
+    width: 100%;
+    cursor: pointer;
+    border-radius: var(--r-lg);
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .hero-box:active {
+    transform: scale(0.985);
+  }
+  .hero-box:focus-visible {
+    outline: 2px solid var(--c-ciruela);
+    outline-offset: 6px;
+  }
+  .hero-box svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+  .hero-box__burst line {
+    opacity: 0;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .hero-box[data-celebrate='true'] .hero-box__burst line {
+    animation: hb-burst 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+    animation-delay: calc(var(--i) * 25ms);
+  }
+  @keyframes hb-burst {
+    0% { opacity: 0; transform: scale(0.3); }
+    35% { opacity: 1; }
+    100% { opacity: 0; transform: scale(1.15) translateY(-6px); }
+  }
+</style>

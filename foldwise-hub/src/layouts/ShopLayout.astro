@@ -1,0 +1,65 @@
+---
+/** Shell for every shop page: hub document head, shop header and footer. */
+import HubLayout from './HubLayout.astro';
+import ShopHeader from '../components/site/ShopHeader.astro';
+import ShopFooter from '../components/site/ShopFooter.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description } = Astro.props;
+---
+
+<HubLayout title={title} description={description}>
+  <div class="shop">
+    <ShopHeader />
+    <main id="contenido" class="shop__main">
+      <slot />
+    </main>
+    <ShopFooter />
+  </div>
+</HubLayout>
+
+<script>
+  // Reveal marked elements once, as they enter the viewport.
+  const items = document.querySelectorAll<HTMLElement>('[data-reveal]');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (!reduce && 'IntersectionObserver' in window) {
+    document.documentElement.classList.add('reveal-ready');
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const e of entries) {
+          if (!e.isIntersecting) continue;
+          e.target.classList.add('is-revealed');
+          io.unobserve(e.target);
+        }
+      },
+      { rootMargin: '0px 0px -8% 0px', threshold: 0.12 },
+    );
+    items.forEach((el, i) => {
+      el.style.setProperty('--reveal-i', String(i % 4));
+      io.observe(el);
+    });
+  }
+</script>
+
+<style is:global>
+  .shop {
+    overflow-x: clip;
+  }
+  .reveal-ready [data-reveal]:not(.is-revealed) {
+    opacity: 0;
+  }
+  .reveal-ready [data-reveal].is-revealed {
+    animation: shop-reveal 0.75s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+    animation-delay: calc(var(--reveal-i, 0) * 80ms);
+  }
+  @keyframes shop-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(18px);
+    }
+  }
+</style>
