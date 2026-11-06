@@ -34,6 +34,8 @@ Final evidence: vitest 38/38; `npm run build` 11 pages; `grep -ril ebiopacking d
 | R1 | AI photoreal product images (12 + hero + familia) | delegated, wave A | done 6af6ae2 |
 | R2 | SVG realism (IsoBox, HeroBox, guides) | delegated, wave A | done 37e3a5e, 3c4a693 (clean kraft fix after "las cajas parecen sucias") |
 | R3 | Packbox-style header + hero panel; integrate photos in cards/catalog/familia; opening mailer moves to its own section | delegated, wave B | done 65431b9, 6de3e35 — vitest 43, build OK, no ebiopacking, e2e 93 |
+| R4 | Photoreal opening mailer (3 frames crossfade) — "cambiemos también esta" | delegated | done bf78fe3 |
+| R5 | Photoreal brand board applications + "Versión ilustrada" — "también apliquemos estos cambios en marca en acción" | delegated | done 3f4d6a1, abdc41a — vitest 43, build OK, no ebiopacking, e2e 95 |
 
 ## Rulings (controller decisions; cost if wrong)
 - R1 Parallel waves (user request) despite skill default — risk of conflicts; none occurred.
