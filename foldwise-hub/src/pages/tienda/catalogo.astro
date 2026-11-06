@@ -8,7 +8,8 @@ import ShopLayout from '../../layouts/ShopLayout.astro';
 import CategoryCard from '../../components/site/CategoryCard.astro';
 import CatalogFilters, { type FilterGroup } from '../../components/site/CatalogFilters.astro';
 import Icon from '../../components/brand/Icon.astro';
-import { categories, type BoxStyle } from '../../data/categories';
+import { hasGuide } from '../../data/guides';
+import { categories, minOrderUnits, type BoxStyle } from '../../data/categories';
 
 const ESTILOS: { value: string; label: string; styles: BoxStyle[] }[] = [
   { value: 'clasicas', label: 'Clásicas', styles: ['rsc', 'multidepth', 'sideloader'] },
@@ -50,7 +51,7 @@ const groups: FilterGroup[] = [
     options: USOS.map((u) => ({ value: u.value, label: u.label, count: items.filter((i) => i.uso.includes(u.value)).length })),
   },
 ];
-const minUnits = Math.min(...categories.map((c) => c.minUnits));
+const minUnits = minOrderUnits;
 ---
 
 <ShopLayout
@@ -76,7 +77,7 @@ const minUnits = Math.min(...categories.map((c) => c.minUnits));
         <ul class="catalog__proof">
           <li><Icon name="pedido-pequeno" size={20} /> Desde {minUnits} cajas por pedido</li>
           <li><Icon name="personaliza" size={20} /> Con tu logo impreso</li>
-          <li><Icon name="rapido" size={20} /> Listas en 3 a 5 días hábiles</li>
+          <li><Icon name="rapido" size={20} /> Entrega rápida</li>
         </ul>
       </div>
     </header>
@@ -104,7 +105,11 @@ const minUnits = Math.min(...categories.map((c) => c.minUnits));
                 data-estilo={i.estilo}
                 data-uso={i.uso.join(' ')}
               >
-                <CategoryCard category={i.category} />
+                <CategoryCard
+                  category={i.category}
+                  linkNonFeatured={false}
+                  guideHref={hasGuide(i.category.slug) ? `/tienda/guia/${i.category.slug}` : undefined}
+                />
               </div>
             ))
           }

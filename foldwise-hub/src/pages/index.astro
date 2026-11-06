@@ -8,12 +8,15 @@ import HubLayout from '../layouts/HubLayout.astro';
 import AnimatedLogo from '../components/brand/AnimatedLogo.astro';
 import Pattern from '../components/brand/Pattern.astro';
 import { palette, taglines } from '../data/brand';
+import { GUIDE_SLUGS, guideInfo } from '../data/guides';
 
 const brandLinks = [
   { label: 'Manual', href: '/marca', text: 'Nombre, logo, color, tipografía y voz, con el porqué de cada decisión.' },
   { label: 'Marca en acción', href: '/marca/en-accion', text: 'Cajas, cinta, tarjetas, redes y reparto con la marca puesta.' },
   { label: 'Cajas', href: '/marca/cajas', text: 'Las 12 familias de cajas con la marca, y todas juntas.' },
 ];
+
+const guideLinks = GUIDE_SLUGS.map((slug) => ({ label: guideInfo[slug].titulo, href: `/tienda/guia/${slug}` }));
 ---
 
 <HubLayout title="Foldwise · Propuesta de marca">
@@ -66,6 +69,15 @@ const brandLinks = [
           </span>
           <span class="door__cta">Entrar a la tienda</span>
         </a>
+        <ul class="door__links door__links--sitio" data-door-guides role="list" aria-label="Guías de armado">
+          {
+            guideLinks.map((l) => (
+              <li>
+                <a href={l.href}>{l.label}</a>
+              </li>
+            ))
+          }
+        </ul>
       </article>
     </section>
 
@@ -175,7 +187,6 @@ const brandLinks = [
   }
   .door__main--full {
     max-width: none;
-    height: 100%;
     align-content: space-between;
     gap: var(--s-8);
   }
@@ -244,6 +255,23 @@ const brandLinks = [
   }
   .door__links a:hover {
     color: var(--c-lima);
+  }
+  .door__links--sitio,
+  .door__links--sitio li {
+    border-color: rgb(58 29 63 / 0.28);
+  }
+  .door__links--sitio li {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .door__links--sitio a {
+    color: var(--c-ciruela);
+    text-decoration-color: var(--c-ciruela);
+  }
+  .door__links--sitio a:hover {
+    color: var(--c-ciruela-sombra);
+  }
+  .door--sitio .door__links a:focus-visible {
+    outline-color: var(--c-ciruela);
   }
   .door__links span {
     font-size: var(--fs-sm);

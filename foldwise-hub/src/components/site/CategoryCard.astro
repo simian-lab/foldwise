@@ -2,26 +2,34 @@
 /**
  * Category tile for the shop: an isometric render of the family's smallest
  * size, its name, a one-line pitch and the entry price. Featured families
- * link to their product page; the rest to their catalog anchor.
+ * link to their product page; the rest to their catalog anchor, unless
+ * `linkNonFeatured` is false (the catalog itself), where they render as a
+ * static tile labelled "Ficha próximamente".
  */
 import type { Category } from '../../data/categories';
+import { money } from '../../data/pricing';
 import IsoBox from '../boxes/IsoBox.astro';
 
 interface Props {
   category: Category;
   class?: string;
+  /** Link non-featured families to their catalog anchor (default true). */
+  linkNonFeatured?: boolean;
+  /** Optional assembly guide link; only rendered on static (non-link) tiles. */
+  guideHref?: string;
 }
 
-const { category, class: className } = Astro.props;
+const { category, class: className, linkNonFeatured = true, guideHref } = Astro.props;
+const linked = category.featured || linkNonFeatured;
 const href = category.featured ? `/tienda/producto/${category.slug}` : `/tienda/catalogo#${category.slug}`;
+const Tag = linked ? 'a' : 'div';
 const size = category.sizes[0];
 const from = Math.min(...category.tiers.map((t) => t.unitPrice));
-const price = from.toLocaleString('es-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 ---
 
-<a
-  href={href}
-  class:list={['cat-card', { 'cat-card--featured': category.featured }, className]}
+<Tag
+  href={linked ? href : undefined}
+  class:list={['cat-card', { 'cat-card--featured': category.featured, 'cat-card--static': !linked }, className]}
   data-category-card
   data-slug={category.slug}
   data-reveal
@@ -50,11 +58,19 @@ const price = from.toLocaleString('es-US', { minimumFractionDigits: 2, maximumFr
     <span class="cat-card__short">{category.shortEs}</span>
     <span class="cat-card__meta">
       <span>Desde {category.minUnits} unidades</span>
-      <span class="cat-card__price">desde US$ {price} c/u</span>
+      <span class="cat-card__price">desde {money(from)} c/u</span>
     </span>
+    {
+      !linked && guideHref && (
+        <a class="cat-card__guide" href={guideHref}>
+          Cómo se arma
+        </a>
+      )
+    }
   </span>
   {category.featured && <span class="cat-card__tag">Ficha completa</span>}
-</a>
+  {!linked && <span class="cat-card__tag cat-card__tag--soon">Ficha próximamente</span>}
+</Tag>
 
 <style>
   .cat-card {
@@ -83,6 +99,14 @@ const price = from.toLocaleString('es-US', { minimumFractionDigits: 2, maximumFr
   }
   .cat-card:active {
     transform: translateY(-2px) scale(0.99);
+  }
+  /* static tile (catalog, non-featured): no click affordance */
+  .cat-card--static:hover,
+  .cat-card--static:active {
+    transform: none;
+  }
+  .cat-card--static:hover .cat-card__corner {
+    transform: scale(0);
   }
   .cat-card:focus-visible {
     outline: 2px solid var(--c-ciruela);
@@ -169,6 +193,24 @@ const price = from.toLocaleString('es-US', { minimumFractionDigits: 2, maximumFr
     color: var(--c-crema);
     font-size: 0.72rem;
     font-weight: 600;
+  }
+
+  .cat-card__tag--soon {
+    background: color-mix(in srgb, var(--c-kraft-claro) 70%, #ffffff);
+    color: var(--c-ciruela);
+  }
+  .cat-card__guide {
+    align-self: flex-start;
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--c-ciruela);
+    text-decoration: underline;
+    text-decoration-color: var(--c-lima);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+  .cat-card__guide:hover {
+    text-decoration-color: var(--c-ciruela);
   }
 
   @media (max-width: 560px) {

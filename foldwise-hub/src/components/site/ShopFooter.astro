@@ -3,11 +3,13 @@
 import Isotype from '../brand/Isotype.astro';
 import { categories } from '../../data/categories';
 import { taglines } from '../../data/brand';
+import { GUIDE_SLUGS, guideInfo } from '../../data/guides';
 
 const shop = categories.slice(0, 6).map((c) => ({
   label: c.nameEs,
   href: c.featured ? `/tienda/producto/${c.slug}` : `/tienda/catalogo#${c.slug}`,
 }));
+const guideLinks = GUIDE_SLUGS.map((slug) => ({ label: guideInfo[slug].titulo, href: `/tienda/guia/${slug}` }));
 ---
 
 <footer class="shop-footer">
@@ -28,6 +30,13 @@ const shop = categories.slice(0, 6).map((c) => ({
       <ul>
         <li><a href="/tienda/catalogo">Todo el catálogo</a></li>
         {shop.map((s) => <li><a href={s.href}>{s.label}</a></li>)}
+      </ul>
+    </nav>
+
+    <nav class="shop-footer__col" aria-label="Guías de armado" data-footer-guides>
+      <h2>Guías de armado</h2>
+      <ul>
+        {guideLinks.map((g) => <li><a href={g.href}>{g.label}</a></li>)}
       </ul>
     </nav>
 
@@ -63,7 +72,7 @@ const shop = categories.slice(0, 6).map((c) => ({
     margin: 0 auto;
     padding: var(--s-16) var(--s-8) var(--s-12);
     display: grid;
-    grid-template-columns: 1.6fr 1fr 1fr 1.2fr;
+    grid-template-columns: 1.4fr 1fr 1fr 0.8fr 1.1fr;
     gap: var(--s-12);
   }
   .shop-footer__lockup {

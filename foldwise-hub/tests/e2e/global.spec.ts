@@ -28,6 +28,8 @@ test.describe('every route', () => {
       // Visible text only: in dev mode the HTML carries absolute file paths.
       const text = (await page.evaluate(() => document.body.innerText)).toLowerCase();
       expect(text).not.toContain('ebiopacking');
+      // No delivery-time number the client never committed to.
+      expect(text).not.toContain('días hábiles');
 
       // Nothing may hide page-level overflow, and nothing may stick out.
       const clips = await page.evaluate(() =>
@@ -92,6 +94,13 @@ test.describe('hub entry', () => {
       ['Manual', '/marca'],
       ['Marca en acción', '/marca/en-accion'],
       ['Cajas', '/marca/cajas'],
+    ]);
+
+    const guides = main.locator('[data-door-guides] a');
+    expect(await guides.evaluateAll((els) => els.map((e) => e.getAttribute('href')))).toEqual([
+      '/tienda/guia/cajas-mailer',
+      '/tienda/guia/cajas-de-envio',
+      '/tienda/guia/mailers-faciles',
     ]);
 
     await expect(main.getByText('Propuesta de marca por Simian')).toBeVisible();
