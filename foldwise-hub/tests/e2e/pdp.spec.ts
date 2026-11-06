@@ -42,6 +42,21 @@ test.describe('mailer product page', () => {
     expect(blocked).toEqual([]);
   });
 
+  test('gallery shows the product photo first and the labelled live logo preview second', async ({ page }) => {
+    await page.goto(MAILER);
+    const media = page.locator('.pdp__media');
+    const photo = media.locator('img[data-pdp-photo]');
+    await expect(photo).toHaveAttribute('src', '/img/products/cajas-mailer.webp');
+    await expect(photo).toHaveAttribute('alt', /Cajas mailer/);
+    await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    const preview = media.locator('[data-logo-preview]');
+    await expect(preview.locator('[data-preview-label]')).toHaveText('Vista previa con tu logo');
+    await expect(preview).toHaveAccessibleName('Vista previa con tu logo');
+    const pb = (await photo.boundingBox())!;
+    const vb = (await preview.boundingBox())!;
+    expect(vb.y).toBeGreaterThanOrEqual(pb.y + pb.height - 1);
+  });
+
   test('volume pricing follows the tiers (99 -> 1.65, 100 -> 1.22)', async ({ page }) => {
     await page.goto(MAILER);
     await setQty(page, '99');

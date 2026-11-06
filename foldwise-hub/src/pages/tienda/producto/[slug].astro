@@ -1,7 +1,8 @@
 ---
 /**
- * Product page, built only for featured families. Live logo preview on the
- * left, configurator on the right, then specs, the dieline and related
+ * Product page, built only for featured families. Gallery on the left (the
+ * product photo, then the live "tu logo aquí" SVG preview as a second,
+ * labelled view), configurator on the right, then specs, the dieline and related
  * families.
  */
 import ShopLayout from '../../../layouts/ShopLayout.astro';
@@ -71,6 +72,19 @@ const related = [
 
     <section class="pdp__top" aria-labelledby="pdp-title">
       <div class="pdp__media">
+        <figure class="pdp__photo-wrap">
+          <img
+            class="pdp__photo"
+            src={`/img/products/${category.slug}.webp`}
+            alt={`${category.nameEs} de Foldwise en cartón corrugado, con el logo impreso`}
+            width="1600"
+            height="1200"
+            loading="eager"
+            fetchpriority="high"
+            decoding="async"
+            data-pdp-photo
+          />
+        </figure>
         <LogoPreview category={category} />
       </div>
 
@@ -209,8 +223,21 @@ const related = [
     align-items: start;
   }
   .pdp__media {
-    position: sticky;
-    top: 150px;
+    display: grid;
+    gap: var(--s-4);
+  }
+  .pdp__photo-wrap {
+    margin: 0;
+    border-radius: 28px;
+    overflow: hidden;
+    background: #f3ebe0;
+  }
+  .pdp__photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
   }
   .pdp__info {
     padding-top: var(--s-6);
@@ -380,9 +407,6 @@ const related = [
     .pdp__specs {
       grid-template-columns: minmax(0, 1fr);
     }
-    .pdp__media {
-      position: static;
-    }
     .pdp__info {
       max-width: none;
       padding-top: 0;
@@ -394,6 +418,9 @@ const related = [
   @media (max-width: 760px) {
     .pdp {
       padding-inline: var(--s-4);
+    }
+    .pdp__photo-wrap {
+      border-radius: 22px;
     }
     .pdp__specs,
     .pdp__dieline,

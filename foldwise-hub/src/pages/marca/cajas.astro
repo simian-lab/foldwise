@@ -28,18 +28,33 @@ const renders = categories.map((c) => {
 
     <section class="family" aria-labelledby="fam">
       <h2 id="fam">Toda la familia</h2>
-      <BoxLineup />
+      <img
+        class="family__photo"
+        src="/img/products/familia.webp"
+        alt="Las 12 cajas de Foldwise juntas: cajas de mudanza, reforzadas y de envío con cinta lima, una caja de vino ciruela, mailers, una caja de regalo ciruela y una caja de ropa crema"
+        width="2000"
+        height="1000"
+        loading="lazy"
+        decoding="async"
+        data-family-photo
+      />
     </section>
 
     <section aria-labelledby="ren">
       <h2 id="ren">Las 12 cajas</h2>
       <div class="grid">
         {
-          renders.map(({ c, size, colorway }) => (
-            <figure class="card" data-render={c.slug}>
-              <div class="photo">
-                <IsoBox style={c.style} l={size.l} w={size.w} h={size.h} colorway={colorway} branding="foldwise" />
-              </div>
+          renders.map(({ c, size }) => (
+            <figure class="card card--photo" data-render={c.slug}>
+              <img
+                class="card__photo"
+                src={`/img/products/${c.slug}.webp`}
+                alt={`${c.nameEs} de Foldwise en cartón corrugado, con el logo impreso`}
+                width="1600"
+                height="1200"
+                loading="lazy"
+                decoding="async"
+              />
               <figcaption>
                 <strong>{c.nameEs}</strong>
                 <span>{fmt(size.l)} × {fmt(size.w)} × {fmt(size.h)} in</span>
@@ -49,6 +64,31 @@ const renders = categories.map((c) => {
         }
       </div>
     </section>
+
+    <details class="illus" data-illustrated>
+      <summary>
+        <span class="illus__title">Versión ilustrada</span>
+        <span class="illus__hint">Las mismas 12 cajas dibujadas en isométrico, para piezas gráficas y guías.</span>
+      </summary>
+      <div class="illus__body">
+        <BoxLineup />
+        <div class="grid grid--small">
+          {
+            renders.map(({ c, size, colorway }) => (
+              <figure class="card" data-render-illustrated={c.slug}>
+                <div class="photo">
+                  <IsoBox style={c.style} l={size.l} w={size.w} h={size.h} colorway={colorway} branding="foldwise" />
+                </div>
+                <figcaption>
+                  <strong>{c.nameEs}</strong>
+                  <span>{fmt(size.l)} × {fmt(size.w)} × {fmt(size.h)} in</span>
+                </figcaption>
+              </figure>
+            ))
+          }
+        </div>
+      </div>
+    </details>
   </main>
 </HubLayout>
 
@@ -105,6 +145,84 @@ const renders = categories.map((c) => {
     display: grid;
     gap: var(--s-3);
   }
+  .card--photo {
+    padding: 0 0 var(--s-4);
+    overflow: hidden;
+    background: #f3ebe0;
+  }
+  .card--photo figcaption {
+    padding-inline: var(--s-6);
+  }
+  .card__photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+  .family__photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    border-radius: var(--r-lg);
+    background: #f1e7dd;
+  }
+  .illus {
+    border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+    padding-top: var(--s-6);
+  }
+  .illus summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-2) var(--s-4);
+    cursor: pointer;
+    list-style: none;
+    color: var(--c-ciruela);
+  }
+  .illus summary::-webkit-details-marker {
+    display: none;
+  }
+  .illus__title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: var(--fs-lg);
+    letter-spacing: -0.02em;
+  }
+  .illus__title::before {
+    content: '';
+    width: 0.55em;
+    height: 0.55em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease;
+  }
+  .illus[open] .illus__title::before {
+    transform: rotate(45deg);
+  }
+  .illus__hint {
+    font-size: var(--fs-sm);
+    color: var(--c-ciruela-claro);
+  }
+  .illus summary:focus-visible {
+    outline: 2px solid var(--c-ciruela);
+    outline-offset: 4px;
+    border-radius: var(--r-sm);
+  }
+  .illus__body {
+    display: grid;
+    gap: var(--s-12);
+    margin-top: var(--s-8);
+  }
+  .grid--small {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  }
   .photo {
     padding: var(--s-2);
     filter: drop-shadow(0 12px 12px rgba(42, 20, 48, 0.2));
@@ -116,6 +234,12 @@ const renders = categories.map((c) => {
     }
     .card {
       padding: var(--s-3);
+    }
+    .card--photo {
+      padding: 0 0 var(--s-3);
+    }
+    .card--photo figcaption {
+      padding-inline: var(--s-3);
     }
     .card figcaption {
       min-height: 4.6rem;

@@ -22,6 +22,20 @@ test.describe('catalog', () => {
     expect(blocked).toEqual([]);
   });
 
+  test('every catalog card shows its product photo with a Spanish alt', async ({ page }) => {
+    await page.goto(CATALOG);
+    const items = page.locator('[data-catalog-item]');
+    await expect(items).toHaveCount(12);
+    for (let i = 0; i < 12; i++) {
+      const item = items.nth(i);
+      const slug = await item.getAttribute('id');
+      const img = item.locator('img[data-product-photo]');
+      await expect(img).toHaveAttribute('src', `/img/products/${slug}.webp`);
+      await expect(img).toHaveAttribute('alt', /de Foldwise en cartón corrugado/);
+      await expect(img).toHaveAttribute('loading', 'lazy');
+    }
+  });
+
   test('estilo filter hides non-matching cards', async ({ page }) => {
     await page.goto(CATALOG);
     await page.locator('[data-filter-group="estilo"]').getByText('Mailers', { exact: true }).click();

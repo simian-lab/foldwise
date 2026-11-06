@@ -16,8 +16,9 @@ test.describe('isometric boxes', () => {
     page.on('pageerror', (e) => errors.push(e.message));
     const blocked = await blockExternal(page);
     await page.goto(CAJAS);
+    await page.locator('details[data-illustrated] summary').click();
 
-    const boxes = page.locator('main [data-render] svg[data-style]');
+    const boxes = page.locator('main [data-render-illustrated] svg[data-style]');
     await expect(boxes).toHaveCount(12);
     for (let i = 0; i < 12; i++) {
       const bb = await boxes.nth(i).boundingBox();
@@ -61,6 +62,7 @@ test.describe('isometric boxes', () => {
   // "blanco" exists in the renderer but no page uses it yet.
   test('every colorway used by the brand renders', async ({ page }) => {
     await page.goto(CAJAS);
+    await page.locator('details[data-illustrated] summary').click();
     for (const c of ['kraft', 'ciruela', 'crema']) {
       await expect(page.locator(`svg[data-colorway="${c}"]`).first()).toBeVisible();
     }

@@ -19,7 +19,13 @@ const first = category.sizes[0];
 const dims = (s: { l: number; w: number; h: number }) => `${s.l} × ${s.w} × ${s.h} in`;
 ---
 
-<figure class="preview" data-logo-preview>
+<figure class="preview" data-logo-preview aria-labelledby="preview-label">
+  <p class="preview__label" id="preview-label" data-preview-label>
+    <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+      <path d="M2.5 11.5l4-4 2.5 2.5 4.5-5" />
+    </svg>
+    Vista previa con tu logo
+  </p>
   <svg class="preview__flutes" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
     <defs>
       <pattern id="pdp-flute" width="28" height="18" patternUnits="userSpaceOnUse">
@@ -63,13 +69,37 @@ const dims = (s: { l: number; w: number; h: number }) => `${s.l} × ${s.w} × ${
     flex-direction: column;
     justify-content: center;
     margin: 0;
-    min-height: 560px;
-    padding: var(--s-12) var(--s-8) var(--s-6);
+    min-height: 480px;
+    padding: var(--s-16) var(--s-8) var(--s-6);
     border-radius: 28px;
     background: radial-gradient(70% 60% at 50% 45%, color-mix(in srgb, var(--c-kraft-claro) 70%, #fff) 0%, var(--c-kraft-claro) 70%);
     overflow: hidden;
     isolation: isolate;
     scroll-margin-top: 140px;
+  }
+  .preview__label {
+    position: absolute;
+    top: var(--s-4);
+    left: var(--s-4);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0.3rem 0.75rem 0.3rem 0.6rem;
+    border-radius: var(--r-pill);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+  }
+  .preview__label svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: var(--c-lima);
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
   .preview__flutes {
     position: absolute;
@@ -142,7 +172,7 @@ const dims = (s: { l: number; w: number; h: number }) => `${s.l} × ${s.w} × ${
   }
   @media (max-width: 760px) {
     .preview {
-      padding: var(--s-8) var(--s-4) var(--s-4);
+      padding: var(--s-16) var(--s-4) var(--s-4);
       border-radius: 22px;
     }
     .preview__caption {

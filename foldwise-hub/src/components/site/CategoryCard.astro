@@ -1,14 +1,13 @@
 ---
 /**
- * Category tile for the shop: an isometric render of the family's smallest
- * size, its name, a one-line pitch and the entry price. Featured families
+ * Category tile for the shop: the family's product photo
+ * (/img/products/{slug}.webp), its name, a one-line pitch and the entry price. Featured families
  * link to their product page; the rest to their catalog anchor, unless
  * `linkNonFeatured` is false (the catalog itself), where they render as a
  * static tile labelled "Ficha próximamente".
  */
 import type { Category } from '../../data/categories';
 import { money } from '../../data/pricing';
-import IsoBox from '../boxes/IsoBox.astro';
 
 interface Props {
   category: Category;
@@ -23,7 +22,6 @@ const { category, class: className, linkNonFeatured = true, guideHref } = Astro.
 const linked = category.featured || linkNonFeatured;
 const href = category.featured ? `/tienda/producto/${category.slug}` : `/tienda/catalogo#${category.slug}`;
 const Tag = linked ? 'a' : 'div';
-const size = category.sizes[0];
 const from = Math.min(...category.tiers.map((t) => t.unitPrice));
 ---
 
@@ -42,15 +40,15 @@ const from = Math.min(...category.tiers.map((t) => t.unitPrice));
     </svg>
   </span>
   <span class="cat-card__stage">
-    <IsoBox
-      style={category.style}
-      l={size.l}
-      w={size.w}
-      h={size.h}
-      colorway="kraft"
-      branding={category.featured ? 'foldwise' : 'none'}
-      label={`${category.nameEs} Foldwise de ${size.l} × ${size.w} × ${size.h} pulgadas`}
-      class="cat-card__box"
+    <img
+      class="cat-card__photo"
+      src={`/img/products/${category.slug}.webp`}
+      alt={`${category.nameEs} de Foldwise en cartón corrugado, con el logo impreso`}
+      width="1600"
+      height="1200"
+      loading="lazy"
+      decoding="async"
+      data-product-photo
     />
   </span>
   <span class="cat-card__body">
@@ -134,27 +132,22 @@ const from = Math.min(...category.tiers.map((t) => t.unitPrice));
 
   .cat-card__stage {
     display: block;
-    padding: var(--s-6) var(--s-8) var(--s-2);
-    background:
-      radial-gradient(60% 55% at 50% 62%, color-mix(in srgb, var(--c-kraft-claro) 45%, transparent), transparent 70%);
+    overflow: hidden;
+    background: #f3ebe0;
   }
-  .cat-card :global(.cat-card__box) {
+  .cat-card__photo {
+    display: block;
     width: 100%;
-    max-width: 230px;
-    margin-inline: auto;
-    aspect-ratio: 400 / 340;
-    transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   }
-  .cat-card:hover :global(.cat-card__box) {
-    transform: translateY(-4px) rotate(-1.5deg);
+  .cat-card:hover .cat-card__photo {
+    transform: scale(1.04);
   }
-  .cat-card--static:hover :global(.cat-card__box) {
+  .cat-card--static:hover .cat-card__photo {
     transform: none;
-  }
-  .cat-card--featured .cat-card__stage {
-    background:
-      radial-gradient(60% 55% at 50% 62%, color-mix(in srgb, #ffffff 35%, transparent), transparent 70%),
-      color-mix(in srgb, var(--c-kraft-claro) 55%, var(--c-crema));
   }
 
   .cat-card__body {
@@ -223,9 +216,6 @@ const from = Math.min(...category.tiers.map((t) => t.unitPrice));
   }
 
   @media (max-width: 560px) {
-    .cat-card__stage {
-      padding: var(--s-4) var(--s-4) 0;
-    }
     .cat-card__body {
       padding: var(--s-3) var(--s-4) var(--s-4);
     }
