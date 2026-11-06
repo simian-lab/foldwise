@@ -1,0 +1,84 @@
+---
+/**
+ * The whole Foldwise family in one "product photo": every category at the same
+ * px-per-inch, biggest at the back, smaller boxes stepping forward and
+ * overlapping. IsoBox fits each box to its own viewBox, so each one is
+ * wrapped in a container sized from its own Scene.scale to share one scale.
+ */
+import IsoBox from './IsoBox.astro';
+import { buildBox, VIEWBOX } from './iso-geometry';
+import { categories } from '../../data/categories';
+
+interface Props {
+  class?: string;
+}
+const { class: className } = Astro.props;
+
+const STAGE = { w: 1200, h: 620 };
+const COLORWAY: Record<string, 'kraft' | 'ciruela' | 'crema'> = {
+  retail: 'ciruela',
+  apparel: 'crema',
+  wine: 'ciruela',
+};
+
+const items = categories
+  .map((c) => {
+    const size = c.sizes[Math.min(1, c.sizes.length - 1)];
+    const colorway = COLORWAY[c.style] ?? 'kraft';
+    const scale = buildBox({ style: c.style, l: size.l, w: size.w, h: size.h, open: false, colorway, branding: 'foldwise' }).scale;
+    return { c, size, colorway, scale, volume: size.l * size.w * size.h };
+  })
+  .sort((a, b) => b.volume - a.volume);
+
+// Shared scale: stage px per inch.
+const K = 6.2;
+const placed = items.map((it, i) => {
+  const width = (VIEWBOX.w * K) / it.scale;
+  const height = (VIEWBOX.h * K) / it.scale;
+  const t = i / (items.length - 1);
+  // Walk left to right and from back (high) to front (low).
+  const cx = 150 + t * 900 + (i % 2 ? 18 : -18);
+  const cy = 250 + t * 250 + (i % 2 ? 22 : 0);
+  return { ...it, width, height, x: cx - width / 2, y: cy - height / 2 };
+});
+---
+
+<div class:list={['lineup', className]} data-lineup role="group" aria-label="Toda la familia Foldwise, a escala real entre sí">
+  <div class="stage" style={`aspect-ratio:${STAGE.w}/${STAGE.h}`}>
+    <div class="floor"></div>
+    {
+      placed.map((p, i) => (
+        <div
+          class="slot"
+          style={`left:${(p.x / STAGE.w) * 100}%;top:${(p.y / STAGE.h) * 100}%;width:${(p.width / STAGE.w) * 100}%;z-index:${i + 1}`}
+        >
+          <IsoBox style={p.c.style} l={p.size.l} w={p.size.w} h={p.size.h} colorway={p.colorway} branding="foldwise" />
+        </div>
+      ))
+    }
+  </div>
+</div>
+
+<style>
+  .lineup {
+    width: 100%;
+  }
+  .stage {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--r-lg);
+    background: radial-gradient(120% 90% at 50% 20%, #fbf8f1 0%, var(--c-crema) 55%, #ece3d2 100%);
+    box-shadow: 0 30px 60px -34px rgba(42, 20, 48, 0.35);
+  }
+  .floor {
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 38%;
+    background: linear-gradient(to bottom, transparent, rgba(169, 132, 94, 0.14));
+  }
+  .slot {
+    position: absolute;
+    filter: drop-shadow(0 14px 14px rgba(42, 20, 48, 0.22));
+  }
+</style>

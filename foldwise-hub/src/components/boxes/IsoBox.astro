@@ -54,7 +54,13 @@ const {
 
 const scene = buildBox({ style, l, w, h, open, colorway, branding });
 const pal = COLORWAYS[colorway];
-const uid = `ib${Math.random().toString(36).slice(2, 9)}`;
+// Deterministic ids: derived from the props plus a per-render counter, so
+// builds are stable and identical boxes on one page never collide.
+const locals = Astro.locals as Record<string, unknown>;
+const seq = ((locals.__isoBoxSeq as number | undefined) ?? 0) + 1;
+locals.__isoBoxSeq = seq;
+const slug = `${style}-${l}-${w}-${h}-${colorway}-${open ? 'o' : 'c'}-${branding}`.replace(/[^a-z0-9-]/gi, '_');
+const uid = `ib-${slug}-${seq}`;
 const ref = (name: string) => `url(#${uid}-${name})`;
 const paint = (v?: string) => (v?.startsWith('url:') ? ref(v.slice(4)) : (v ?? 'none'));
 const fmt = (n: number) => (Number.isInteger(n) ? `${n}` : `${n}`.replace('.', ','));

@@ -22,6 +22,9 @@ test.describe('isometric boxes', () => {
       expect(bb?.height ?? 0).toBeGreaterThan(50);
       await expect(boxes.nth(i)).toHaveAttribute('role', 'img');
     }
+    const ids = await page.locator('svg.iso-box [id]').evaluateAll((els) => els.map((e) => e.id));
+    expect(ids.length).toBeGreaterThan(0);
+    expect(new Set(ids).size).toBe(ids.length);
     expect(errors).toEqual([]);
     expect(blocked).toEqual([]);
   });

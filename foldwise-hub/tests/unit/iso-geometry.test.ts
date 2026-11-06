@@ -40,9 +40,10 @@ describe('buildBox', () => {
 
   it('fits the whole drawing inside the viewBox and fills it', () => {
     for (const [l, w, h] of [[24, 18, 18], [9, 6, 4], [36, 16, 12], [4, 4, 15]]) {
-      for (const open of [false, true]) {
-        const scene = buildBox({ style: 'rsc', l, w, h, open, colorway: 'kraft', branding: 'none' });
-        const pts = scene.parts.flatMap((p) => p.pts.flat());
+      for (const [style, open] of BOX_STYLES.flatMap((st) => [[st, false], [st, true]] as const)) {
+        const scene = buildBox({ style, l, w, h, open, colorway: 'kraft', branding: 'none' });
+        // real (unclamped) bounds of the solid geometry; blurred shadows may bleed into the padding
+        const pts = scene.parts.filter((p) => p.filter !== 'blur').flatMap((p) => p.pts.flat());
         const xs = pts.map((q) => q[0]);
         const ys = pts.map((q) => q[1]);
         expect(Math.min(...xs)).toBeGreaterThanOrEqual(0);

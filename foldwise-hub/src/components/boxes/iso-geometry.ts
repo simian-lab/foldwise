@@ -11,6 +11,7 @@
  * serialises them, so every proportion and every overlap is testable here.
  */
 import type { BoxStyle } from '../../data/categories';
+import { palette } from '../../data/brand';
 
 export type Vec2 = [number, number];
 export type Vec3 = [number, number, number];
@@ -24,9 +25,9 @@ export const BOX_STYLES: BoxStyle[] = [
 export const VIEWBOX = { w: 400, h: 340 } as const;
 const PAD = 22;
 
-export const LIME = '#C8F25A';
+export const LIME = palette.lima;
 const LIME_SHADE = '#A6CE3E';
-const SHADOW = '#2A1430';
+const SHADOW = palette.ciruelaSombra;
 
 export interface Palette {
   top: string;
@@ -38,11 +39,29 @@ export interface Palette {
 }
 
 /** Four tones per colorway (top / front / side / inner) plus edge and print ink. */
+// Derived shades: tones the shading needs beyond the eight brand tokens.
+// Each is a darker or lighter step of a token, never a new hue.
+const DERIVED = {
+  kraftInner: '#8C6B49', // kraftSombra, one step darker (inside walls)
+  kraftEdge: '#7E5E3E', // kraftSombra, two steps darker (outline)
+  ciruelaInner: '#1D0D21', // ciruelaSombra, one step darker
+  ciruelaEdge: '#160818', // ciruelaSombra, two steps darker
+  cremaTop: '#FCFAF4', // crema lifted toward white (lit lid)
+  cremaSide: '#DED2BC', // crema in shade
+  cremaInner: '#C7B89D',
+  cremaEdge: '#B3A386',
+  blancoFront: '#F3F2EF',
+  blancoSide: '#DEDDD8',
+  blancoInner: '#C5C4BE',
+  blancoEdge: '#ABAAA3',
+} as const;
+
+/** Four tones per colorway (top / front / side / inner) plus edge and print ink. */
 export const COLORWAYS: Record<Colorway, Palette> = {
-  kraft: { top: '#DDBB91', front: '#C9A27A', side: '#AA865F', inner: '#8C6B49', edge: '#7E5E3E', ink: '#3A1D3F' },
-  ciruela: { top: '#5E3664', front: '#3A1D3F', side: '#2A1430', inner: '#1D0D21', edge: '#160818', ink: '#F6F1E7' },
-  crema: { top: '#FCFAF4', front: '#F2EBDD', side: '#DED2BC', inner: '#C7B89D', edge: '#B3A386', ink: '#3A1D3F' },
-  blanco: { top: '#FFFFFF', front: '#F3F2EF', side: '#DEDDD8', inner: '#C5C4BE', edge: '#ABAAA3', ink: '#3A1D3F' },
+  kraft: { top: palette.kraftClaro, front: palette.kraft, side: palette.kraftSombra, inner: DERIVED.kraftInner, edge: DERIVED.kraftEdge, ink: palette.ciruela },
+  ciruela: { top: palette.ciruelaClaro, front: palette.ciruela, side: palette.ciruelaSombra, inner: DERIVED.ciruelaInner, edge: DERIVED.ciruelaEdge, ink: palette.crema },
+  crema: { top: DERIVED.cremaTop, front: palette.crema, side: DERIVED.cremaSide, inner: DERIVED.cremaInner, edge: DERIVED.cremaEdge, ink: palette.ciruela },
+  blanco: { top: '#FFFFFF', front: DERIVED.blancoFront, side: DERIVED.blancoSide, inner: DERIVED.blancoInner, edge: DERIVED.blancoEdge, ink: palette.ciruela },
 };
 
 export interface Part {
@@ -846,10 +865,9 @@ function fit(b: Builder): Scene {
   const scale = Math.min((VIEWBOX.w - 2 * PAD) / (maxX - minX), (VIEWBOX.h - 2 * PAD) / (maxY - minY));
   const ox = (VIEWBOX.w - (maxX - minX) * scale) / 2 - minX * scale;
   const oy = (VIEWBOX.h - (maxY - minY) * scale) / 2 - minY * scale;
-  const tf = ([x, y]: Vec2): Vec2 => [
-    Math.min(VIEWBOX.w, Math.max(0, round(x * scale + ox))),
-    Math.min(VIEWBOX.h, Math.max(0, round(y * scale + oy))),
-  ];
+  // No clamping: solid geometry fits by construction, and the unit test
+  // checks the real bounds. Blurred shadows may bleed into the padding.
+  const tf = ([x, y]: Vec2): Vec2 => [round(x * scale + ox), round(y * scale + oy)];
   const parts: Part[] = raw.map((p) => ({ ...p.style, pts: p.pts2.map((s) => s.map(tf)), closed: p.closed }));
   const clips = b.clips.map((cl) => ({ name: cl.name, pts: cl.pts3.map(project).map(tf) }));
   let logo: LogoFrame | null = null;
