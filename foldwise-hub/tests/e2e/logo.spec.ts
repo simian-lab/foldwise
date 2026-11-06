@@ -61,7 +61,9 @@ test.describe('animated logo', () => {
     const blocked = await blockExternal(page);
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.goto(DEV_PAGE);
-    const logo = page.locator('[data-animated-logo][data-trigger="load"]').first();
+    // Looping load logos pause offscreen, so bring the top-of-page one into view first.
+    const logo = page.locator('#stage-load [data-animated-logo][data-trigger="load"]');
+    await logo.scrollIntoViewIfNeeded();
     await expect(logo).toHaveAttribute('data-state', /flat|folding/);
     await expect(logo).toHaveAttribute('data-state', 'box', { timeout: 3_000 });
     expect(blocked).toEqual([]);
@@ -102,4 +104,30 @@ test.describe('animated logo', () => {
     await logo.hover();
     await expect(logo).toHaveAttribute('data-state', 'box', { timeout: 3_000 });
   });
+
+  // The dev page renders these logos without `loop`, so they inherit loop=true:
+  // hover and view must still play exactly once.
+  for (const trigger of ['hover', 'view'] as const) {
+    test(`${trigger} trigger plays once and rests on the flat isotype`, async ({ page }) => {
+      test.setTimeout(20_000);
+      await blockExternal(page);
+      await page.emulateMedia({ reducedMotion: 'no-preference' });
+      await page.goto(DEV_PAGE);
+      const logo = page.locator(`[data-animated-logo][data-trigger="${trigger}"]`).first();
+      await logo.scrollIntoViewIfNeeded();
+      if (trigger === 'hover') {
+        await logo.hover();
+        await page.mouse.move(0, 0);
+      }
+      await expect(logo).toHaveAttribute('data-state', 'box', { timeout: 3_000 });
+      await expect(logo).toHaveAttribute('data-state', 'flat', { timeout: 6_000 });
+      await page.waitForTimeout(3_000); // longer than the 0.8 s flat intro: a loop would be folding by now
+      await expect(logo).toHaveAttribute('data-state', 'flat');
+      const tl = await logo.evaluate((el) => {
+        const t = (el as HTMLElement & { _timeline?: { isActive(): boolean; progress(): number } })._timeline;
+        return t ? { active: t.isActive(), progress: t.progress() } : null;
+      });
+      expect(tl).toEqual({ active: false, progress: 1 });
+    });
+  }
 });

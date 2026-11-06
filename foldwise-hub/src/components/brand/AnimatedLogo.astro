@@ -13,6 +13,7 @@ type Variant = 'crema' | 'ciruela';
 
 interface Props {
   size?: number;
+  /** Repeat forever. Applies to trigger="load" only; hover and view always play once. */
   loop?: boolean;
   trigger?: 'load' | 'hover' | 'view';
   variant?: Variant;

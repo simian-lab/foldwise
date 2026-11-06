@@ -14,8 +14,9 @@
  * Reduced motion: no timeline is built and the root shows the static isotype
  * (data-state="static").
  *
- * `loop: false` plays the story once and rests on the complete flat isotype
- * (fold lines drawn), because the story itself ends by returning to the f.
+ * `loop` applies only to trigger="load". Hover and view triggers always play
+ * exactly once. A single play rests on the complete flat isotype (fold lines
+ * drawn), because the story itself ends by returning to the f.
  */
 import { gsap } from 'gsap';
 
@@ -139,7 +140,8 @@ function setState(el: HTMLElement, state: AnimatedLogoState) {
 type FoldTone = { shade: string; mid: string; end: string };
 
 export function initAnimatedLogo(el: HTMLElement, opts: AnimatedLogoOptions = {}): gsap.core.Timeline {
-  const loop = opts.loop ?? true;
+  // Only load-triggered logos loop; hover and view always play once.
+  const loop = (opts.trigger ?? 'load') === 'load' && (opts.loop ?? true);
   const q = <T extends Element = SVGElement>(sel: string) => el.querySelector(sel) as T;
   const qa = (sel: string) => Array.from(el.querySelectorAll(sel)) as SVGElement[];
 
@@ -271,8 +273,8 @@ export function initAnimatedLogo(el: HTMLElement, opts: AnimatedLogoOptions = {}
 type LogoHost = HTMLElement & { _timeline?: gsap.core.Timeline | null };
 
 function mount(el: LogoHost) {
-  const loop = el.dataset.loop !== 'false';
   const trigger = (el.dataset.trigger ?? 'load') as AnimatedLogoTrigger;
+  const loop = trigger === 'load' && el.dataset.loop !== 'false';
   const folds = Array.from(el.querySelectorAll('.al-fold')) as SVGElement[];
   let ctx: gsap.Context | null = null;
   let io: IntersectionObserver | null = null;
@@ -281,7 +283,8 @@ function mount(el: LogoHost) {
 
   const rest = () => {
     // After a single play, finish on the complete isotype: redraw the folds.
-    gsap.to(folds, { scaleY: 1, duration: 0.45, ease: 'power3.out', stagger: 0.1 });
+    // Created inside the context so stop() reverts and kills it too.
+    ctx?.add(() => gsap.to(folds, { scaleY: 1, duration: 0.45, ease: 'power3.out', stagger: 0.1 }));
   };
 
   const play = () => {
