@@ -42,6 +42,8 @@ test.describe('isometric boxes', () => {
 
   test('an open mailer shows the inner face of its lid', async ({ page }) => {
     await page.goto(BOARD);
+    // The illustrated applications live inside a collapsed "Versión ilustrada" disclosure.
+    await page.locator('details[data-illustrated] > summary').click();
     const mailer = page.locator('main svg[data-style="mailer"][data-open="true"]').first();
     await expect(mailer).toBeVisible();
     await expect(mailer.locator('[data-part="lid-inner"]')).toHaveCount(1);
