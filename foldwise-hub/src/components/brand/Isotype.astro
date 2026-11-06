@@ -1,0 +1,70 @@
+---
+/**
+ * Foldwise isotype: the lowercase "f" drawn as a box dieline, with tuck-flap
+ * chamfers and dashed fold lines where the flaps meet the stem.
+ *
+ * `variant` names the background the mark sits on, not the mark colour.
+ */
+export type IsotypeVariant = 'crema' | 'ciruela' | 'kraft' | 'lima';
+
+interface Props {
+  variant?: IsotypeVariant;
+  /** Rendered width and height in px. */
+  size?: number;
+  /** Accessible name. Pass an empty string when the mark is decorative. */
+  label?: string;
+  class?: string;
+}
+
+const ISOTYPE_PATH = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
+const ISOTYPE_FOLDS = 'M25 4v8 M15 19v8 M25 19v8';
+
+const ISOTYPE_COLORS: Record<IsotypeVariant, { mark: string; folds: string }> = {
+  crema: { mark: '#3A1D3F', folds: '#C8F25A' },
+  ciruela: { mark: '#F6F1E7', folds: '#3A1D3F' },
+  kraft: { mark: '#3A1D3F', folds: '#C8F25A' },
+  lima: { mark: '#3A1D3F', folds: '#F6F1E7' },
+};
+
+const { variant = 'crema', size = 46, label = 'Foldwise', class: className } = Astro.props;
+const colors = ISOTYPE_COLORS[variant];
+
+// Optical sizing: large marks get finer, denser dashes; small marks get
+// heavier dashes so the fold lines survive at favicon and header sizes.
+const large = size >= 96;
+const foldWidth = large ? 1.6 : 2.2;
+const foldDash = large ? '2.2 2' : '3 2.5';
+const decorative = label === '';
+---
+
+<svg
+  data-isotype
+  data-variant={variant}
+  class:list={['fw-isotype', className]}
+  viewBox="0 0 46 46"
+  width={size}
+  height={size}
+  role={decorative ? undefined : 'img'}
+  aria-label={decorative ? undefined : label}
+  aria-hidden={decorative ? 'true' : undefined}
+  focusable="false"
+>
+  <path data-isotype-shape d={ISOTYPE_PATH} fill={colors.mark}></path>
+  <path
+    data-isotype-folds
+    d={ISOTYPE_FOLDS}
+    fill="none"
+    stroke={colors.folds}
+    stroke-width={foldWidth}
+    stroke-dasharray={foldDash}
+    stroke-linecap="butt"
+  ></path>
+</svg>
+
+<style>
+  .fw-isotype {
+    display: inline-block;
+    flex: none;
+    overflow: visible;
+  }
+</style>

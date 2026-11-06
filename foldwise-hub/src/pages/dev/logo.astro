@@ -1,0 +1,98 @@
+---
+// Dev-only test bench for the brand mark components. Delete in Task 12.
+import HubLayout from '../../layouts/HubLayout.astro';
+import Isotype from '../../components/brand/Isotype.astro';
+import Wordmark from '../../components/brand/Wordmark.astro';
+import AnimatedLogo from '../../components/brand/AnimatedLogo.astro';
+
+const variants = [
+  { name: 'crema', bg: '#F6F1E7' },
+  { name: 'ciruela', bg: '#3A1D3F' },
+  { name: 'kraft', bg: '#C9A27A' },
+  { name: 'lima', bg: '#C8F25A' },
+] as const;
+---
+
+<HubLayout title="Foldwise · Banco de pruebas del logo">
+  <main class="bench">
+    <section class="row" aria-label="Isotipo en sus cuatro versiones">
+      {
+        variants.map((v) => (
+          <div class="tile" style={`background:${v.bg}`}>
+            <Isotype variant={v.name} size={120} />
+            <Isotype variant={v.name} size={46} />
+            <Isotype variant={v.name} size={24} />
+          </div>
+        ))
+      }
+    </section>
+
+    <section class="row" aria-label="Logotipo">
+      {
+        variants.map((v) => (
+          <div class="tile tile--wide" style={`background:${v.bg}`}>
+            <Wordmark variant={v.name} size={40} withIsotype />
+            <Wordmark variant={v.name} size={22} />
+          </div>
+        ))
+      }
+    </section>
+
+    <section class="row row--anim" aria-label="Logo animado">
+      <div class="stage" style="background:#F6F1E7" id="stage-load">
+        <AnimatedLogo size={320} loop trigger="load" />
+      </div>
+      <div class="stage" style="background:#3A1D3F" id="stage-dark">
+        <AnimatedLogo size={320} loop trigger="load" variant="ciruela" />
+      </div>
+      <div class="stage" style="background:#F6F1E7" id="stage-hover">
+        <AnimatedLogo size={160} loop={false} trigger="hover" />
+      </div>
+    </section>
+
+    <section class="row row--anim" aria-label="Logo animado al entrar en pantalla">
+      <div class="stage" style="background:#F6F1E7" id="stage-view">
+        <AnimatedLogo size={240} loop={false} trigger="view" />
+      </div>
+    </section>
+  </main>
+</HubLayout>
+
+<style>
+  .bench {
+    display: grid;
+    gap: 24px;
+    padding: 32px;
+    background: #ece5d6;
+    min-height: 100vh;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .tile {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    min-height: 180px;
+    border-radius: 20px;
+  }
+  .tile--wide {
+    flex-direction: column;
+  }
+  .row--anim {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+  .stage {
+    display: grid;
+    place-items: center;
+    min-height: 420px;
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  #stage-view {
+    margin-top: 60vh;
+  }
+</style>

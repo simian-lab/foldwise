@@ -1,0 +1,196 @@
+---
+/**
+ * Foldwise animated logo: the flat "f" folds its flaps and becomes a taped
+ * isometric box, then returns to the f. See src/scripts/animated-logo.ts for
+ * the timeline, triggers and reduced-motion behaviour.
+ *
+ * `variant` names the background: on crema the box is ciruela; on ciruela the
+ * box is kraft, the real product.
+ */
+import { boxGeometry, pointsOf, tapeAt } from '../../scripts/animated-logo';
+
+type Variant = 'crema' | 'ciruela';
+
+interface Props {
+  size?: number;
+  loop?: boolean;
+  trigger?: 'load' | 'hover' | 'view';
+  variant?: Variant;
+  class?: string;
+}
+
+const { size = 240, loop = true, trigger = 'load', variant = 'crema', class: className } = Astro.props;
+
+const ISOTYPE_PATH = 'M15 42V27h-5l-2-2v-4l2-2h5V4h16l5 5v3H25v7h6l2 2v4l-2 2h-6v15z';
+
+const PALETTE = {
+  crema: {
+    f: '#3A1D3F',
+    folds: '#C8F25A',
+    // The back of the printed board is kraft: folded flaps show it.
+    foldMid: '#E2C7A0',
+    foldEnd: '#C9A27A',
+    top: '#5A3360',
+    left: '#3A1D3F',
+    right: '#2A1430',
+    rim: '#F6F1E7',
+    seam: '#2A1430',
+    mark: '#F6F1E7',
+    markFolds: '#3A1D3F',
+    shadow: '58, 29, 63',
+    shadowAlpha: 0.32,
+    sideFalloff: 0.14,
+    foldShade: '#2A1430',
+  },
+  ciruela: {
+    f: '#F6F1E7',
+    folds: '#C8F25A',
+    foldMid: '#E2C7A0',
+    foldEnd: '#C9A27A',
+    top: '#E2C7A0',
+    left: '#C9A27A',
+    right: '#A9845E',
+    rim: '#F6F1E7',
+    seam: '#A9845E',
+    mark: '#3A1D3F',
+    markFolds: '#C9A27A',
+    shadow: '18, 6, 22',
+    shadowAlpha: 0.55,
+    sideFalloff: 0.1,
+    foldShade: '#E2C7A0',
+  },
+} as const;
+
+const c = PALETTE[variant];
+const g = boxGeometry();
+const tape0 = tapeAt(0);
+const gradId = `al-shadow-${variant}-${Math.random().toString(36).slice(2, 8)}`;
+const fl = g.floorCenter;
+---
+
+<div
+  data-animated-logo
+  data-state="flat"
+  data-trigger={trigger}
+  data-loop={String(loop)}
+  data-variant={variant}
+  data-fold-mid={c.foldMid}
+  data-fold-end={c.foldEnd}
+  data-fold-shade={c.foldShade}
+  class:list={['al', className]}
+  style={`--al-size:${size}px`}
+  role="img"
+  aria-label="Foldwise"
+>
+  <svg class="al-box" viewBox="0 0 200 200" aria-hidden="true" focusable="false">
+    <defs>
+      <radialGradient id={gradId}>
+        <stop offset="0" stop-color={`rgb(${c.shadow})`} stop-opacity={c.shadowAlpha}></stop>
+        <stop offset="0.55" stop-color={`rgb(${c.shadow})`} stop-opacity={c.shadowAlpha * 0.45}></stop>
+        <stop offset="1" stop-color={`rgb(${c.shadow})`} stop-opacity="0"></stop>
+      </radialGradient>
+      <linearGradient id={`${gradId}-side`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#000" stop-opacity="0"></stop>
+        <stop offset="1" stop-color="#000" stop-opacity={c.sideFalloff}></stop>
+      </linearGradient>
+    </defs>
+    <ellipse
+      data-al-part
+      class="al-shadow"
+      cx={fl[0]}
+      cy={fl[1] + 3}
+      rx="72"
+      ry="15"
+      fill={`url(#${gradId})`}></ellipse>
+    <g data-al-part class="al-box-body">
+      <polygon points={pointsOf(g.left)} fill={c.left}></polygon>
+      <polygon points={pointsOf(g.right)} fill={c.right}></polygon>
+      <!-- ambient falloff: the sides darken a little toward the floor -->
+      <polygon points={pointsOf(g.left)} fill={`url(#${gradId}-side)`}></polygon>
+      <polygon points={pointsOf(g.right)} fill={`url(#${gradId}-side)`}></polygon>
+      <polygon points={pointsOf(g.top)} fill={c.top}></polygon>
+      <!-- lid seam where the major flaps meet; the tape covers it -->
+      <polyline class="al-seam" points={pointsOf(g.seam)} fill="none" stroke={c.seam} stroke-width="1.1"></polyline>
+      <!-- rim light on the two front lid edges and the front corner -->
+      <polyline points={pointsOf(g.rimEdges)} fill="none" stroke={c.rim} stroke-opacity="0.32" stroke-width="0.9" stroke-linejoin="round"></polyline>
+      <polyline points={pointsOf(g.cornerEdge)} fill="none" stroke={c.rim} stroke-opacity="0.14" stroke-width="0.8"></polyline>
+      <!-- the isotype printed on the long side -->
+      <g class="al-mark-plane" transform={g.markMatrix}>
+        <g data-al-part class="al-mark">
+          <path d={ISOTYPE_PATH} fill={c.mark}></path>
+          <path d="M25 4v8 M15 19v8 M25 19v8" fill="none" stroke={c.markFolds} stroke-width="1.3" stroke-dasharray="2.4 2"></path>
+        </g>
+      </g>
+      <!-- lime tape: along the lid, over the edge, down the end -->
+      <polygon class="al-tape-side" points={tape0.side} fill="#A9CB46"></polygon>
+      <polygon class="al-tape-top" points={tape0.top} fill="#C8F25A"></polygon>
+      <polyline class="al-tape-sheen" points={tape0.sheen} fill="none" stroke="#EDFFC2" stroke-opacity="0.75" stroke-width="0.8" stroke-linecap="round"></polyline>
+    </g>
+  </svg>
+
+  <div data-al-part class="al-flat">
+    <svg viewBox="0 0 46 46" aria-hidden="true" focusable="false">
+      <path data-isotype-shape d={ISOTYPE_PATH} fill={c.f}></path>
+      <g data-al-part class="al-pieces" opacity="0">
+        <path d="M15 4h10v38h-10z" fill={c.f}></path>
+        <path data-al-part class="al-flap al-flap--left" d="M15 19h-5l-2 2v4l2 2h5z" fill={c.f}></path>
+        <path data-al-part class="al-flap al-flap--right" d="M25 19h6l2 2v4l-2 2h-6z" fill={c.f}></path>
+        <path data-al-part class="al-flap al-flap--top" d="M25 4h6l5 5v3H25z" fill={c.f}></path>
+      </g>
+      <g fill="none" stroke={c.folds} stroke-width="1.6" stroke-dasharray="2.2 2">
+        <path data-al-part class="al-fold" d="M25 4v8"></path>
+        <path data-al-part class="al-fold" d="M15 19v8"></path>
+        <path data-al-part class="al-fold" d="M25 19v8"></path>
+      </g>
+    </svg>
+  </div>
+</div>
+
+<script>
+  import { mountAnimatedLogos } from '../../scripts/animated-logo';
+  mountAnimatedLogos();
+</script>
+
+<style>
+  .al {
+    position: relative;
+    display: inline-block;
+    width: var(--al-size);
+    height: var(--al-size);
+    max-width: 100%;
+    aspect-ratio: 1;
+    flex: none;
+  }
+
+  .al-box {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* The box only exists while the story plays. */
+  .al-box-body,
+  .al-shadow {
+    opacity: 0;
+  }
+
+  .al-flat {
+    position: absolute;
+    inset: 12%;
+    will-change: transform;
+  }
+
+  .al-flat svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  /* Under reduced motion the root is the static isotype, nothing else. */
+  .al[data-state='static'] .al-box {
+    display: none;
+  }
+</style>

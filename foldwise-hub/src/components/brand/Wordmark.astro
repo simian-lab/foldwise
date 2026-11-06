@@ -1,0 +1,69 @@
+---
+/**
+ * Foldwise wordmark: "foldwise" in lowercase Bricolage Grotesque 800 with
+ * -0.035em tracking, optionally locked up with the isotype on its left.
+ *
+ * `variant` names the background the lockup sits on.
+ */
+import Isotype, { type IsotypeVariant } from './Isotype.astro';
+
+interface Props {
+  variant?: IsotypeVariant;
+  /** Font size of the word in px; the isotype scales from it. */
+  size?: number;
+  withIsotype?: boolean;
+  class?: string;
+}
+
+const { variant = 'crema', size = 34, withIsotype = false, class: className } = Astro.props;
+
+const TEXT_COLORS: Record<IsotypeVariant, string> = {
+  crema: '#3A1D3F',
+  ciruela: '#F6F1E7',
+  kraft: '#3A1D3F',
+  lima: '#3A1D3F',
+};
+
+// Lockup proportions from the approved sketch: 46 px mark beside 34 px type.
+const isotypeSize = Math.round(size * (46 / 34));
+---
+
+<span
+  data-wordmark
+  data-variant={variant}
+  data-with-isotype={withIsotype ? '' : undefined}
+  class:list={['fw-wordmark', className]}
+  role="img"
+  aria-label="Foldwise"
+  style={`--wm-size:${size}px;--wm-color:${TEXT_COLORS[variant]}`}
+>
+  {withIsotype && <Isotype variant={variant} size={isotypeSize} label="" class="fw-wordmark__mark" />}
+  <span data-wordmark-text class="fw-wordmark__text" aria-hidden="true">foldwise</span>
+</span>
+
+<style>
+  .fw-wordmark {
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--wm-size) * 0.3);
+    color: var(--wm-color);
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .fw-wordmark__text {
+    font-family: 'Bricolage Grotesque', 'Helvetica Neue', Arial, sans-serif;
+    font-weight: 800;
+    font-size: var(--wm-size);
+    letter-spacing: -0.035em;
+    line-height: 1;
+    /* Bricolage sits high in its em box; nudge so the x-height centres on the mark. */
+    transform: translateY(-0.04em);
+    font-optical-sizing: auto;
+  }
+
+  /* Optical centring: the mark is centred on the lowercase, not the em box. */
+  .fw-wordmark :global(.fw-wordmark__mark) {
+    transform: translateY(calc(var(--wm-size) * 0.04));
+  }
+</style>
