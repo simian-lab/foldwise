@@ -129,12 +129,12 @@ const rays = Array.from({ length: 9 }, (_, i) => {
       </g>
       {JAR.map((k) => <path {...sh(k)} />)}
       {TRAY_FRONT.map((k) => <path {...sh(k)} />)}
-      <g transform={STATIC_MATS.front} data-part="front-print" filter="url(#fw-ink)" opacity="0.95">
+      <g transform={STATIC_MATS.front} data-part="front-print" opacity="0.95">
         <text x="0.8" y="3.2" font-family="'Figtree', sans-serif" font-weight="600" font-size="0.46" fill="#F6F1E7" opacity="0.92">
           Pedidos pequeños. Cuidado enorme.
         </text>
       </g>
-      <g transform={STATIC_MATS.side} data-part="side-print" filter="url(#fw-ink)">
+      <g transform={STATIC_MATS.side} data-part="side-print">
         <g transform="translate(3.9 1.25) scale(0.05)">
           <path d={ISOTYPE} fill="#F6F1E7" opacity="0.9"></path>
           <path d={FOLDS} fill="none" stroke="#3A1D3F" stroke-width="2" stroke-dasharray="3 2.5"></path>
@@ -145,7 +145,7 @@ const rays = Array.from({ length: 9 }, (_, i) => {
     <g data-slot="front">
       <g data-lid>
         {LID_OUTER.map((k) => <path {...sh(k)} />)}
-        <g data-mat="lidOuter" transform={fr.mats.lidOuter} filter="url(#fw-ink)" opacity="0.95">
+        <g data-mat="lidOuter" transform={fr.mats.lidOuter} opacity="0.95">
           <g transform="translate(2.3 3.55) scale(0.058)">
             <path d={ISOTYPE} fill="#F6F1E7"></path>
             <path d={FOLDS} fill="none" stroke={LIME} stroke-width="2.2" stroke-dasharray="3 2.5"></path>
@@ -161,7 +161,7 @@ const rays = Array.from({ length: 9 }, (_, i) => {
           >foldwise</text>
         </g>
         {LID_INNER.map((k) => <path {...sh(k)} />)}
-        <g data-mat="lidInner" transform={fr.mats.lidInner} style="display:none" filter="url(#fw-ink)">
+        <g data-mat="lidInner" transform={fr.mats.lidInner} style="display:none">
           <g transform="translate(6.35 1.7) scale(0.028)">
             <path d={ISOTYPE} fill="#3A1D3F"></path>
           </g>

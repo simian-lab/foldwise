@@ -122,6 +122,32 @@ describe('materials', () => {
   });
 });
 
+describe('print and tape legibility', () => {
+  const contrast = (a: string, b: string) => {
+    const [hi, lo] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+    return (hi + 0.05) / (lo + 0.05);
+  };
+  it('prints ink with clear contrast on every colorway', () => {
+    for (const name of Object.keys(COLORWAYS) as (keyof typeof COLORWAYS)[]) {
+      const c = COLORWAYS[name];
+      expect(contrast(c.ink, c.front)).toBeGreaterThan(3);
+    }
+  });
+
+  it('keeps branded tape pure, fully opaque lime on every colorway', () => {
+    for (const colorway of Object.keys(COLORWAYS) as (keyof typeof COLORWAYS)[]) {
+      const scene = buildBox({ style: 'rsc', l: 12, w: 9, h: 6, open: false, colorway, branding: 'foldwise' });
+      const tape = scene.parts.filter((p) => p.part === 'tape');
+      expect(tape.length).toBeGreaterThan(0);
+      for (const t of tape) {
+        expect(['#C8F25A', '#A6CE3E']).toContain(t.fill);
+        expect(t.opacity).toBeUndefined();
+      }
+      expect(scene.logo).not.toBeNull();
+    }
+  });
+});
+
 describe('colorways', () => {
   it('shade top lighter than front lighter than side', () => {
     for (const name of Object.keys(COLORWAYS) as (keyof typeof COLORWAYS)[]) {

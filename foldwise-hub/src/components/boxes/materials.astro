@@ -1,7 +1,7 @@
 ---
 /**
- * Shared board materials for every box drawing on the page: paper-fibre
- * texture, soft face lighting, shadow blurs, tape gloss and print roughness.
+ * Shared board materials for every box drawing on the page: a fine paper
+ * grain, soft face lighting, shadow blurs and tape gloss.
  *
  * Rendered by IsoBox, HeroBox and AssemblyGuide, but only the first call on a
  * page emits anything (guarded through Astro.locals), so a page with a dozen
@@ -13,7 +13,8 @@
  * Units: gradients are objectBoundingBox (scale-free). `fw-fiber` and the
  * blurs live in the user space of a ~400-unit viewBox (IsoBox, HeroBox);
  * `fw-fiber-in` is the same fibre for drawings in inch units (the guide).
- * `fw-ink` works in face-local inches (the print groups' own space).
+ * Print gets no filter on purpose: a missing or heavy filter can hide the
+ * logo, and legibility comes first.
  */
 const locals = Astro.locals as Record<string, unknown>;
 const first = !locals.__fwMaterials;
@@ -26,16 +27,12 @@ const TILE = 240;
     <>
       <svg id="fw-materials" width="0" height="0" aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
         <defs>
-          {/* paper fibre: fine dark fibres, pale specks and a slow mottle, all low alpha */}
+          {/* new kraft: one very fine, low-contrast fibre grain (no mottle, no stains) */}
           <filter id="fw-fiber-f" filterUnits="userSpaceOnUse" x="0" y="0" width={TILE} height={TILE} color-interpolation-filters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="1.1 0.38" numOctaves="2" seed="4" stitchTiles="stitch" result="fine" />
-            <feColorMatrix in="fine" type="matrix" values="0 0 0 0 0.29  0 0 0 0 0.19  0 0 0 0 0.10  0.85 0 0 0 -0.43" result="dark" />
-            <feTurbulence type="fractalNoise" baseFrequency="1.4" numOctaves="1" seed="11" stitchTiles="stitch" result="speck" />
-            <feColorMatrix in="speck" type="matrix" values="0 0 0 0 1  0 0 0 0 0.97  0 0 0 0 0.9  0 0.9 0 0 -0.52" result="light" />
-            <feTurbulence type="fractalNoise" baseFrequency="0.018" numOctaves="2" seed="2" stitchTiles="stitch" result="slow" />
-            <feColorMatrix in="slow" type="matrix" values="0 0 0 0 0.33  0 0 0 0 0.22  0 0 0 0 0.12  0.32 0 0 0 -0.13" result="mottle" />
+            <feTurbulence type="fractalNoise" baseFrequency="1.8 1.1" numOctaves="1" seed="4" stitchTiles="stitch" result="fine" />
+            <feColorMatrix in="fine" type="matrix" values="0 0 0 0 0.36  0 0 0 0 0.25  0 0 0 0 0.14  0.5 0 0 0 -0.26" result="dark" />
+            <feColorMatrix in="fine" type="matrix" values="0 0 0 0 1  0 0 0 0 0.97  0 0 0 0 0.9  0 -0.5 0 0 0.22" result="light" />
             <feMerge>
-              <feMergeNode in="mottle" />
               <feMergeNode in="dark" />
               <feMergeNode in="light" />
             </feMerge>
@@ -96,13 +93,6 @@ const TILE = 240;
             <feGaussianBlur stdDeviation="1.8" />
           </filter>
 
-          {/* printed ink: slightly ragged edges and a few unprinted pores (face-local inches) */}
-          <filter id="fw-ink" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
-            <feTurbulence type="fractalNoise" baseFrequency="7" numOctaves="2" seed="9" result="n" />
-            <feDisplacementMap in="SourceGraphic" in2="n" scale="0.03" xChannelSelector="R" yChannelSelector="G" result="d" />
-            <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 -11 0 0 9" result="pores" />
-            <feComposite in="d" in2="pores" operator="in" />
-          </filter>
         </defs>
       </svg>
       <script is:inline>

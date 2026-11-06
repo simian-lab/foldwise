@@ -224,7 +224,7 @@ class Builder {
 }
 
 /** Fibre strength per board: kraft shows its fibre, printed and bleached boards much less. */
-const FIBER = { kraft: 1, ciruela: 0.55, light: 0.4 } as const;
+const FIBER = { kraft: 1, ciruela: 0.5, light: 0.35 } as const;
 
 /**
  * Flute line along a cut board edge: a wave running between the two liners,
@@ -438,11 +438,11 @@ function flap(b: Builder, o: Vec3, along: Vec3, dir: Vec3, depth: number, part: 
 /** Packing tape: slightly translucent film with a glossy sheen; clear tape tints the board amber. */
 function tape(b: Builder, pts: Vec3[], vertical: boolean, lime: boolean) {
   if (lime) {
-    b.poly(pts, { fill: vertical ? LIME_SHADE : LIME, opacity: 0.94, stroke: mix(LIME_SHADE, '#3A1D3F', 0.12), sw: 0.4, part: 'tape' });
+    b.poly(pts, { fill: vertical ? LIME_SHADE : LIME, stroke: mix(LIME_SHADE, '#3A1D3F', 0.12), sw: 0.4, part: 'tape' });
   } else {
-    b.poly(pts, { fill: mix(b.pal.front, '#B8894F', 0.5), opacity: 0.22, stroke: '#FFFFFF', sw: 0.4, part: 'tape' });
+    b.poly(pts, { fill: mix(b.pal.front, '#A8783F', 0.55), opacity: 0.4, stroke: mix(b.pal.top, '#FFFFFF', 0.5), sw: 0.6, part: 'tape' });
   }
-  b.poly(pts, { fill: 'url:tape-gloss', opacity: vertical ? 0.55 : 0.85 });
+  b.poly(pts, { fill: 'url:tape-gloss', opacity: lime ? (vertical ? 0.35 : 0.5) : vertical ? 0.6 : 0.9 });
 }
 
 /** Zig-zag cut end of a tape strip on a face frame, from s0 to s1 at depth t. */

@@ -67,8 +67,10 @@ const ref = (name: string) => `url(#${uid}-${name})`;
 // ./materials.astro, so a page of boxes holds one copy of each filter.
 const shared = (name: string) => `url(#fw-${name})`;
 const paint = (v?: string) => (v?.startsWith('url:') ? shared(v.slice(4)) : (v ?? 'none'));
-// Print reads as ink on board: multiply on light boards lets the paper through.
+// A client logo reads as ink on board: multiply on light boards lets the paper
+// through. The Foldwise lockup keeps its exact brand colours (lime folds stay lime).
 const lightBoard = colorway !== 'ciruela';
+const multiplyPrint = lightBoard && branding === 'cliente';
 const fmt = (n: number) => (Number.isInteger(n) ? `${n}` : `${n}`.replace('.', ','));
 const name =
   label ??
@@ -140,9 +142,7 @@ const ph = logo
       <g
         transform={`matrix(${logo.matrix.join(' ')})`}
         data-part="front-print"
-        filter="url(#fw-ink)"
-        style={lightBoard ? 'mix-blend-mode:multiply' : undefined}
-        opacity={lightBoard ? undefined : '0.94'}
+        style={multiplyPrint ? 'mix-blend-mode:multiply' : undefined}
       >
         {lockup && (
           <g data-part="brand">
