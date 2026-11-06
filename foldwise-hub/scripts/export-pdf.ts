@@ -46,15 +46,25 @@ async function serverUp(): Promise<boolean> {
   }
 }
 
-/** Scrolls the whole page once so lazy images load before printing. */
+/**
+ * Loads every image before printing: lazy images are switched to eager (print
+ * layout never scrolls them into view) and the page is scrolled once, then we
+ * wait until each image has decoded, so no photo prints as a blank box.
+ */
 async function settle(page: Page): Promise<void> {
   await page.evaluate(async () => {
+    document.querySelectorAll<HTMLImageElement>('img[loading="lazy"]').forEach((img) => {
+      img.loading = 'eager';
+    });
     const step = window.innerHeight * 0.8;
     for (let y = 0; y < document.documentElement.scrollHeight; y += step) {
       window.scrollTo(0, y);
       await new Promise((r) => setTimeout(r, 60));
     }
     window.scrollTo(0, 0);
+    await Promise.all(
+      [...document.images].map((img) => (img.complete ? img.decode().catch(() => null) : null)),
+    );
     await Promise.all(
       [...document.images].map((img) =>
         img.complete
@@ -92,6 +102,8 @@ async function main(): Promise<void> {
       if (!res?.ok()) throw new Error(`${job.route} answered ${res?.status()}`);
       await page.addStyleTag({ content: PRINT_CSS });
       await settle(page);
+      const blank = await page.evaluate(() => [...document.images].filter((img) => !img.naturalWidth).map((img) => img.src));
+      if (blank.length) console.warn(`${job.route}: ${blank.length} images did not load: ${blank.join(', ')}`);
       const path = resolve(OUT_DIR, job.file);
       await page.pdf({
         path,

@@ -159,6 +159,26 @@ test.describe('brand manual', () => {
     await expect(sec.locator('[data-ig-story="encuesta"] [data-ig-poll]')).not.toContainText('%');
   });
 
+  test('Color and Patrones show product photos with Spanish alt text that load', async ({ page }) => {
+    await page.goto(PAGE);
+    const expected = { color: ['caja-banda', 'cinta'], patrones: ['mailer-interior', 'caja-banda'] } as const;
+    for (const [id, photos] of Object.entries(expected)) {
+      const imgs = section(page, id).locator(`[data-applied="${id}"] img`);
+      await expect(imgs).toHaveCount(photos.length);
+      for (const [i, name] of photos.entries()) {
+        const img = imgs.nth(i);
+        await expect(img).toHaveAttribute('src', `/img/board/${name}.webp`);
+        await expect(img).toHaveAttribute('alt', /\b(caja|cinta|mailer|Mailer|Caja|Rollo)\b/);
+        await expect(img).toHaveAttribute('width', '1600');
+        await expect(img).toHaveAttribute('height', '1200');
+        await expect(img).toHaveAttribute('loading', 'lazy');
+        await img.scrollIntoViewIfNeeded();
+        await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBe(1600);
+      }
+    }
+    await expect(section(page, 'color').getByRole('heading', { level: 3, name: 'La paleta aplicada' })).toBeVisible();
+    await expect(section(page, 'patrones').getByRole('heading', { level: 3, name: 'Los patrones en el producto' })).toBeVisible();
+  });
 
   test('Próximos pasos lists the next deliverables; Simian credit and sibling links are present', async ({ page }) => {
     await page.goto(PAGE);

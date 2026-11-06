@@ -511,6 +511,33 @@ const nextSteps = [
             </div>
             <p class="small">Para sombras, volumen y estados de la interfaz. Nunca como color principal de una pieza.</p>
           </div>
+          <div class="block" data-applied="color">
+            <h3>La paleta aplicada</h3>
+            <div class="applied">
+              <figure>
+                <img
+                  src="/img/board/caja-banda.webp"
+                  alt="Caja de envío kraft con una banda ciruela impresa con el logo de Foldwise y «Cuidado enorme.», cerrada con cinta lima"
+                  width="1600"
+                  height="1200"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption><b>80% calma</b> Kraft natural y una banda ciruela: el material y la marca hacen casi todo el trabajo.</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="/img/board/cinta.webp"
+                  alt="Rollo de cinta lima con el logo de Foldwise impreso, desenrollado sobre cartón kraft"
+                  width="1600"
+                  height="1200"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption><b>20% energía</b> La lima llega en el cierre: la cinta es lo último que se toca y lo primero que se ve.</figcaption>
+              </figure>
+            </div>
+          </div>
         </Section>
 
         {/* 06 ------------------------------------------------------------ */}
@@ -613,6 +640,33 @@ const nextSteps = [
               <div class="patterns__tile"><Pattern kind="flauta" color={palette.ciruelaClaro} bg={palette.ciruela} scale={0.8} label="Patrón flauta sobre ciruela" /></div>
               <figcaption><b>Flauta sobre ciruela</b> Fondos oscuros de redes y web.</figcaption>
             </figure>
+          </div>
+          <div class="block" data-applied="patrones">
+            <h3>Los patrones en el producto</h3>
+            <div class="applied">
+              <figure>
+                <img
+                  src="/img/board/mailer-interior.webp"
+                  alt="Mailer kraft abierta con el interior ciruela impreso: «Hola. Esto lo empacamos pensando en ti.» y una línea punteada de troquel"
+                  width="1600"
+                  height="1200"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption><b>Interior de la mailer</b> La línea punteada del troquel acompaña el mensaje, a una sola tinta.</figcaption>
+              </figure>
+              <figure>
+                <img
+                  src="/img/board/caja-banda.webp"
+                  alt="Caja de envío kraft con una banda ciruela impresa con el logo de Foldwise, cerrada con cinta lima"
+                  width="1600"
+                  height="1200"
+                  loading="lazy"
+                  decoding="async"
+                />
+                <figcaption><b>Banda de la caja</b> La franja es el patrón en su forma más simple: un solo tono sobre el kraft.</figcaption>
+              </figure>
+            </div>
           </div>
           <p class="small">
             El patrón siempre va en un solo tono sobre su fondo y nunca detrás del logo. Hay más ejemplos en
@@ -2015,6 +2069,39 @@ const nextSteps = [
   }
 
   /* Responsive -------------------------------------------------------- */
+  /* Applied photos (Color, Patrones) */
+  .applied {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-4);
+  }
+  .applied figure {
+    margin: 0;
+    display: grid;
+    gap: var(--s-2);
+    align-content: start;
+    min-width: 0;
+  }
+  .applied img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--r-md);
+  }
+  .applied figcaption {
+    font-size: var(--fs-xs);
+    line-height: 1.45;
+    color: rgb(58 29 63 / 0.78);
+    max-width: 46ch;
+  }
+  .applied figcaption b {
+    display: block;
+    color: var(--c-ciruela);
+    font-size: var(--fs-sm);
+  }
+
   /* 10 Redes sociales ------------------------------------------------- */
   .rhythm {
     display: grid;
@@ -2216,7 +2303,8 @@ const nextSteps = [
     .patterns {
       grid-template-columns: minmax(0, 1fr);
     }
-    .rhythm {
+    .rhythm,
+    .applied {
       grid-template-columns: minmax(0, 1fr);
     }
     .social-examples {
@@ -2333,6 +2421,7 @@ const nextSteps = [
     .next li,
     .studies > *,
     .patterns figure,
+    .applied figure,
     .templates li,
     .social-examples figure,
     .closing {
