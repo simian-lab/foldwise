@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { blockExternal } from './helpers';
 
-const BRAND_ROUTES = ['/', '/marca', '/marca/en-accion', '/marca/cajas'];
+const BRAND_ROUTES = ['/', '/marca', '/marca/en-accion', '/marca/cajas', '/marca/logo-animado'];
 const SHOP_ROUTES = ['/tienda', '/tienda/catalogo', '/tienda/producto/cajas-mailer', '/tienda/producto/cajas-de-envio'];
 const GUIDE_ROUTES = ['/tienda/guia/cajas-mailer', '/tienda/guia/cajas-de-envio', '/tienda/guia/mailers-faciles'];
 const ROUTES = [...BRAND_ROUTES, ...SHOP_ROUTES, ...GUIDE_ROUTES];

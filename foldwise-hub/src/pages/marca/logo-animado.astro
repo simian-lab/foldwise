@@ -1,0 +1,307 @@
+---
+/**
+ * Side-by-side review of the animated logo: the current crossfade version
+ * against the true-fold prototype ("A · Pliegue real"), on both backgrounds,
+ * with shared playback controls. Not linked from the manual yet.
+ */
+import HubLayout from '../../layouts/HubLayout.astro';
+import AnimatedLogo from '../../components/brand/AnimatedLogo.astro';
+import AnimatedLogoFold from '../../components/brand/AnimatedLogoFold.astro';
+
+const rows = [
+  { variant: 'crema', title: 'Sobre crema', note: 'Caja kraft con la f en tinta ciruela.' },
+  { variant: 'ciruela', title: 'Sobre ciruela', note: 'Caja ciruela con la f en tinta crema.' },
+] as const;
+---
+
+<HubLayout title="Foldwise · Logo animado" description="El logo animado actual frente al nuevo pliegue real, lado a lado.">
+  <main class="page">
+    <header class="head">
+      <p class="eyebrow">Logo animado · prototipo</p>
+      <h1>Del pliegue a la caja, en una sola pieza.</h1>
+      <p class="lede">
+        El logo actual funde la f y hace aparecer una caja. La propuesta A la dobla de verdad: cada solapa gira sobre su
+        línea punteada y el tronco forma las paredes. Al cerrar, la cinta lima sella el borde y la f queda impresa en el
+        costado.
+      </p>
+    </header>
+
+    <div class="controls" data-logo-controls role="group" aria-label="Controles de reproducción">
+      <button type="button" class="btn" data-ctl-play>Reproducir</button>
+      <button type="button" class="btn btn--ghost" data-ctl-slow aria-pressed="false">Cámara lenta (0,25×)</button>
+      <label class="scrub">
+        <span>Recorrido</span>
+        <input type="range" min="0" max="1000" value="0" step="1" data-ctl-scrub aria-label="Recorrido de la animación" />
+      </label>
+    </div>
+
+    {
+      rows.map((r) => (
+        <section class:list={['row', `row--${r.variant}`]} aria-labelledby={`row-${r.variant}`} data-compare-row={r.variant}>
+          <h2 id={`row-${r.variant}`}>{r.title}</h2>
+          <div class="pair">
+            <figure class="cell">
+              <div class="stage">
+                <AnimatedLogo variant={r.variant} size={300} trigger="load" loop />
+              </div>
+              <figcaption>
+                <strong>Actual</strong> · fundido de la f a una caja
+              </figcaption>
+            </figure>
+            <figure class="cell cell--new">
+              <div class="stage">
+                <AnimatedLogoFold variant={r.variant} size={300} trigger="load" loop />
+              </div>
+              <figcaption>
+                <strong>Nuevo · pliegue real</strong> · {r.note}
+              </figcaption>
+            </figure>
+          </div>
+        </section>
+      ))
+    }
+
+    <section class="why" aria-labelledby="why">
+      <h2 id="why">Qué cambia</h2>
+      <ul>
+        <li><strong>Un pliegue, no un fundido.</strong> La f es el troquel: nada aparece ni desaparece, cada panel gira sobre su pliegue en 3D.</li>
+        <li><strong>La pieza es real.</strong> Las solapas de la barra cierran los extremos, el tronco se enrolla en las paredes y la solapa superior baja como tapa con su lengüeta.</li>
+        <li><strong>El material se revela al doblar.</strong> La cara de adentro es la f impresa; la de afuera es kraft (o ciruela), con fibra, luz desde arriba a la izquierda y canto con flauta.</li>
+        <li><strong>Tiene un final.</strong> La cinta lima sella, la f se imprime en el costado y la caja se asienta sobre su sombra.</li>
+      </ul>
+    </section>
+
+    <section class="triggers" aria-labelledby="triggers">
+      <h2 id="triggers">Al pasar el cursor y al entrar en pantalla</h2>
+      <p class="hint">Se reproducen una vez y quedan en la caja cerrada.</p>
+      <div class="pair pair--small">
+        <figure class="cell">
+          <div class="stage stage--small" data-trigger-demo="hover">
+            <AnimatedLogoFold variant="crema" size={180} trigger="hover" loop={false} />
+          </div>
+          <figcaption>Al pasar el cursor</figcaption>
+        </figure>
+        <figure class="cell">
+          <div class="stage stage--small stage--ciruela" data-trigger-demo="view">
+            <AnimatedLogoFold variant="ciruela" size={180} trigger="view" loop />
+          </div>
+          <figcaption>Al entrar en pantalla</figcaption>
+        </figure>
+      </div>
+    </section>
+  </main>
+</HubLayout>
+
+<script>
+  type Host = HTMLElement;
+  type Tl = {
+    restart(): void;
+    pause(): void;
+    timeScale(v?: number): number;
+    duration(): number;
+    totalTime(v: number): void;
+  };
+  const hosts = () =>
+    Array.from(document.querySelectorAll<Host>('[data-compare-row] [data-animated-logo], [data-compare-row] [data-animated-logo-fold]'));
+  const tlOf = (h: Host) => (h as unknown as { _timeline?: Tl | null })._timeline ?? null;
+
+  const play = document.querySelector<HTMLButtonElement>('[data-ctl-play]');
+  const slow = document.querySelector<HTMLButtonElement>('[data-ctl-slow]');
+  const scrub = document.querySelector<HTMLInputElement>('[data-ctl-scrub]');
+  let speed = 1;
+
+  const applySpeed = () =>
+    hosts().forEach((h) => {
+      h.dataset.alfSpeed = String(speed);
+      tlOf(h)?.timeScale(speed);
+    });
+
+  play?.addEventListener('click', () => {
+    hosts().forEach((h) => {
+      delete h.dataset.alfHeld;
+      const tl = tlOf(h);
+      if (!tl) return;
+      tl.timeScale(speed);
+      tl.restart();
+    });
+    if (scrub) scrub.value = '0';
+  });
+
+  slow?.addEventListener('click', () => {
+    speed = speed === 1 ? 0.25 : 1;
+    slow.setAttribute('aria-pressed', String(speed !== 1));
+    applySpeed();
+  });
+
+  scrub?.addEventListener('input', () => {
+    const k = Number(scrub.value) / 1000;
+    hosts().forEach((h) => {
+      const tl = tlOf(h);
+      if (!tl) return;
+      h.dataset.alfHeld = '';
+      tl.pause();
+      tl.totalTime(k * tl.duration());
+    });
+  });
+</script>
+
+<style>
+  .page {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: var(--s-16) var(--s-6) var(--s-24);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--s-12);
+  }
+  .eyebrow {
+    font-family: var(--f-text);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-kraft-sombra);
+    margin: 0 0 var(--s-3);
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    font-size: var(--fs-2xl);
+    line-height: 1.02;
+    color: var(--c-ciruela);
+    margin: 0;
+    max-width: 18ch;
+  }
+  .lede {
+    max-width: 60ch;
+    font-size: var(--fs-body);
+    color: var(--c-ciruela-claro);
+    margin: var(--s-4) 0 0;
+  }
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-size: var(--fs-xl);
+    color: var(--c-ciruela);
+    margin: 0 0 var(--s-6);
+  }
+
+  .controls {
+    position: sticky;
+    top: var(--s-4);
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-3) var(--s-4);
+    padding: var(--s-3) var(--s-4);
+    border-radius: var(--r-pill);
+    background: rgba(246, 241, 231, 0.92);
+    box-shadow: 0 10px 30px -18px rgba(42, 20, 48, 0.45), 0 0 0 1px rgba(58, 29, 63, 0.08);
+    backdrop-filter: blur(6px);
+  }
+  .btn {
+    font: 600 var(--fs-sm) / 1 var(--f-text);
+    padding: 0.7rem 1.1rem;
+    border-radius: var(--r-pill);
+    border: 0;
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    cursor: pointer;
+  }
+  .btn--ghost {
+    background: transparent;
+    color: var(--c-ciruela);
+    box-shadow: inset 0 0 0 1.5px var(--c-ciruela);
+  }
+  .btn--ghost[aria-pressed='true'] {
+    background: var(--c-lima);
+    box-shadow: inset 0 0 0 1.5px var(--c-ciruela);
+  }
+  .btn:focus-visible {
+    outline: 3px solid var(--c-lima);
+    outline-offset: 2px;
+  }
+  .scrub {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    flex: 1 1 200px;
+    min-width: 0;
+    font: 600 var(--fs-sm) / 1 var(--f-text);
+    color: var(--c-ciruela);
+  }
+  .scrub input {
+    flex: 1;
+    min-width: 0;
+    accent-color: var(--c-ciruela);
+  }
+
+  .pair {
+    display: grid;
+    gap: var(--s-6);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+  }
+  .cell {
+    margin: 0;
+    display: grid;
+    gap: var(--s-3);
+  }
+  .stage {
+    min-width: 0;
+    display: grid;
+    place-items: center;
+    padding: var(--s-8) var(--s-4);
+    border-radius: var(--r-lg);
+    background: radial-gradient(120% 90% at 50% 15%, #fbf8f1, var(--c-crema) 70%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 18px 34px -22px rgba(42, 20, 48, 0.4);
+  }
+  .row--ciruela .stage,
+  .stage--ciruela {
+    background: radial-gradient(120% 90% at 50% 15%, #4a2850, var(--c-ciruela) 70%);
+    box-shadow: 0 18px 34px -22px rgba(18, 6, 22, 0.7);
+  }
+  .stage--small {
+    padding: var(--s-6) var(--s-4);
+  }
+  figcaption {
+    font-size: var(--fs-sm);
+    color: var(--c-ciruela-claro);
+  }
+  figcaption strong {
+    color: var(--c-ciruela);
+  }
+  .cell--new figcaption strong {
+    background: linear-gradient(transparent 60%, rgba(200, 242, 90, 0.7) 60%);
+  }
+
+  .why ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: var(--s-4);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr));
+  }
+  .why li {
+    font-size: var(--fs-body);
+    color: var(--c-ciruela-claro);
+    line-height: 1.45;
+    padding-top: var(--s-3);
+    border-top: 2px solid var(--c-ciruela);
+  }
+  .why strong {
+    display: block;
+    color: var(--c-ciruela);
+    margin-bottom: var(--s-1);
+  }
+  .hint {
+    margin: calc(var(--s-4) * -1) 0 var(--s-6);
+    color: var(--c-ciruela-claro);
+  }
+  .pair--small {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    max-width: 640px;
+  }
+</style>
