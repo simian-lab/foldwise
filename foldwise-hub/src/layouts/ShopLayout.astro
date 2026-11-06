@@ -46,6 +46,14 @@ const { title, description } = Astro.props;
 </script>
 
 <style is:global>
+  .shop ::selection {
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+  }
+  .shop {
+    caret-color: var(--c-ciruela);
+    accent-color: var(--c-ciruela);
+  }
   .reveal-ready [data-reveal]:not(.is-revealed) {
     opacity: 0;
   }

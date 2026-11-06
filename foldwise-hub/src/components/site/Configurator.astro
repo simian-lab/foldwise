@@ -245,7 +245,7 @@ const hint = next
     stroke: currentColor;
     stroke-width: 2.2;
     stroke-linecap: round;
-    transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+    transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .cfg__step:hover {
     background: color-mix(in srgb, var(--c-kraft-claro) 40%, transparent);
@@ -292,7 +292,7 @@ const hint = next
     transition:
       background 0.25s,
       border-color 0.25s,
-      transform 0.25s cubic-bezier(0.3, 1.4, 0.5, 1);
+      transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .cfg__tier:hover {
     border-color: var(--c-ciruela);
@@ -376,7 +376,7 @@ const hint = next
     border-radius: 14px;
     background: var(--c-crema);
     color: var(--c-ciruela);
-    transition: background 0.25s, transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1);
+    transition: background 0.25s, transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .cfg__drop:hover .cfg__drop-icon {
     transform: translateY(-2px);
@@ -439,7 +439,7 @@ const hint = next
   .cfg__error {
     margin: 0;
     padding: var(--s-2) var(--s-3);
-    border-left: 3px solid #b3261e;
+    border: 1px solid color-mix(in srgb, #b3261e 40%, transparent);
     border-radius: 6px;
     background: #fbe9e7;
     font-size: var(--fs-sm);
@@ -484,7 +484,7 @@ const hint = next
   }
   .cfg__unit:global(.is-ticking),
   .cfg__total:global(.is-ticking) {
-    animation: cfg-tick 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+    animation: cfg-tick 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   }
   @keyframes cfg-tick {
     40% {

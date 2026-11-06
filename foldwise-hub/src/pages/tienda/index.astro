@@ -3,7 +3,6 @@ import ShopLayout from '../../layouts/ShopLayout.astro';
 import HeroBox from '../../components/site/HeroBox.astro';
 import CategoryCard from '../../components/site/CategoryCard.astro';
 import BoxLineup from '../../components/boxes/BoxLineup.astro';
-import Icon from '../../components/brand/Icon.astro';
 import { categories, minOrderUnits } from '../../data/categories';
 import { taglines } from '../../data/brand';
 
@@ -11,31 +10,27 @@ const minUnits = minOrderUnits;
 
 const benefits = [
   {
-    icon: 'pedido-pequeno',
     title: 'Pedidos pequeños de verdad',
     text: `Pide desde ${minUnits} cajas. Cuando crezcas, el precio baja contigo.`,
   },
   {
-    icon: 'personaliza',
     title: 'Con tu logo',
-    text: 'Imprimimos tu marca para que cada envío se vea tuyo desde la puerta.',
+    text: 'Cada envío se ve tuyo desde la puerta.',
   },
   {
-    icon: 'rapido',
     title: 'Entrega rápida',
-    text: 'Producimos y despachamos tu pedido rápido, para que tu lanzamiento no espere.',
+    text: 'Para que tu lanzamiento no espere.',
   },
   {
-    icon: 'asesoria',
     title: 'Una persona real te ayuda',
-    text: 'Te orientamos con la medida y el cartón, sin tecnicismos.',
+    text: 'Con la medida y el cartón, sin tecnicismos.',
   },
 ] as const;
 
 const starters = [
-  { icon: 'medida', title: 'A tu medida', text: '¿Tu producto no cabe en una caja estándar? La hacemos a la medida.' },
-  { icon: 'armado', title: 'Fáciles de armar', text: 'Pliegues claros y guías paso a paso para armar en segundos.' },
-  { icon: 'eco', title: 'Cartón reciclable', text: 'Corrugado que se recicla con el resto del papel, sin plásticos.' },
+  { title: 'A tu medida', text: '¿Tu producto no cabe en una caja estándar? La hacemos para él.' },
+  { title: 'Fáciles de armar', text: 'Pliegues marcados y una guía paso a paso.' },
+  { title: 'Cartón reciclable', text: 'Se recicla con el resto del papel, sin plásticos.' },
 ] as const;
 
 const steps = [
@@ -48,23 +43,16 @@ const steps = [
 <ShopLayout title="Foldwise · Tienda de cajas para emprendedores">
   <section class="hero" aria-labelledby="hero-title">
     <div class="hero__copy">
-      <p class="hero__kicker">
-        <span class="hero__dot" aria-hidden="true"></span>
-        Cajas de cartón corrugado desde {minUnits} unidades
-      </p>
       <h1 id="hero-title" class="hero__title">{taglines.principal}</h1>
       <p class="hero__lede">
-        Cajas para tu tienda en línea, con tu logo y en la medida justa. {taglines.secundaria}
+        Cajas de cartón corrugado para tu tienda en línea, con tu logo y en la medida justa, desde {minUnits} unidades.
+        {taglines.secundaria}
       </p>
       <div class="hero__actions">
         <a href="#categorias" class="btn btn--lime">Explora las cajas</a>
         <a href="/tienda/producto/cajas-mailer" class="btn btn--ghost">Personaliza tu mailer</a>
       </div>
-      <ul class="hero__proof">
-        <li><Icon name="pedido-pequeno" size={20} /> Desde {minUnits} cajas</li>
-        <li><Icon name="envio" size={20} /> Envíos en EE. UU.</li>
-        <li><Icon name="asesoria" size={20} /> Atención personalizada</li>
-      </ul>
+      <p class="hero__note">Envíos en EE. UU. · Atención personalizada</p>
     </div>
 
     <div class="hero__stage" data-hero-scope>
@@ -91,10 +79,7 @@ const steps = [
     <ul class="benefits__list">
       {
         benefits.map((b) => (
-          <li class="benefit" data-reveal>
-            <span class="benefit__icon">
-              <Icon name={b.icon} size={26} />
-            </span>
+          <li class="benefit">
             <h3>{b.title}</h3>
             <p>{b.text}</p>
           </li>
@@ -128,13 +113,8 @@ const steps = [
           {
             starters.map((s) => (
               <li>
-                <span class="starters__icon">
-                  <Icon name={s.icon} size={24} />
-                </span>
-                <span>
-                  <strong>{s.title}</strong>
-                  {s.text}
-                </span>
+                <strong>{s.title}</strong>
+                <span>{s.text}</span>
               </li>
             ))
           }
@@ -277,22 +257,6 @@ const steps = [
     justify-content: center;
     padding: var(--s-12) 0 var(--s-12) var(--s-4);
   }
-  .hero__kicker {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-    margin: 0 0 var(--s-6);
-    font-size: var(--fs-sm);
-    font-weight: 600;
-    color: var(--c-ciruela-claro);
-  }
-  .hero__dot {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--c-lima);
-    box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-lima) 35%, transparent);
-  }
   .hero__title {
     font-size: clamp(3rem, 1.2rem + 4.6vw, 5.6rem);
     line-height: 0.95;
@@ -313,23 +277,11 @@ const steps = [
     gap: var(--s-3);
     margin-top: var(--s-8);
   }
-  .hero__proof {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-2) var(--s-6);
-    margin: var(--s-12) 0 0;
-    padding: 0;
-    list-style: none;
-    font-size: var(--fs-sm);
-    font-weight: 500;
-  }
-  .hero__proof li {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-  }
-  .hero__proof :global(.fw-icon) {
-    color: var(--c-ciruela-claro);
+  .hero__note {
+    margin: var(--s-8) 0 0;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: color-mix(in srgb, var(--c-ciruela) 68%, var(--c-crema));
   }
 
   .hero__stage {
@@ -339,7 +291,7 @@ const steps = [
     justify-content: center;
     min-height: 600px;
     padding: var(--s-12) var(--s-8) var(--s-6);
-    border-radius: 28px;
+    border-radius: var(--r-lg);
     background:
       radial-gradient(70% 60% at 50% 45%, color-mix(in srgb, var(--c-kraft-claro) 70%, #fff) 0%, var(--c-kraft-claro) 70%);
     overflow: hidden;
@@ -378,38 +330,39 @@ const steps = [
   }
   .benefits__list {
     display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--s-8);
+    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
     margin: 0;
-    padding: var(--s-8) var(--s-4);
+    padding: 0;
     list-style: none;
-    border-top: 1px solid color-mix(in srgb, var(--c-kraft) 35%, transparent);
-    border-bottom: 1px solid color-mix(in srgb, var(--c-kraft) 35%, transparent);
+    border-block: 1px solid color-mix(in srgb, var(--c-kraft) 35%, transparent);
+  }
+  .benefit {
+    padding: var(--s-8) var(--s-6);
+  }
+  .benefit + .benefit {
+    border-left: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+  }
+  .benefit:first-child {
+    padding-left: 0;
   }
   .benefit h3 {
-    margin: var(--s-4) 0 var(--s-2);
-    font-size: 1.2rem;
+    margin: 0 0 var(--s-2);
+    font-size: 1.15rem;
     letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  .benefit:first-child h3 {
+    max-width: 12ch;
+    font-size: clamp(1.6rem, 1rem + 1.2vw, 2.1rem);
+    line-height: 1.02;
+    letter-spacing: -0.035em;
   }
   .benefit p {
     margin: 0;
+    max-width: 30ch;
     font-size: var(--fs-sm);
     line-height: 1.5;
     color: color-mix(in srgb, var(--c-ciruela) 75%, var(--c-crema));
-  }
-  .benefit__icon {
-    display: inline-grid;
-    place-items: center;
-    width: 52px;
-    height: 52px;
-    border-radius: 16px;
-    background: color-mix(in srgb, var(--c-kraft-claro) 55%, transparent);
-    color: var(--c-ciruela);
-    transition: transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1), background 0.3s;
-  }
-  .benefit:hover .benefit__icon {
-    transform: rotate(-6deg) scale(1.06);
-    background: var(--c-lima);
   }
 
   /* ───── categories ───── */
@@ -452,7 +405,7 @@ const steps = [
     gap: var(--s-12);
     align-items: center;
     padding: var(--s-16);
-    border-radius: 28px;
+    border-radius: var(--r-lg);
     background: var(--c-ciruela);
     color: var(--c-crema);
     overflow: hidden;
@@ -468,33 +421,26 @@ const steps = [
     color: color-mix(in srgb, var(--c-crema) 82%, transparent);
   }
   .starters__list {
-    display: grid;
-    gap: var(--s-4);
     margin: 0 0 var(--s-8);
     padding: 0;
     list-style: none;
+    border-top: 1px dashed color-mix(in srgb, var(--c-crema) 28%, transparent);
   }
   .starters__list li {
-    display: flex;
+    display: grid;
+    grid-template-columns: 10rem minmax(0, 1fr);
     gap: var(--s-4);
-    align-items: flex-start;
+    align-items: baseline;
+    padding: var(--s-3) 0;
+    border-bottom: 1px dashed color-mix(in srgb, var(--c-crema) 28%, transparent);
     font-size: var(--fs-sm);
     color: color-mix(in srgb, var(--c-crema) 78%, transparent);
   }
   .starters__list strong {
-    display: block;
-    color: var(--c-crema);
+    color: var(--c-lima);
+    font-family: var(--f-display);
     font-size: 1rem;
-  }
-  .starters__icon {
-    display: inline-grid;
-    place-items: center;
-    flex: none;
-    width: 44px;
-    height: 44px;
-    border-radius: 14px;
-    background: var(--c-ciruela-claro);
-    color: var(--c-kraft-claro);
+    letter-spacing: -0.02em;
   }
   .starters__photos {
     position: relative;
@@ -504,7 +450,7 @@ const steps = [
   .starters__photo {
     position: absolute;
     object-fit: cover;
-    border-radius: 20px;
+    border-radius: var(--r-md);
   }
   .starters__photo--main {
     top: 0;
@@ -528,7 +474,8 @@ const steps = [
     gap: var(--s-3);
     max-width: 230px;
     padding: var(--s-3) var(--s-4);
-    border-radius: 16px;
+    border-radius: var(--r-sm);
+    transform: rotate(-2.5deg);
     background: var(--c-crema);
     color: var(--c-ciruela);
     font-size: var(--fs-xs);
@@ -559,7 +506,7 @@ const steps = [
     height: auto;
     aspect-ratio: 4 / 3;
     object-fit: cover;
-    border-radius: 28px;
+    border-radius: var(--r-lg);
   }
   .steps__copy h2 {
     font-size: var(--fs-2xl);
@@ -623,6 +570,13 @@ const steps = [
     .benefits__list {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
+    .benefit:nth-child(3) {
+      border-left: 0;
+      padding-left: 0;
+    }
+    .benefit:nth-child(n + 3) {
+      border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+    }
     .starters__panel {
       padding: var(--s-12);
     }
@@ -662,23 +616,28 @@ const steps = [
     }
     .hero__stage {
       padding: var(--s-8) var(--s-4) var(--s-4);
-      border-radius: 22px;
     }
     .hero__caption {
       flex-direction: column;
       gap: var(--s-1);
     }
-    .hero__proof {
-      margin-top: var(--s-8);
-    }
     .benefits__list {
       grid-template-columns: minmax(0, 1fr);
-      gap: var(--s-6);
-      padding-inline: 0;
+    }
+    .benefit,
+    .benefit + .benefit {
+      padding: var(--s-6) 0;
+      border-left: 0;
+    }
+    .benefit + .benefit {
+      border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+    }
+    .starters__list li {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-1);
     }
     .starters__panel {
       padding: var(--s-8) var(--s-6);
-      border-radius: 22px;
     }
     .starters__photos {
       min-height: 300px;

@@ -197,9 +197,11 @@ const steps = guides[slug];
     gap: var(--s-4) var(--s-8);
     margin-top: var(--s-16);
     padding: var(--s-8) var(--s-8) var(--s-8) var(--s-12);
-    border-radius: 32px;
+    border-radius: var(--r-lg);
     background: var(--c-ciruela);
     color: var(--c-crema);
+    outline: 1.5px dashed color-mix(in srgb, var(--c-kraft) 55%, transparent);
+    outline-offset: -10px;
   }
   .gpage__cta p {
     margin: 0;
@@ -218,6 +220,9 @@ const steps = guides[slug];
     color: var(--c-ciruela);
     font-weight: 700;
     text-decoration: none;
+  }
+  .gpage__btn {
+    transition: background 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   }
   .gpage__btn:hover {
     background: var(--c-crema);
@@ -248,8 +253,7 @@ const steps = guides[slug];
       margin-top: var(--s-16);
     }
     .gpage__cta {
-      padding: var(--s-6);
-      border-radius: 22px;
+      padding: var(--s-8) var(--s-6);
     }
   }
 </style>

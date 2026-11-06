@@ -8,7 +8,6 @@ import ShopLayout from '../../../layouts/ShopLayout.astro';
 import LogoPreview from '../../../components/site/LogoPreview.astro';
 import Configurator from '../../../components/site/Configurator.astro';
 import CategoryCard from '../../../components/site/CategoryCard.astro';
-import Icon from '../../../components/brand/Icon.astro';
 import Dieline from '../../../components/boxes/Dieline.astro';
 import { hasGuide } from '../../../data/guides';
 import { categories, type Category } from '../../../data/categories';
@@ -134,11 +133,7 @@ const related = [
           </dd>
         </div>
       </dl>
-      <ul class="pdp__service">
-        <li><Icon name="rapido" size={22} /> Producción y entrega rápida</li>
-        <li><Icon name="envio" size={22} /> Envíos en EE. UU.</li>
-        <li><Icon name="eco" size={22} /> Cartón corrugado de calidad de fábrica</li>
-      </ul>
+      <p class="pdp__service">Producción y entrega rápida, con envíos en EE. UU.</p>
     </section>
 
     <section class="pdp__dieline" aria-labelledby="dieline-title">
@@ -334,22 +329,10 @@ const related = [
   }
   .pdp__service {
     grid-column: 2;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--s-3) var(--s-8);
     margin: 0;
-    padding: 0;
-    list-style: none;
     font-size: var(--fs-sm);
     font-weight: 500;
-  }
-  .pdp__service li {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-  }
-  .pdp__service :global(.fw-icon) {
-    color: var(--c-ciruela-claro);
+    color: color-mix(in srgb, var(--c-ciruela) 72%, var(--c-crema));
   }
 
   /* dieline slot */

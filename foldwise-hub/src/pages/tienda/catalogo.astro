@@ -7,7 +7,6 @@
 import ShopLayout from '../../layouts/ShopLayout.astro';
 import CategoryCard from '../../components/site/CategoryCard.astro';
 import CatalogFilters, { type FilterGroup } from '../../components/site/CatalogFilters.astro';
-import Icon from '../../components/brand/Icon.astro';
 import { hasGuide } from '../../data/guides';
 import { categories, minOrderUnits, type BoxStyle } from '../../data/categories';
 
@@ -74,11 +73,9 @@ const minUnits = minOrderUnits;
             baja contigo.
           </p>
         </div>
-        <ul class="catalog__proof">
-          <li><Icon name="pedido-pequeno" size={20} /> Desde {minUnits} cajas por pedido</li>
-          <li><Icon name="personaliza" size={20} /> Con tu logo impreso</li>
-          <li><Icon name="rapido" size={20} /> Entrega rápida</li>
-        </ul>
+        <p class="catalog__proof">
+          Desde <strong>{minUnits} cajas</strong> por pedido,<br />con tu logo impreso.
+        </p>
       </div>
     </header>
 
@@ -123,7 +120,6 @@ const minUnits = minOrderUnits;
     </div>
 
     <section class="custom" aria-labelledby="custom-title">
-      <span class="custom__icon"><Icon name="medida" size={30} /></span>
       <div>
         <h2 id="custom-title">¿Tu producto no cabe en ninguna?</h2>
         <p>Hacemos la caja a la medida, con el mismo pedido mínimo. Cuéntanos qué envías y te proponemos la medida.</p>
@@ -175,21 +171,15 @@ const minUnits = minOrderUnits;
     gap: var(--s-8);
   }
   .catalog__proof {
-    display: grid;
-    gap: var(--s-3);
     margin: 0;
-    padding: 0 0 var(--s-1);
-    list-style: none;
+    padding: var(--s-4) 0 var(--s-1) var(--s-6);
+    border-left: 1px dashed var(--c-kraft);
     font-size: var(--fs-sm);
-    font-weight: 500;
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--c-ciruela) 78%, var(--c-crema));
   }
-  .catalog__proof li {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--s-2);
-  }
-  .catalog__proof :global(.fw-icon) {
-    color: var(--c-ciruela-claro);
+  .catalog__proof strong {
+    color: var(--c-ciruela);
   }
   .catalog__head h1 {
     font-size: clamp(2.6rem, 1.4rem + 3.6vw, 4.8rem);
@@ -197,7 +187,7 @@ const minUnits = minOrderUnits;
     letter-spacing: -0.045em;
     max-width: 12ch;
   }
-  .catalog__head p {
+  .catalog__intro > div > p {
     margin: var(--s-4) 0 0;
     max-width: 52ch;
     font-size: 1.15rem;
@@ -253,7 +243,7 @@ const minUnits = minOrderUnits;
     flex: 1;
   }
   .catalog__item:global(.is-entering) {
-    animation: item-in 0.45s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+    animation: item-in 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
   }
   .catalog__item:target {
     animation: item-target 1.6s ease-out 0.3s both;
@@ -335,32 +325,26 @@ const minUnits = minOrderUnits;
 
   .custom {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
     gap: var(--s-8);
     margin-top: var(--s-24);
-    padding: var(--s-12);
-    border-radius: 28px;
+    padding: var(--s-12) var(--s-16);
+    border-radius: var(--r-lg);
     background: var(--c-ciruela);
     color: var(--c-crema);
+    outline: 1.5px dashed color-mix(in srgb, var(--c-kraft) 55%, transparent);
+    outline-offset: -12px;
   }
   .custom h2 {
     font-size: var(--fs-xl);
+    text-wrap: balance;
     color: var(--c-crema);
   }
   .custom p {
     margin: var(--s-2) 0 0;
     max-width: 56ch;
     color: color-mix(in srgb, var(--c-crema) 80%, transparent);
-  }
-  .custom__icon {
-    display: grid;
-    place-items: center;
-    width: 64px;
-    height: 64px;
-    border-radius: 20px;
-    background: var(--c-ciruela-claro);
-    color: var(--c-kraft-claro);
   }
 
   @media (max-width: 1100px) {
@@ -403,7 +387,6 @@ const minUnits = minOrderUnits;
     }
     .custom {
       margin-top: var(--s-16);
-      border-radius: 22px;
     }
   }
 </style>
