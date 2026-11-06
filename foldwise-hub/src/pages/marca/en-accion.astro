@@ -16,6 +16,51 @@ import SocialPost from '../../components/brand/applications/SocialPost.astro';
 import DeliveryVan from '../../components/brand/applications/DeliveryVan.astro';
 import { palette, taglines, voice } from '../../data/brand';
 
+// "Aplicaciones": one photo per touchpoint (public/img/board), the same order and
+// captions as the illustrated mockups, which stay available in the disclosure below.
+const applications = [
+  {
+    kind: 'mailer', mod: 'mailer', photo: 'mailer-interior', Art: MailerInside,
+    title: 'Mailer con mensaje interior', desc: 'El primer hola, impreso donde tu cliente mira primero.',
+    alt: 'Mailer kraft abierto con el interior ciruela impreso: «Hola. Esto lo empacamos pensando en ti.»',
+  },
+  {
+    kind: 'shipping-box', mod: 'shipping', photo: 'caja-banda', Art: ShippingBand,
+    title: 'Caja de envío con banda', desc: 'Kraft natural, banda ciruela y cinta lima en el cierre.',
+    alt: 'Caja de envío kraft con una banda ciruela impresa con el logo de Foldwise y «Cuidado enorme.», cerrada con cinta lima',
+  },
+  {
+    kind: 'social-post', mod: 'social', photo: 'post-redes', Art: SocialPost,
+    title: 'Post de redes', desc: 'Un mensaje, una caja, mucho aire.',
+    alt: 'Teléfono con un post de Foldwise: «Tu primera caja también cuenta.», desde 25 cajas',
+  },
+  {
+    kind: 'tape', mod: 'tape', photo: 'cinta', Art: Tape,
+    title: 'Cinta de embalaje lima', desc: 'La energía de la marca, justo en el cierre.',
+    alt: 'Rollo de cinta lima con el logo de Foldwise impreso, desenrollado sobre cartón kraft',
+  },
+  {
+    kind: 'thank-you-card', mod: 'thanks', photo: 'tarjeta-gracias', Art: ThankYouCard,
+    title: 'Tarjeta de agradecimiento', desc: 'Viaja dentro de cada pedido.',
+    alt: 'Tarjeta crema «Gracias por empezar con nosotros.» sobre un sobre kraft',
+  },
+  {
+    kind: 'sticker', mod: 'sticker', photo: 'sticker', Art: Sticker,
+    title: 'Sticker y sello', desc: 'Para cerrar el papel de seda o firmar una caja.',
+    alt: 'Sticker redondo ciruela «pedidos pequeños · cuidado enorme» cerrando papel de seda, junto a un sello lima «Hecho con cuidado»',
+  },
+  {
+    kind: 'business-card', mod: 'card', photo: 'tarjetas-presentacion', Art: BusinessCard,
+    title: 'Tarjeta de presentación', desc: 'Con nombre propio: atención personalizada de verdad.',
+    alt: 'Tarjetas de presentación de Foldwise: una ciruela con el logo y una crema de Valentina Ríos, asesora de packaging',
+  },
+  {
+    kind: 'delivery-van', mod: 'van', photo: 'furgoneta', Art: DeliveryVan,
+    title: 'Furgoneta de reparto', desc: 'La marca en la calle, de camino a tu próximo pedido.',
+    alt: 'Furgoneta blanca de reparto con el logo de Foldwise y «Pedidos pequeños. Cuidado enorme.» en el costado',
+  },
+];
+
 const primary = [
   { name: 'Crema', hex: palette.crema, role: 'Base' },
   { name: 'Kraft', hex: palette.kraft, role: 'Material' },
@@ -184,39 +229,47 @@ const icons = [
           <p class="panel__why">Del unboxing a la puerta: cada punto de contacto dice lo mismo con la misma calma.</p>
         </div>
         <div class="apps">
-          <figure class="app app--mailer" data-application="mailer">
-            <div class="app__art"><MailerInside /></div>
-            <figcaption><b>Mailer con mensaje interior</b> El primer hola, impreso donde tu cliente mira primero.</figcaption>
-          </figure>
-          <figure class="app app--shipping" data-application="shipping-box">
-            <div class="app__art"><ShippingBand /></div>
-            <figcaption><b>Caja de envío con banda</b> Kraft natural, banda ciruela y cinta lima en el cierre.</figcaption>
-          </figure>
-          <figure class="app app--social" data-application="social-post">
-            <div class="app__art"><SocialPost /></div>
-            <figcaption><b>Post de redes</b> Un mensaje, una caja, mucho aire.</figcaption>
-          </figure>
-          <figure class="app app--tape" data-application="tape">
-            <div class="app__art"><Tape /></div>
-            <figcaption><b>Cinta de embalaje lima</b> La energía de la marca, justo en el cierre.</figcaption>
-          </figure>
-          <figure class="app app--thanks" data-application="thank-you-card">
-            <div class="app__art"><ThankYouCard /></div>
-            <figcaption><b>Tarjeta de agradecimiento</b> Viaja dentro de cada pedido.</figcaption>
-          </figure>
-          <figure class="app app--sticker" data-application="sticker">
-            <div class="app__art"><Sticker /></div>
-            <figcaption><b>Sticker y sello</b> Para cerrar el papel de seda o firmar una caja.</figcaption>
-          </figure>
-          <figure class="app app--card" data-application="business-card">
-            <div class="app__art"><BusinessCard /></div>
-            <figcaption><b>Tarjeta de presentación</b> Con nombre propio: atención personalizada de verdad.</figcaption>
-          </figure>
-          <figure class="app app--van" data-application="delivery-van">
-            <div class="app__art"><DeliveryVan /></div>
-            <figcaption><b>Furgoneta de reparto</b> La marca en la calle, de camino a tu próximo pedido.</figcaption>
-          </figure>
+          {
+            applications.map((a) => (
+              <figure class={`app app--photo app--${a.mod}`} data-application={a.kind}>
+                <div class="app__photo">
+                  <img
+                    src={`/img/board/${a.photo}.webp`}
+                    alt={a.alt}
+                    width="1600"
+                    height="1200"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </div>
+                <figcaption>
+                  <b>{a.title}</b> {a.desc}
+                </figcaption>
+              </figure>
+            ))
+          }
         </div>
+
+        <details class="illus" data-illustrated>
+          <summary>
+            <span class="illus__title">Versión ilustrada</span>
+            <span class="illus__hint">Las mismas 8 aplicaciones dibujadas en isométrico, para piezas gráficas y guías.</span>
+          </summary>
+          <div class="apps apps--illus">
+            {
+              applications.map(({ kind, mod, title, desc, Art }) => (
+                <figure class={`app app--${mod}`} data-application-illustrated={kind}>
+                  <div class="app__art">
+                    <Art />
+                  </div>
+                  <figcaption>
+                    <b>{title}</b> {desc}
+                  </figcaption>
+                </figure>
+              ))
+            }
+          </div>
+        </details>
       </section>
 
       <section class="panel panel--voice" data-board-section="voz" aria-labelledby="h-voz">
@@ -696,6 +749,89 @@ const icons = [
   }
   .app--van {
     grid-column: span 7;
+  }
+
+  /* Photo version: the picture runs edge to edge, the caption keeps the card padding */
+  .app.app--photo {
+    padding: 0 0 var(--s-6);
+    background: #efe7d8;
+    overflow: hidden;
+    gap: var(--s-4);
+  }
+  .app__photo {
+    position: relative;
+    flex: 1;
+    aspect-ratio: 4 / 3;
+    background: var(--c-crema);
+  }
+  .app__photo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  /* the van shot is wide: a 16:9 window keeps the bottom row from towering */
+  .app--van .app__photo {
+    aspect-ratio: 16 / 9;
+  }
+  .app--van .app__photo img {
+    object-position: 50% 48%;
+  }
+  .app--photo figcaption {
+    padding-inline: var(--s-6);
+  }
+
+  /* Illustrated version, collapsed under the photos (same pattern as /marca/cajas) */
+  .illus {
+    margin-top: var(--s-8);
+    border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+    padding-top: var(--s-6);
+  }
+  .illus summary {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--s-2) var(--s-4);
+    cursor: pointer;
+    list-style: none;
+    color: var(--c-ciruela);
+  }
+  .illus summary::-webkit-details-marker {
+    display: none;
+  }
+  .illus__title {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: var(--fs-lg);
+    letter-spacing: -0.02em;
+  }
+  .illus__title::before {
+    content: '';
+    width: 0.55em;
+    height: 0.55em;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(-45deg);
+    transition: transform 0.2s ease;
+  }
+  .illus[open] .illus__title::before {
+    transform: rotate(45deg);
+  }
+  .illus__hint {
+    font-size: var(--fs-sm);
+    color: var(--c-ciruela-claro);
+  }
+  .illus summary:focus-visible {
+    outline: 2px solid var(--c-ciruela);
+    outline-offset: 4px;
+    border-radius: var(--r-sm);
+  }
+  .apps--illus {
+    margin-top: var(--s-8);
   }
 
   /* Voice */

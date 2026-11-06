@@ -50,19 +50,38 @@ test.describe('brand-in-action board', () => {
     }
   });
 
-  test('shows the 8 applications, the mailer with its inner message', async ({ page }) => {
+  test('shows the 8 applications as photos, each with a loaded image and Spanish alt', async ({ page }) => {
     await page.goto(PAGE);
     const apps = page.locator('[data-board-section="aplicaciones"] [data-application]');
     await expect(apps).toHaveCount(8);
     for (const kind of APPLICATIONS) {
-      const app = page.locator(`[data-application="${kind}"]`);
-      await expect(app).toHaveCount(1);
-      await expect(app.locator('svg').first()).toBeVisible();
+      const img = page.locator(`[data-application="${kind}"] img`);
+      await expect(img).toHaveCount(1);
+      await expect(img).toHaveAttribute('src', /^\/img\/board\/.+\.webp$/);
+      await expect(img).toHaveAttribute('width', '1600');
+      await expect(img).toHaveAttribute('height', '1200');
+      await expect(img).toHaveAttribute('loading', 'lazy');
+      await img.scrollIntoViewIfNeeded();
+      await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth)).toBe(1600);
     }
-    await expect(page.locator('[data-application="mailer"] [data-part="inner-message"]')).toContainText(
+    await expect(page.locator('[data-application="mailer"] img')).toHaveAttribute('alt', /Esto lo empacamos pensando en ti/);
+  });
+
+  test('keeps the 8 illustrated mockups in a collapsed "Versión ilustrada" disclosure', async ({ page }) => {
+    await page.goto(PAGE);
+    const illus = page.locator('[data-board-section="aplicaciones"] details[data-illustrated]');
+    await expect(illus).not.toHaveAttribute('open', /.*/);
+    await expect(illus.locator('summary')).toContainText('Versión ilustrada');
+    await illus.locator('summary').click();
+    const figs = illus.locator('[data-application-illustrated]');
+    await expect(figs).toHaveCount(8);
+    for (const kind of APPLICATIONS) {
+      await expect(illus.locator(`[data-application-illustrated="${kind}"] svg`).first()).toBeVisible();
+    }
+    await expect(illus.locator('[data-application-illustrated="mailer"] [data-part="inner-message"]')).toContainText(
       'Esto lo empacamos pensando en ti',
     );
-    await expect(page.locator('[data-application="shipping-box"] [data-part="band"]')).toHaveCount(1);
+    await expect(illus.locator('[data-application-illustrated="shipping-box"] [data-part="band"]')).toHaveCount(1);
   });
 
   test('the patterns panel shows the 8 brand icons', async ({ page }) => {
@@ -75,6 +94,8 @@ test.describe('brand-in-action board', () => {
   test('patterns are tileable SVG and the board has no horizontal scroll at 375 px', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 800 });
     await page.goto(PAGE);
+    // measure with the illustrated mockups expanded too
+    await page.locator('details[data-illustrated] summary').click();
     for (const kind of ['troquel', 'flauta']) {
       await expect(page.locator(`[data-pattern="${kind}"] pattern`).first()).toHaveCount(1);
     }

@@ -35,3 +35,9 @@ Fotos de producto en `products/`, generadas con IA (Figma MCP `generate_image`, 
 | `products/mailer-abierta.webp` | Figma AI · gpt-image-2.5-flare | compuesto (tarjeta «¡Gracias por apoyar lo pequeño!» y tapa interior «Lo pequeño se cuida en grande.») |
 
 Las tres fotos `mailer-*.webp` (sección «Ábrela como la abre tu cliente») son tres generaciones independientes de la misma caja. Para que el fundido se lea como la tapa moviéndose, la cerrada y la entreabierta se alinearon a la abierta con una homografía de la pared frontal y se pasaron al mismo fondo de papel de la abierta; luego se compusieron las marcas y textos exactos con la misma mezcla de tinta.
+
+## Imágenes de aplicaciones del tablero (/marca/en-accion), generadas con IA
+
+- Herramienta: Figma AI `generate_image`, modelo gpt-image-2.5-flare. Fecha: 2026-11-06.
+- Archivos: `board/{mailer-interior, caja-banda, cinta, tarjeta-gracias, sticker, tarjetas-presentacion, post-redes, furgoneta}.webp`
+- Las fotos se generaron sin texto ni logos. Isotipo, wordmark y todos los textos se compusieron después de forma exacta (render Playwright + deformación de perspectiva PIL + mezcla tipo tinta). La pantalla de post-redes reutiliza las fotos de producto cajas-mailer.webp y cajas-de-envio.webp.
