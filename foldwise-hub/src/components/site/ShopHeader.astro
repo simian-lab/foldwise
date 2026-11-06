@@ -1,10 +1,13 @@
 ---
 /**
- * Shop header: animated logo (plays on hover), a visual-only search field,
- * the dead institutional links and the category navigation row. No cart.
+ * Shop header, in the Packbox structure: a thin ciruela promo bar that
+ * scrolls away, then a sticky two-row header. Row one carries the animated
+ * logo (plays on hover), a wide visual-only search and the actions (where we
+ * ship and the advisor CTA; no cart, no login). Row two is the category nav,
+ * "Todas las cajas" first, then the families, then the institutional links.
  */
 import AnimatedLogo from '../brand/AnimatedLogo.astro';
-import { categories } from '../../data/categories';
+import { categories, minOrderUnits } from '../../data/categories';
 
 const NAV_SLUGS = [
   'cajas-de-envio',
@@ -22,10 +25,12 @@ const nav = NAV_SLUGS.map((slug) => categories.find((c) => c.slug === slug)!).ma
 const path = Astro.url.pathname.replace(/\/$/, '');
 ---
 
+<p class="shop-promo" data-shop-promo>Pide desde {minOrderUnits} cajas, con tu logo.</p>
+
 <header class="shop-header" data-shop-header>
   <div class="shop-header__bar">
     <a href="/tienda" class="shop-header__brand" aria-label="Foldwise, inicio de la tienda">
-      <AnimatedLogo size={44} trigger="hover" loop={false} variant="crema" />
+      <AnimatedLogo size={40} trigger="hover" loop={false} variant="crema" />
       <span class="shop-header__word" aria-hidden="true">foldwise</span>
     </a>
 
@@ -38,60 +43,92 @@ const path = Astro.url.pathname.replace(/\/$/, '');
       </svg>
     </form>
 
+    <div class="shop-header__actions">
+      <span class="shop-header__region">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+          <circle cx="12" cy="10" r="2.3" fill="none" stroke="currentColor" stroke-width="1.8"></circle>
+        </svg>
+        Envíos en EE. UU.
+      </span>
+      <a href="#" class="shop-header__cta">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V16.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path>
+        </svg>
+        Habla con un asesor
+      </a>
+    </div>
+  </div>
+
+  <div class="shop-header__row">
+    <nav class="shop-nav" data-shop-nav aria-label="Categorías">
+      <ul>
+        <li>
+          <a href="/tienda/catalogo" class="shop-nav__all" aria-current={path === '/tienda/catalogo' ? 'page' : undefined}>
+            Todas las cajas
+          </a>
+        </li>
+        <li class="shop-nav__sep" aria-hidden="true"></li>
+        {nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+      </ul>
+    </nav>
     <nav class="shop-header__links" aria-label="Foldwise">
       <a href="#">Nosotros</a>
       <a href="#">Blog</a>
       <a href="#">Contacto</a>
-      <a href="#" class="shop-header__cta">Habla con un asesor</a>
     </nav>
   </div>
-
-  <nav class="shop-nav" data-shop-nav aria-label="Categorías">
-    <ul>
-      <li>
-        <a href="/tienda/catalogo" class="shop-nav__all" aria-current={path === '/tienda/catalogo' ? 'page' : undefined}>
-          Todas las cajas
-        </a>
-      </li>
-      {nav.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
-    </ul>
-  </nav>
 </header>
 
 <script>
   const header = document.querySelector<HTMLElement>('[data-shop-header]');
   if (header) {
-    const onScroll = () => header.classList.toggle('is-scrolled', window.scrollY > 8);
+    const onScroll = () => header.classList.toggle('is-scrolled', header.getBoundingClientRect().top <= 0 && window.scrollY > 8);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
   }
 </script>
 
 <style>
+  .shop-promo {
+    margin: 0;
+    padding: 7px var(--s-4);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    line-height: 1.3;
+    text-align: center;
+  }
+
   .shop-header {
     position: sticky;
     top: 0;
     z-index: 50;
-    background: color-mix(in srgb, var(--c-crema) 88%, transparent);
+    background: color-mix(in srgb, var(--c-crema) 92%, transparent);
     backdrop-filter: saturate(1.4) blur(14px);
     -webkit-backdrop-filter: saturate(1.4) blur(14px);
-    border-bottom: 1px solid transparent;
-    transition: border-color 0.3s, box-shadow 0.3s;
+    border-bottom: 1px solid color-mix(in srgb, var(--c-kraft) 30%, transparent);
+    transition: box-shadow 0.3s;
   }
   .shop-header:global(.is-scrolled) {
-    border-bottom-color: color-mix(in srgb, var(--c-kraft) 35%, transparent);
     box-shadow: 0 10px 30px -24px rgba(42, 20, 48, 0.5);
   }
-  .shop-header__bar {
+  .shop-header__bar,
+  .shop-header__row {
     max-width: 1360px;
     margin: 0 auto;
-    padding: var(--s-4) var(--s-8) var(--s-3);
+    padding-inline: var(--s-8);
+  }
+  .shop-header__bar {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 560px) minmax(0, 1fr);
     align-items: center;
     gap: var(--s-8);
+    padding-block: var(--s-4) var(--s-3);
   }
   .shop-header__brand {
+    justify-self: start;
     display: inline-flex;
     align-items: center;
     gap: var(--s-1);
@@ -101,7 +138,7 @@ const path = Astro.url.pathname.replace(/\/$/, '');
   .shop-header__word {
     font-family: var(--f-display);
     font-weight: 800;
-    font-size: 1.7rem;
+    font-size: 1.6rem;
     letter-spacing: -0.035em;
     line-height: 1;
     transform: translateY(-1px);
@@ -109,25 +146,26 @@ const path = Astro.url.pathname.replace(/\/$/, '');
 
   .shop-search {
     position: relative;
-    max-width: 520px;
     width: 100%;
-    justify-self: center;
   }
   .shop-search input {
     width: 100%;
-    height: 46px;
-    padding: 0 var(--s-4) 0 2.9rem;
+    height: 44px;
+    padding: 0 3rem 0 var(--s-6);
     font: inherit;
     font-size: var(--fs-sm);
     color: var(--c-ciruela);
-    background: color-mix(in srgb, var(--c-crema) 40%, #ffffff);
-    border: 1px solid color-mix(in srgb, var(--c-kraft) 45%, transparent);
+    background: color-mix(in srgb, var(--c-crema) 35%, #ffffff);
+    border: 1px solid color-mix(in srgb, var(--c-kraft) 40%, transparent);
     border-radius: var(--r-pill);
     outline: none;
     transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
   }
   .shop-search input::placeholder {
-    color: color-mix(in srgb, var(--c-ciruela) 50%, var(--c-crema));
+    color: color-mix(in srgb, var(--c-ciruela) 55%, var(--c-crema));
+  }
+  .shop-search input:hover {
+    border-color: color-mix(in srgb, var(--c-kraft) 75%, transparent);
   }
   .shop-search input:focus {
     border-color: var(--c-ciruela);
@@ -136,27 +174,140 @@ const path = Astro.url.pathname.replace(/\/$/, '');
   }
   .shop-search__icon {
     position: absolute;
-    left: 1rem;
+    right: 1.1rem;
     top: 50%;
-    width: 20px;
-    height: 20px;
+    width: 19px;
+    height: 19px;
     transform: translateY(-50%);
-    color: var(--c-ciruela-claro);
+    color: var(--c-ciruela);
     pointer-events: none;
   }
 
-  .shop-header__links {
+  .shop-header__actions {
+    justify-self: end;
     display: flex;
     align-items: center;
     gap: var(--s-6);
     font-size: var(--fs-sm);
     font-weight: 500;
   }
-  .shop-header__links a {
-    text-decoration: none;
-    position: relative;
+  .shop-header__region {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
+    color: color-mix(in srgb, var(--c-ciruela) 85%, var(--c-crema));
   }
-  .shop-header__links a:not(.shop-header__cta)::after {
+  .shop-header__region svg,
+  .shop-header__cta svg {
+    width: 18px;
+    height: 18px;
+    flex: none;
+  }
+  .shop-header__cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: 0.6rem 1.05rem;
+    border-radius: var(--r-pill);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background 0.2s, transform 0.15s;
+  }
+  .shop-header__cta:hover {
+    background: var(--c-ciruela-claro);
+  }
+  .shop-header__cta:active {
+    transform: scale(0.96);
+  }
+
+  .shop-header__row {
+    display: flex;
+    align-items: center;
+    gap: var(--s-6);
+  }
+  .shop-nav {
+    flex: 1;
+    min-width: 0;
+  }
+  .shop-nav ul {
+    display: flex;
+    align-items: center;
+    gap: var(--s-1);
+    margin: 0;
+    padding: var(--s-1) 0 var(--s-3);
+    list-style: none;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* fade the clipped end so a cut-off family reads as "scroll for more" */
+    -webkit-mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(90deg, #000 calc(100% - 40px), transparent);
+  }
+  .shop-nav li:last-child {
+    padding-right: 32px;
+  }
+  .shop-nav ul::-webkit-scrollbar {
+    display: none;
+  }
+  .shop-nav a {
+    display: block;
+    white-space: nowrap;
+    padding: 0.4rem 0.7rem;
+    border-radius: var(--r-pill);
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    color: color-mix(in srgb, var(--c-ciruela) 82%, var(--c-crema));
+    transition: background 0.2s, color 0.2s;
+  }
+  .shop-nav a:hover {
+    background: color-mix(in srgb, var(--c-kraft-claro) 55%, transparent);
+    color: var(--c-ciruela);
+  }
+  .shop-nav a.shop-nav__all {
+    padding-left: 0;
+    font-weight: 700;
+    color: var(--c-ciruela);
+  }
+  .shop-nav a.shop-nav__all:hover {
+    background: none;
+    text-decoration: underline;
+    text-decoration-color: var(--c-lima);
+    text-decoration-thickness: 3px;
+    text-underline-offset: 6px;
+  }
+  .shop-nav a.shop-nav__all[aria-current='page'] {
+    text-decoration: underline;
+    text-decoration-color: var(--c-ciruela);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+  .shop-nav__sep {
+    flex: none;
+    width: 1px;
+    height: 18px;
+    margin-inline: var(--s-3);
+    background: color-mix(in srgb, var(--c-kraft) 60%, transparent);
+  }
+
+  .shop-header__links {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: var(--s-6);
+    padding: var(--s-1) 0 var(--s-3) var(--s-6);
+    border-left: 1px solid color-mix(in srgb, var(--c-kraft) 60%, transparent);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+  .shop-header__links a {
+    position: relative;
+    text-decoration: none;
+    color: color-mix(in srgb, var(--c-ciruela) 82%, var(--c-crema));
+  }
+  .shop-header__links a::after {
     content: '';
     position: absolute;
     left: 0;
@@ -168,59 +319,16 @@ const path = Astro.url.pathname.replace(/\/$/, '');
     transform-origin: left;
     transition: transform 0.25s ease;
   }
-  .shop-header__links a:not(.shop-header__cta):hover::after {
-    transform: scaleX(1);
-  }
-  .shop-header__cta {
-    padding: 0.65rem 1.1rem;
-    border-radius: var(--r-pill);
-    background: var(--c-ciruela);
-    color: var(--c-crema);
-    font-weight: 600;
-    transition: background 0.2s, transform 0.15s;
-  }
-  .shop-header__cta:hover {
-    background: var(--c-ciruela-claro);
-  }
-  .shop-header__cta:active {
-    transform: scale(0.96);
-  }
-
-  .shop-nav {
-    max-width: 1360px;
-    margin: 0 auto;
-    padding: 0 var(--s-8);
-  }
-  .shop-nav ul {
-    display: flex;
-    gap: var(--s-1);
-    margin: 0;
-    padding: 0 0 var(--s-3);
-    list-style: none;
-    overflow-x: auto;
-    scrollbar-width: none;
-  }
-  .shop-nav ul::-webkit-scrollbar {
-    display: none;
-  }
-  .shop-nav a {
-    display: block;
-    white-space: nowrap;
-    padding: 0.4rem 0.85rem;
-    border-radius: var(--r-pill);
-    font-size: var(--fs-sm);
-    text-decoration: none;
-    color: color-mix(in srgb, var(--c-ciruela) 82%, var(--c-crema));
-    transition: background 0.2s, color 0.2s;
-  }
-  .shop-nav a:hover {
-    background: color-mix(in srgb, var(--c-kraft-claro) 55%, transparent);
+  .shop-header__links a:hover {
     color: var(--c-ciruela);
   }
-  .shop-nav__all {
-    font-weight: 600;
-    color: var(--c-ciruela) !important;
-    border: 1px solid color-mix(in srgb, var(--c-ciruela) 25%, transparent);
+  .shop-header__links a:hover::after {
+    transform: scaleX(1);
+  }
+  .shop-header a:focus-visible,
+  .shop-search input:focus-visible {
+    outline: 2px solid var(--c-ciruela);
+    outline-offset: 2px;
   }
 
   .visually-hidden {
@@ -232,8 +340,13 @@ const path = Astro.url.pathname.replace(/\/$/, '');
     white-space: nowrap;
   }
 
+  @media (max-width: 1240px) {
+    .shop-header__region {
+      display: none;
+    }
+  }
   @media (max-width: 1100px) {
-    .shop-header__links a:not(.shop-header__cta) {
+    .shop-header__links {
       display: none;
     }
   }
@@ -243,26 +356,26 @@ const path = Astro.url.pathname.replace(/\/$/, '');
     }
     .shop-header__bar {
       grid-template-columns: auto auto;
+      justify-content: space-between;
       gap: var(--s-3);
       padding: var(--s-3) var(--s-4) var(--s-2);
+    }
+    .shop-header__row {
+      padding-inline: var(--s-4) 0;
     }
     .shop-search {
       grid-column: 1 / -1;
       grid-row: 2;
-      max-width: none;
-    }
-    .shop-header__links {
-      justify-self: end;
     }
     .shop-header__cta {
-      padding: 0.5rem 0.9rem;
+      padding: 0.5rem 0.85rem;
       font-size: var(--fs-xs);
     }
-    .shop-header__word {
-      font-size: 1.45rem;
+    .shop-header__cta svg {
+      display: none;
     }
-    .shop-nav {
-      padding: 0 var(--s-2);
+    .shop-header__word {
+      font-size: 1.4rem;
     }
   }
 </style>

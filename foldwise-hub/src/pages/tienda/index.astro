@@ -2,29 +2,20 @@
 import ShopLayout from '../../layouts/ShopLayout.astro';
 import HeroBox from '../../components/site/HeroBox.astro';
 import CategoryCard from '../../components/site/CategoryCard.astro';
-import BoxLineup from '../../components/boxes/BoxLineup.astro';
 import { categories, minOrderUnits } from '../../data/categories';
 import { taglines } from '../../data/brand';
 
 const minUnits = minOrderUnits;
 
-const benefits = [
-  {
-    title: 'Pedidos pequeños de verdad',
-    text: `Pide desde ${minUnits} cajas. Cuando crezcas, el precio baja contigo.`,
-  },
-  {
-    title: 'Con tu logo',
-    text: 'Cada envío se ve tuyo desde la puerta.',
-  },
-  {
-    title: 'Entrega rápida',
-    text: 'Para que tu lanzamiento no espere.',
-  },
-  {
-    title: 'Una persona real te ayuda',
-    text: 'Con la medida y el cartón, sin tecnicismos.',
-  },
+// Small checks under the hero buttons: what every box is, never a promise.
+const ticks = ['Cartón corrugado reciclable', 'Medidas estándar de EE. UU.', 'Guía de armado incluida'] as const;
+
+// Neutral proof row at the foot of the hero panel (no client logos, no numbers we can't back).
+const proofs = [
+  { icon: 'stack', label: `Desde ${minUnits} cajas` },
+  { icon: 'stamp', label: 'Con tu logo' },
+  { icon: 'pin', label: 'Envíos en EE. UU.' },
+  { icon: 'chat', label: 'Atención personalizada' },
 ] as const;
 
 const starters = [
@@ -41,7 +32,7 @@ const steps = [
 ---
 
 <ShopLayout title="Foldwise · Tienda de cajas para emprendedores">
-  <section class="hero" aria-labelledby="hero-title">
+  <section class="hero" aria-labelledby="hero-title" data-hero-panel>
     <div class="hero__copy">
       <h1 id="hero-title" class="hero__title">{taglines.principal}</h1>
       <p class="hero__lede">
@@ -52,11 +43,74 @@ const steps = [
         <a href="#categorias" class="btn btn--lime">Explora las cajas</a>
         <a href="/tienda/producto/cajas-mailer" class="btn btn--ghost">Personaliza tu mailer</a>
       </div>
-      <p class="hero__note">Envíos en EE. UU. · Atención personalizada</p>
+      <ul class="hero__ticks">
+        {
+          ticks.map((t) => (
+            <li>
+              <svg viewBox="0 0 16 16" aria-hidden="true" focusable="false">
+                <circle cx="8" cy="8" r="7" />
+                <path d="M4.8 8.3l2.2 2.2 4.2-4.8" />
+              </svg>
+              {t}
+            </li>
+          ))
+        }
+      </ul>
     </div>
 
-    <div class="hero__stage" data-hero-scope>
-      <svg class="hero__flutes" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <figure class="hero__media">
+      <img
+        class="hero__photo"
+        src="/img/products/hero.webp"
+        alt="Caja mailer Foldwise color ciruela abierta, con el logo impreso al frente; adentro, papel de seda, una tarjeta en blanco y un frasco de vidrio ámbar"
+        width="1600"
+        height="1200"
+        loading="eager"
+        fetchpriority="high"
+        decoding="async"
+        data-hero-photo
+      />
+    </figure>
+
+    <ul class="hero__proof" aria-label="Lo que tienes con Foldwise">
+      {
+        proofs.map((p) => (
+          <li>
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              {p.icon === 'stack' && (
+                <>
+                  <path d="M4 15.5l8 4 8-4" />
+                  <path d="M4 11.5l8 4 8-4" />
+                  <path d="M12 3.5l8 4-8 4-8-4z" />
+                </>
+              )}
+              {p.icon === 'stamp' && (
+                <>
+                  <rect x="3.5" y="5" width="17" height="14" rx="2" />
+                  <path d="M8 15.5V9h3.2M8 12h2.6" />
+                  <path d="M14 15.5h2.5" />
+                </>
+              )}
+              {p.icon === 'pin' && (
+                <>
+                  <path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z" />
+                  <circle cx="12" cy="10" r="2.3" />
+                </>
+              )}
+              {p.icon === 'chat' && (
+                <path d="M5 5.5h14a1.5 1.5 0 0 1 1.5 1.5v8a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 3.5V16.5H5A1.5 1.5 0 0 1 3.5 15V7A1.5 1.5 0 0 1 5 5.5z" />
+              )}
+            </svg>
+            {p.label}
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <section class="unbox" aria-labelledby="unbox-title">
+    <div class="unbox__stage" data-hero-scope>
+      <svg class="unbox__flutes" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
         <defs>
           <pattern id="flute" width="28" height="18" patternUnits="userSpaceOnUse">
             <path d="M0 9c7 0 7-7 14-7s7 7 14 7" fill="none" stroke="#A9845E" stroke-width="1.1" opacity="0.35"></path>
@@ -64,28 +118,25 @@ const steps = [
         </defs>
         <rect width="600" height="600" fill="url(#flute)"></rect>
       </svg>
-      <div class="hero__box">
+      <div class="unbox__box">
         <HeroBox />
       </div>
-      <div class="hero__caption">
+      <div class="unbox__caption">
         <span data-hero-hint>Toca la caja para abrirla</span>
-        <span class="hero__spec">Caja mailer M-1410, 14 × 10 × 4 in</span>
+        <span class="unbox__spec">Caja mailer M-1410, 14 × 10 × 4 in</span>
       </div>
     </div>
-  </section>
-
-  <section class="benefits" aria-labelledby="benefits-title">
-    <h2 id="benefits-title" class="visually-hidden">Por qué Foldwise</h2>
-    <ul class="benefits__list">
-      {
-        benefits.map((b) => (
-          <li class="benefit">
-            <h3>{b.title}</h3>
-            <p>{b.text}</p>
-          </li>
-        ))
-      }
-    </ul>
+    <div class="unbox__copy">
+      <h2 id="unbox-title">Ábrela como la abre tu cliente</h2>
+      <p>
+        La tapa se levanta y lo primero que ve es lo que tú pusiste adentro. Así se siente recibir una caja mailer con tu
+        marca.
+      </p>
+      <div class="unbox__links">
+        <a href="/tienda/producto/cajas-mailer" class="btn btn--ghost">Ponle tu logo</a>
+        <a href="/tienda/guia/cajas-mailer" class="unbox__guide">Mira cómo se arma</a>
+      </div>
+    </div>
   </section>
 
   <section id="categorias" class="cats" aria-labelledby="cats-title">
@@ -152,11 +203,20 @@ const steps = [
     <div class="section-head">
       <div>
         <h2 id="family-title">Toda la familia</h2>
-        <p>Del mailer para joyería a la caja de mudanza, todas a escala real entre sí.</p>
+        <p>Del mailer para joyería a la caja de mudanza, las 12 familias juntas.</p>
       </div>
       <a href="/tienda/catalogo" class="btn btn--ghost">Compara las medidas</a>
     </div>
-    <BoxLineup />
+    <img
+      class="family__photo"
+      src="/img/products/familia.webp"
+      alt="Las 12 cajas de Foldwise juntas: cajas de mudanza, reforzadas y de envío con cinta lima, una caja de vino ciruela, mailers, una caja de regalo ciruela y una caja de ropa crema"
+      width="2000"
+      height="1000"
+      loading="lazy"
+      decoding="async"
+      data-family-photo
+    />
   </section>
 
   <section class="steps" aria-labelledby="steps-title">
@@ -191,7 +251,7 @@ const steps = [
 
 <style>
   .hero,
-  .benefits,
+  .unbox,
   .cats,
   .starters,
   .family,
@@ -243,33 +303,40 @@ const steps = [
     background: color-mix(in srgb, var(--c-kraft-claro) 30%, transparent);
   }
 
-  /* ───── hero ───── */
+  /* ───── hero: one tinted panel, copy left, photo right, proof row at its foot ───── */
   .hero {
+    --hero-bg: #f1e6d8;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr);
-    gap: var(--s-8);
-    align-items: stretch;
-    padding-top: var(--s-6);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+    grid-template-rows: 1fr auto;
+    width: min(calc(100% - 2 * var(--s-8)), calc(1360px - 2 * var(--s-8)));
+    max-width: none;
+    margin-top: var(--s-6);
+    padding: 0;
+    border-radius: 28px;
+    background: var(--hero-bg);
+    overflow: hidden;
+    isolation: isolate;
   }
   .hero__copy {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    padding: var(--s-12) 0 var(--s-12) var(--s-4);
+    padding: var(--s-12) var(--s-8) var(--s-6) var(--s-16);
   }
   .hero__title {
-    font-size: clamp(3rem, 1.2rem + 4.6vw, 5.6rem);
-    line-height: 0.95;
-    letter-spacing: -0.045em;
-    max-width: 10ch;
+    font-size: clamp(2.6rem, 1.2rem + 3.2vw, 4.1rem);
+    line-height: 0.98;
+    letter-spacing: -0.04em;
+    max-width: 13ch;
     text-wrap: balance;
   }
   .hero__lede {
     margin: var(--s-6) 0 0;
-    max-width: 40ch;
-    font-size: var(--fs-lg);
+    max-width: 42ch;
+    font-size: 1.15rem;
     line-height: 1.5;
-    color: color-mix(in srgb, var(--c-ciruela) 80%, var(--c-crema));
+    color: color-mix(in srgb, var(--c-ciruela) 82%, var(--hero-bg));
   }
   .hero__actions {
     display: flex;
@@ -277,19 +344,95 @@ const steps = [
     gap: var(--s-3);
     margin-top: var(--s-8);
   }
-  .hero__note {
-    margin: var(--s-8) 0 0;
+  .hero__ticks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-6);
+    margin: var(--s-6) 0 0;
+    padding: 0;
+    list-style: none;
     font-size: var(--fs-xs);
     font-weight: 600;
-    color: color-mix(in srgb, var(--c-ciruela) 68%, var(--c-crema));
+    color: color-mix(in srgb, var(--c-ciruela) 80%, var(--hero-bg));
+  }
+  .hero__ticks li {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .hero__ticks svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    fill: none;
+    stroke: var(--c-ciruela);
+    stroke-width: 1.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .hero__media {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    position: relative;
+    margin: 0;
+    min-height: 520px;
+  }
+  .hero__photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 62% 50%;
+    /* melt the photo's own backdrop into the panel instead of showing a seam */
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 16%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 16%);
+  }
+  .hero__proof {
+    grid-column: 1;
+    grid-row: 2;
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    gap: var(--s-3) var(--s-12);
+    margin: 0 var(--s-8) 0 var(--s-16);
+    padding: var(--s-6) 0 var(--s-8);
+    list-style: none;
+    border-top: 1px dashed color-mix(in srgb, var(--c-kraft-sombra) 55%, transparent);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--c-ciruela);
+  }
+  .hero__proof li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    white-space: nowrap;
+  }
+  .hero__proof svg {
+    width: 20px;
+    height: 20px;
+    flex: none;
+    fill: none;
+    stroke: var(--c-ciruela);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
   }
 
-  .hero__stage {
+  /* ───── unboxing: the interactive mailer ───── */
+  .unbox {
+    display: grid;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    gap: var(--s-16);
+    align-items: center;
+    margin-top: var(--s-24);
+  }
+  .unbox__stage {
     position: relative;
     display: flex;
     flex-direction: column;
     justify-content: center;
-    min-height: 600px;
+    min-height: 540px;
     padding: var(--s-12) var(--s-8) var(--s-6);
     border-radius: var(--r-lg);
     background:
@@ -297,7 +440,7 @@ const steps = [
     overflow: hidden;
     isolation: isolate;
   }
-  .hero__flutes {
+  .unbox__flutes {
     position: absolute;
     inset: 0;
     width: 100%;
@@ -306,11 +449,11 @@ const steps = [
     mask-image: radial-gradient(80% 70% at 50% 50%, transparent 30%, #000 85%);
     -webkit-mask-image: radial-gradient(80% 70% at 50% 50%, transparent 30%, #000 85%);
   }
-  .hero__box {
-    width: min(100%, 560px);
+  .unbox__box {
+    width: min(100%, 520px);
     margin-inline: auto;
   }
-  .hero__caption {
+  .unbox__caption {
     display: flex;
     justify-content: space-between;
     gap: var(--s-4);
@@ -319,50 +462,38 @@ const steps = [
     font-weight: 600;
     color: var(--c-ciruela-claro);
   }
-  .hero__spec {
+  .unbox__spec {
     font-weight: 500;
     color: color-mix(in srgb, var(--c-ciruela) 65%, var(--c-kraft-claro));
   }
-
-  /* ───── benefits ───── */
-  .benefits {
-    margin-top: var(--s-12);
-  }
-  .benefits__list {
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
-    margin: 0;
-    padding: 0;
-    list-style: none;
-    border-block: 1px solid color-mix(in srgb, var(--c-kraft) 35%, transparent);
-  }
-  .benefit {
-    padding: var(--s-8) var(--s-6);
-  }
-  .benefit + .benefit {
-    border-left: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
-  }
-  .benefit:first-child {
-    padding-left: 0;
-  }
-  .benefit h3 {
-    margin: 0 0 var(--s-2);
-    font-size: 1.15rem;
-    letter-spacing: -0.025em;
+  .unbox__copy h2 {
+    font-size: var(--fs-2xl);
+    max-width: 12ch;
     text-wrap: balance;
   }
-  .benefit:first-child h3 {
-    max-width: 12ch;
-    font-size: clamp(1.6rem, 1rem + 1.2vw, 2.1rem);
-    line-height: 1.02;
-    letter-spacing: -0.035em;
-  }
-  .benefit p {
-    margin: 0;
-    max-width: 30ch;
-    font-size: var(--fs-sm);
+  .unbox__copy p {
+    margin: var(--s-6) 0 0;
+    max-width: 40ch;
+    font-size: var(--fs-lg);
     line-height: 1.5;
-    color: color-mix(in srgb, var(--c-ciruela) 75%, var(--c-crema));
+    color: color-mix(in srgb, var(--c-ciruela) 78%, var(--c-crema));
+  }
+  .unbox__links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--s-6);
+    margin-top: var(--s-8);
+  }
+  .unbox__guide {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    text-decoration-color: var(--c-lima);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 4px;
+  }
+  .unbox__guide:hover {
+    text-decoration-color: var(--c-ciruela);
   }
 
   /* ───── categories ───── */
@@ -393,6 +524,15 @@ const steps = [
   /* ───── family lineup ───── */
   .family {
     margin-top: var(--s-24);
+  }
+  .family__photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 2 / 1;
+    object-fit: cover;
+    border-radius: var(--r-lg);
+    background: #f1e7dd;
   }
 
   /* ───── starters ───── */
@@ -567,30 +707,52 @@ const steps = [
     .cats__grid {
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
-    .benefits__list {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-    .benefit:nth-child(3) {
-      border-left: 0;
-      padding-left: 0;
-    }
-    .benefit:nth-child(n + 3) {
-      border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
-    }
     .starters__panel {
       padding: var(--s-12);
+    }
+    .hero__copy {
+      padding: var(--s-12) var(--s-6) var(--s-6) var(--s-12);
+    }
+    .hero__proof {
+      margin-left: var(--s-12);
     }
   }
   @media (max-width: 900px) {
     .hero,
+    .unbox,
     .starters__panel,
     .steps {
       grid-template-columns: minmax(0, 1fr);
     }
-    .hero__copy {
-      padding: var(--s-8) 0 0;
+    .hero {
+      grid-template-rows: auto;
     }
-    .hero__stage {
+    .hero__copy {
+      padding: var(--s-12) var(--s-8) var(--s-6);
+    }
+    .hero__media {
+      grid-column: 1;
+      grid-row: 2;
+      min-height: 0;
+      aspect-ratio: 4 / 3;
+    }
+    .hero__photo {
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    .hero__proof {
+      grid-row: 3;
+      margin: 0;
+      padding: var(--s-6) var(--s-8) var(--s-8);
+      border-top: 0;
+    }
+    .unbox {
+      gap: var(--s-8);
+    }
+    .unbox__copy {
+      order: -1;
+    }
+    .unbox__stage {
       min-height: 0;
     }
     .starters__photos {
@@ -598,8 +760,7 @@ const steps = [
     }
   }
   @media (max-width: 760px) {
-    .hero,
-    .benefits,
+    .unbox,
     .cats,
     .starters,
     .family,
@@ -614,23 +775,28 @@ const steps = [
       flex-direction: column;
       align-items: flex-start;
     }
-    .hero__stage {
+    .hero {
+      width: calc(100% - 2 * var(--s-4));
+      border-radius: 22px;
+    }
+    .hero__copy {
+      padding: var(--s-8) var(--s-6) var(--s-6);
+    }
+    .hero__proof {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding: var(--s-6);
+      font-size: var(--fs-xs);
+    }
+    .hero__proof li {
+      white-space: normal;
+    }
+    .unbox__stage {
       padding: var(--s-8) var(--s-4) var(--s-4);
     }
-    .hero__caption {
+    .unbox__caption {
       flex-direction: column;
       gap: var(--s-1);
-    }
-    .benefits__list {
-      grid-template-columns: minmax(0, 1fr);
-    }
-    .benefit,
-    .benefit + .benefit {
-      padding: var(--s-6) 0;
-      border-left: 0;
-    }
-    .benefit + .benefit {
-      border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
     }
     .starters__list li {
       grid-template-columns: minmax(0, 1fr);
@@ -642,6 +808,7 @@ const steps = [
     .starters__photos {
       min-height: 300px;
     }
+    .unbox,
     .cats,
     .starters,
     .family,

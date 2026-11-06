@@ -25,7 +25,67 @@ test.describe('shop home', () => {
     await expect(page.locator('a[data-category-card][href="/tienda/catalogo#cajas-ropa"]')).toHaveCount(1);
   });
 
-  test('header has search, category nav and dead links, and there is no cart', async ({ page }) => {
+  test('header follows the Packbox structure: promo bar, search row and category row, no cart or login', async ({ page }) => {
+    await page.goto(HOME);
+    const promo = page.locator('[data-shop-promo]');
+    await expect(promo).toHaveText('Pide desde 25 cajas, con tu logo.');
+    const header = page.locator('[data-shop-header]');
+    // promo bar sits above the header, the search in row one, categories in row two below it
+    const promoBox = (await promo.boundingBox())!;
+    const searchBox = (await header.locator('input[type="search"]').boundingBox())!;
+    const navBox = (await header.locator('[data-shop-nav]').boundingBox())!;
+    expect(promoBox.y + promoBox.height).toBeLessThanOrEqual(searchBox.y);
+    expect(searchBox.y + searchBox.height).toBeLessThanOrEqual(navBox.y);
+    await expect(header.locator('[data-shop-nav] a').first()).toHaveText('Todas las cajas');
+    await expect(header.getByRole('link', { name: 'Habla con un asesor' })).toBeVisible();
+    const text = (await header.innerText()).toLowerCase();
+    for (const bad of ['log in', 'iniciar sesión', 'ingresar', 'carrito', 'mi cuenta']) expect(text).not.toContain(bad);
+  });
+
+  test('hero is one panel with the H1, both buttons, ticks, the hero photo and the proof row', async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 900 });
+    await page.goto(HOME);
+    const panel = page.locator('[data-hero-panel]');
+    await expect(panel.locator('h1')).toHaveText('Pedidos pequeños. Cuidado enorme.');
+    await expect(panel.getByRole('link', { name: 'Explora las cajas' })).toBeVisible();
+    await expect(panel.getByRole('link', { name: 'Personaliza tu mailer' })).toBeVisible();
+    await expect(panel.locator('.hero__ticks li')).toHaveCount(3);
+    const photo = panel.locator('img[data-hero-photo]');
+    await expect(photo).toHaveAttribute('src', '/img/products/hero.webp');
+    await expect(photo).toHaveAttribute('alt', /mailer Foldwise/);
+    await expect(photo).toHaveAttribute('loading', 'eager');
+    await expect(photo).toHaveAttribute('fetchpriority', 'high');
+    await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    // photo on the right of the copy
+    const h1 = (await panel.locator('h1').boundingBox())!;
+    const pb = (await photo.boundingBox())!;
+    expect(pb.x).toBeGreaterThan(h1.x);
+    const proof = panel.locator('.hero__proof li');
+    await expect(proof).toHaveText(['Desde 25 cajas', 'Con tu logo', 'Envíos en EE. UU.', 'Atención personalizada']);
+    // the interactive mailer lives in its own section, not in the hero
+    await expect(panel.locator('[data-hero-box]')).toHaveCount(0);
+    const unbox = page.locator('main section', { has: page.getByRole('heading', { level: 2, name: 'Ábrela como la abre tu cliente' }) });
+    await expect(unbox.locator('[data-hero-box]')).toHaveCount(1);
+  });
+
+  test('category cards show the product photo of each of the 12 families', async ({ page }) => {
+    await page.goto(HOME);
+    const cards = page.locator('[data-category-card]');
+    await expect(cards).toHaveCount(12);
+    const photos = await cards.evaluateAll((els) =>
+      els.map((el) => {
+        const img = el.querySelector<HTMLImageElement>('img[data-product-photo]');
+        return { slug: el.getAttribute('data-slug'), src: img?.getAttribute('src'), alt: img?.alt ?? '', svg: el.querySelectorAll('svg[data-style]').length };
+      }),
+    );
+    for (const p of photos) {
+      expect(p.src).toBe(`/img/products/${p.slug}.webp`);
+      expect(p.alt.length).toBeGreaterThan(10);
+      expect(p.svg).toBe(0);
+    }
+  });
+
+  test('header keeps search, category nav and dead links, and there is no cart', async ({ page }) => {
     await page.goto(HOME);
     const header = page.locator('header');
     await expect(header.locator('input[type="search"]')).toHaveCount(1);
@@ -56,6 +116,8 @@ test.describe('shop home', () => {
 
     await page.goto(HOME);
     const box = page.locator('[data-hero-box]');
+    // The mailer now has its own section below the hero: bring it into view.
+    await box.scrollIntoViewIfNeeded();
     await expect(box).toHaveAttribute('data-open', 'true', { timeout: 5000 });
     await expect(box.getByText('¡Gracias por apoyar lo pequeño!')).toHaveCount(1);
 
@@ -86,37 +148,14 @@ test.describe('shop home', () => {
     await ctx.close();
   });
 
-  test('shows the whole family lineup, with each of the first four marks uncovered', async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
+  test('"Toda la familia" shows the family photo', async ({ page }) => {
     await page.goto(HOME);
     const section = page.locator('main section', { has: page.getByRole('heading', { level: 2, name: 'Toda la familia' }) });
-    const lineup = section.locator('[data-lineup]');
-    await expect(lineup).toHaveAttribute('role', 'group');
-    await expect(lineup).toHaveAttribute('aria-label', /familia/i);
-    const boxes = lineup.locator('svg[data-style]');
-    await expect(boxes).toHaveCount(12);
-    // The group carries the name; the 12 renders stay out of the accessibility tree.
-    const exposed = await boxes.evaluateAll((els) => els.filter((e) => !e.closest('[aria-hidden="true"]')).length);
-    expect(exposed).toBe(0);
-
-    await lineup.scrollIntoViewIfNeeded();
-    // The printed mark of each of the back four boxes must be on top at its centre.
-    const covered = await lineup.evaluate((root) => {
-      const svgs = [...root.querySelectorAll('svg[data-style]')].slice(0, 4);
-      return svgs
-        .map((svg, i) => {
-          const mark = svg.querySelector('[data-part="brand"]');
-          if (!mark) return `box ${i}: no brand`;
-          const r = mark.getBoundingClientRect();
-          // first painted shape under the centre (svg roots and slot boxes hit-test as rectangles)
-          const hit = document
-            .elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2)
-            .find((el) => el instanceof SVGGeometryElement || el instanceof SVGTextContentElement);
-          return hit && svg.contains(hit) ? null : `box ${i}`;
-        })
-        .filter(Boolean);
-    });
-    expect(covered).toEqual([]);
+    const photo = section.locator('img[data-family-photo]');
+    await expect(photo).toHaveAttribute('src', '/img/products/familia.webp');
+    await expect(photo).toHaveAttribute('alt', /12 cajas de Foldwise/);
+    await photo.scrollIntoViewIfNeeded();
+    await expect.poll(() => photo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
   });
 
   test('hero box keeps one accessible name while it toggles', async ({ page }) => {
@@ -124,6 +163,7 @@ test.describe('shop home', () => {
     const box = page.locator('[data-hero-box]');
     await expect(box).toHaveAttribute('aria-label', 'Abrir o cerrar la caja');
     await expect(box.locator('svg').first()).toHaveAttribute('aria-hidden', 'true');
+    await box.scrollIntoViewIfNeeded();
     await expect(box).toHaveAttribute('aria-pressed', 'true', { timeout: 5000 });
     await expect(box).toHaveAttribute('aria-label', 'Abrir o cerrar la caja');
     await box.click();

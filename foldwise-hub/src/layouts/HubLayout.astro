@@ -7,9 +7,11 @@ import { taglines } from '../data/brand';
 interface Props {
   title: string;
   description?: string;
+  /** Tone of the hub bar; the shop uses "paper" so it never doubles its promo bar. */
+  navTone?: 'dark' | 'paper';
 }
 
-const { title, description = taglines.principal } = Astro.props;
+const { title, description = taglines.principal, navTone = 'dark' } = Astro.props;
 ---
 
 <!doctype html>
@@ -25,7 +27,7 @@ const { title, description = taglines.principal } = Astro.props;
     <title>{title}</title>
   </head>
   <body>
-    <HubNav />
+    <HubNav tone={navTone} />
     <slot />
   </body>
 </html>

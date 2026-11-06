@@ -7,6 +7,11 @@
  */
 import Isotype from '../brand/Isotype.astro';
 
+interface Props {
+  /** "paper" sits quietly above the shop, whose own promo bar is ciruela. */
+  tone?: 'dark' | 'paper';
+}
+const { tone = 'dark' } = Astro.props;
 const path = Astro.url.pathname.replace(/\/$/, '') || '/';
 const active = path.startsWith('/tienda') ? 'sitio' : path.startsWith('/marca') ? 'marca' : null;
 
@@ -16,10 +21,10 @@ const doors = [
 ] as const;
 ---
 
-<div class="hub-nav" data-hub-nav>
+<div class:list={['hub-nav', `hub-nav--${tone}`]} data-hub-nav>
   <nav class="hub-nav__inner" aria-label="Propuesta de marca">
     <a class="hub-nav__home" href="/">
-      <Isotype variant="ciruela" size={18} label="" />
+      <Isotype variant={tone === "paper" ? "kraft" : "ciruela"} size={18} label="" />
       <span>Foldwise <span class="hub-nav__muted">· propuesta de marca</span></span>
     </a>
     <ul class="hub-nav__switch" role="list">
@@ -97,6 +102,31 @@ const doors = [
   .hub-nav a:focus-visible {
     outline: 2px solid var(--c-lima);
     outline-offset: 2px;
+  }
+  /* paper tone: the proposal frame above the shop, distinct from its ciruela promo bar */
+  .hub-nav--paper {
+    background: var(--c-kraft-claro);
+    color: var(--c-ciruela);
+  }
+  .hub-nav--paper .hub-nav__muted {
+    color: color-mix(in srgb, var(--c-ciruela) 72%, var(--c-kraft-claro));
+  }
+  .hub-nav--paper .hub-nav__switch {
+    background: rgb(58 29 63 / 0.08);
+  }
+  .hub-nav--paper .hub-nav__switch a {
+    color: color-mix(in srgb, var(--c-ciruela) 80%, var(--c-kraft-claro));
+  }
+  .hub-nav--paper .hub-nav__switch a:hover {
+    color: var(--c-ciruela);
+    background: rgb(58 29 63 / 0.08);
+  }
+  .hub-nav--paper .hub-nav__switch a[aria-current='true'] {
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .hub-nav--paper a:focus-visible {
+    outline-color: var(--c-ciruela);
   }
   @media (max-width: 480px) {
     .hub-nav__inner {
