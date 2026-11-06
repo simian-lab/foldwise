@@ -1,0 +1,146 @@
+---
+import HubLayout from '../../layouts/HubLayout.astro';
+import IsoBox from '../../components/boxes/IsoBox.astro';
+import BoxLineup from '../../components/boxes/BoxLineup.astro';
+import { categories } from '../../data/categories';
+
+// Kraft carries the family; ciruela and crema are the 20% accents.
+const COLORWAY = { retail: 'ciruela', wine: 'ciruela', apparel: 'crema' } as const;
+const fmt = (n: number) => `${n}`.replace('.', ',');
+
+const renders = categories.map((c) => {
+  const size = c.sizes[Math.min(1, c.sizes.length - 1)];
+  const colorway = COLORWAY[c.style as keyof typeof COLORWAY] ?? 'kraft';
+  return { c, size, colorway };
+});
+---
+
+<HubLayout
+  title="Foldwise · Cajas de marca"
+  description="Las 12 cajas de Foldwise con su marca, y toda la familia junta."
+>
+  <main class="page">
+    <header class="head">
+      <p class="eyebrow">Marca aplicada</p>
+      <h1>Doce cajas, una sola familia.</h1>
+      <p class="lede">Kraft como protagonista, ciruela y crema como acentos. Cada caja lleva el isotipo y el nombre en su cara frontal.</p>
+    </header>
+
+    <section class="family" aria-labelledby="fam">
+      <h2 id="fam">Toda la familia</h2>
+      <BoxLineup />
+    </section>
+
+    <section aria-labelledby="ren">
+      <h2 id="ren">Las 12 cajas</h2>
+      <div class="grid">
+        {
+          renders.map(({ c, size, colorway }) => (
+            <figure class="card" data-render={c.slug}>
+              <div class="photo">
+                <IsoBox style={c.style} l={size.l} w={size.w} h={size.h} colorway={colorway} branding="foldwise" />
+              </div>
+              <figcaption>
+                <strong>{c.nameEs}</strong>
+                <span>{fmt(size.l)} × {fmt(size.w)} × {fmt(size.h)} in</span>
+              </figcaption>
+            </figure>
+          ))
+        }
+      </div>
+    </section>
+  </main>
+</HubLayout>
+
+<style>
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: var(--s-16) var(--s-6) var(--s-24);
+    display: grid;
+    gap: var(--s-16);
+  }
+  .eyebrow {
+    font-family: var(--f-text);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--c-kraft-sombra);
+    margin: 0 0 var(--s-3);
+  }
+  h1 {
+    font-family: var(--f-display);
+    font-weight: 800;
+    letter-spacing: -0.035em;
+    font-size: var(--fs-2xl);
+    line-height: 1.02;
+    color: var(--c-ciruela);
+    margin: 0;
+  }
+  .lede {
+    max-width: 52ch;
+    font-size: var(--fs-body);
+    color: var(--c-ciruela-claro);
+    margin: var(--s-4) 0 0;
+  }
+  h2 {
+    font-family: var(--f-display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-size: var(--fs-xl);
+    color: var(--c-ciruela);
+    margin: 0 0 var(--s-6);
+  }
+  .grid {
+    display: grid;
+    gap: var(--s-6);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  }
+  .card {
+    margin: 0;
+    border-radius: var(--r-lg);
+    background: radial-gradient(120% 90% at 50% 15%, #fbf8f1, var(--c-crema) 70%);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8) inset, 0 18px 34px -22px rgba(42, 20, 48, 0.4);
+    padding: var(--s-6) var(--s-6) var(--s-4);
+    display: grid;
+    gap: var(--s-3);
+  }
+  .photo {
+    padding: var(--s-2);
+    filter: drop-shadow(0 12px 12px rgba(42, 20, 48, 0.2));
+  }
+  @media (max-width: 560px) {
+    .grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--s-3);
+    }
+    .card {
+      padding: var(--s-3);
+    }
+    .card figcaption {
+      min-height: 4.6rem;
+    }
+    .card figcaption strong {
+      font-size: var(--fs-sm);
+    }
+  }
+  figcaption {
+    display: grid;
+    gap: 2px;
+    align-content: start;
+    min-height: 5.6rem;
+    font-family: var(--f-text);
+    color: var(--c-ciruela);
+  }
+  figcaption strong {
+    font-family: var(--f-display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    font-size: var(--fs-lg);
+  }
+  figcaption span {
+    font-size: var(--fs-sm);
+    color: var(--c-ciruela-claro);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

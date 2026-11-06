@@ -14,7 +14,7 @@ interface Props {
 }
 const { class: className } = Astro.props;
 
-const STAGE = { w: 1200, h: 620 };
+const STAGE = { w: 1200, h: 520 };
 const COLORWAY: Record<string, 'kraft' | 'ciruela' | 'crema'> = {
   retail: 'ciruela',
   apparel: 'crema',
@@ -31,14 +31,14 @@ const items = categories
   .sort((a, b) => b.volume - a.volume);
 
 // Shared scale: stage px per inch.
-const K = 6.2;
+const K = 7.4;
 const placed = items.map((it, i) => {
   const width = (VIEWBOX.w * K) / it.scale;
   const height = (VIEWBOX.h * K) / it.scale;
   const t = i / (items.length - 1);
   // Walk left to right and from back (high) to front (low).
-  const cx = 150 + t * 900 + (i % 2 ? 18 : -18);
-  const cy = 250 + t * 250 + (i % 2 ? 22 : 0);
+  const cx = 170 + t * 860 + (i % 2 ? 26 : -10);
+  const cy = 215 + t * 175 + (i % 2 ? 30 : 0);
   return { ...it, width, height, x: cx - width / 2, y: cy - height / 2 };
 });
 ---
