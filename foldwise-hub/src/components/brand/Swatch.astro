@@ -1,0 +1,113 @@
+---
+/**
+ * Colour swatch: a chip with its name, hex, RGB and an approximate CMYK.
+ * CMYK is a naive device-independent conversion, good for briefing a printer,
+ * not a substitute for a proof.
+ */
+interface Props {
+  name: string;
+  hex: string;
+  /** Short note on the colour's job, e.g. "Base". */
+  role?: string;
+  tier?: 'primary' | 'support';
+  class?: string;
+}
+
+const { name, hex, role, tier = 'primary', class: className } = Astro.props;
+
+const n = parseInt(hex.replace('#', ''), 16);
+const rgb = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+const [r, g, b] = rgb.map((v) => v / 255);
+const k = 1 - Math.max(r, g, b);
+const cmyk =
+  k >= 1
+    ? [0, 0, 0, 100]
+    : [(1 - r - k) / (1 - k), (1 - g - k) / (1 - k), (1 - b - k) / (1 - k), k].map((v) => Math.round(v * 100));
+
+// Text on the chip itself picks the readable ink.
+const lum = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+const ink = lum > 0.5 ? '#3A1D3F' : '#F6F1E7';
+---
+
+<figure
+  class:list={['swatch', `swatch--${tier}`, className]}
+  data-swatch
+  data-tier={tier}
+  data-hex={hex.toUpperCase()}
+  style={`--sw:${hex};--sw-ink:${ink}`}
+>
+  <div class="swatch__chip" aria-hidden="true">
+    {role && <span class="swatch__role">{role}</span>}
+  </div>
+  <figcaption class="swatch__meta">
+    <span class="swatch__name">{name}</span>
+    <span class="swatch__hex">{hex.toUpperCase()}</span>
+    <dl class="swatch__codes">
+      <div><dt>RGB</dt><dd>{rgb.join(' ')}</dd></div>
+      <div><dt>CMYK</dt><dd>{`C${cmyk[0]} M${cmyk[1]} Y${cmyk[2]} K${cmyk[3]}`}</dd></div>
+    </dl>
+  </figcaption>
+</figure>
+
+<style>
+  .swatch {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s-3);
+    min-width: 0;
+  }
+  .swatch__chip {
+    background: var(--sw);
+    color: var(--sw-ink);
+    border-radius: var(--r-md);
+    box-shadow: inset 0 0 0 1px rgb(58 29 63 / 0.1);
+    aspect-ratio: 1 / 1.15;
+    display: flex;
+    align-items: flex-end;
+    padding: var(--s-3);
+  }
+  .swatch--support .swatch__chip {
+    aspect-ratio: 1.6 / 1;
+    border-radius: var(--r-sm);
+  }
+  .swatch__role {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    opacity: 0.85;
+  }
+  .swatch__meta {
+    display: grid;
+    gap: 2px;
+    font-size: var(--fs-xs);
+    line-height: 1.35;
+  }
+  .swatch__name {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    letter-spacing: -0.01em;
+  }
+  .swatch__hex {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .swatch__codes {
+    margin: 0;
+    display: grid;
+    gap: 1px;
+    color: rgb(58 29 63 / 0.72);
+    font-variant-numeric: tabular-nums;
+  }
+  .swatch__codes div {
+    display: flex;
+    gap: 0.5em;
+  }
+  .swatch__codes dt {
+    font-weight: 600;
+    min-width: 3.2em;
+  }
+  .swatch__codes dd {
+    margin: 0;
+  }
+</style>
