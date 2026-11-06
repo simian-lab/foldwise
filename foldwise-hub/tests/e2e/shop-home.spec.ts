@@ -119,7 +119,7 @@ test.describe('shop home', () => {
     // The mailer now has its own section below the hero: bring it into view.
     await box.scrollIntoViewIfNeeded();
     await expect(box).toHaveAttribute('data-open', 'true', { timeout: 5000 });
-    await expect(box.getByText('¡Gracias por apoyar lo pequeño!')).toHaveCount(1);
+    await expect(box.locator('img[data-frame="open"]')).toHaveAttribute('alt', /¡Gracias por apoyar lo pequeño!/);
 
     await box.click();
     await expect(box).toHaveAttribute('data-open', 'false');
@@ -135,6 +135,35 @@ test.describe('shop home', () => {
     await expect(box).toHaveAttribute('data-open', 'false');
     await box.scrollIntoViewIfNeeded();
     await expect(box).toHaveAttribute('data-open', 'true', { timeout: 5000 });
+  });
+
+  test('hero box stacks three photo frames and shows the open one after toggling', async ({ page }) => {
+    await page.goto(HOME);
+    const box = page.locator('[data-hero-box]');
+    const frames = box.locator('img[data-frame]');
+    await expect(frames).toHaveCount(3);
+    const keys = await frames.evaluateAll((els) => els.map((e) => e.getAttribute('data-frame')));
+    expect(keys).toEqual(['closed', 'half', 'open']);
+    for (const k of keys) {
+      await expect(box.locator(`img[data-frame="${k}"]`)).toHaveAttribute('alt', /caja mailer/i);
+    }
+    await expect(box.locator('img[data-frame="closed"]')).toHaveAttribute('loading', 'eager');
+    await expect(box.locator('img[data-frame="open"]')).toHaveAttribute('aria-hidden', 'true');
+
+    await box.scrollIntoViewIfNeeded();
+    // touch it before the scroll-open fires, then open it by hand
+    await box.click();
+    await expect(box).toHaveAttribute('data-open', 'true');
+    const open = box.locator('img[data-frame="open"]');
+    await expect(open).toHaveCSS('opacity', '1');
+    await expect(open).not.toHaveAttribute('aria-hidden', 'true');
+    await expect(box.locator('img[data-frame="closed"]')).toHaveAttribute('aria-hidden', 'true');
+    await expect(box).toHaveAttribute('data-progress', '1');
+    await expect.poll(() => open.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+
+    await box.click();
+    await expect(box).toHaveAttribute('data-open', 'false');
+    await expect(open).toHaveCSS('opacity', '0');
   });
 
   test('with reduced motion the hero box renders open and static', async ({ browser }) => {
@@ -162,7 +191,7 @@ test.describe('shop home', () => {
     await page.goto(HOME);
     const box = page.locator('[data-hero-box]');
     await expect(box).toHaveAttribute('aria-label', 'Abrir o cerrar la caja');
-    await expect(box.locator('svg').first()).toHaveAttribute('aria-hidden', 'true');
+    await expect(box.locator('img[data-frame="half"]')).toHaveAttribute('aria-hidden', 'true');
     await box.scrollIntoViewIfNeeded();
     await expect(box).toHaveAttribute('aria-pressed', 'true', { timeout: 5000 });
     await expect(box).toHaveAttribute('aria-label', 'Abrir o cerrar la caja');
@@ -180,9 +209,10 @@ test.describe('shop home', () => {
     const box = page.locator('[data-hero-box]');
     await expect(box).toHaveAttribute('data-open', 'true');
     await expect(box).toHaveAttribute('aria-pressed', 'true');
-    // the open lid hangs behind the tray, and the card face is shown
-    await expect(box.locator('[data-slot="back"] [data-lid]')).toHaveCount(1);
-    await expect(box.locator('[data-mat="card"]')).toBeVisible();
+    // the open photo is the one shown, and the only frame exposed to assistive tech
+    await expect(box.locator('img[data-frame="open"]')).toHaveCSS('opacity', '1');
+    await expect(box.locator('img[data-frame="open"]')).not.toHaveAttribute('aria-hidden', 'true');
+    await expect(box.locator('img[data-frame="closed"]')).toHaveAttribute('aria-hidden', 'true');
     await ctx.close();
   });
 

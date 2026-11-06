@@ -1,64 +1,30 @@
 ---
 /**
- * Interactive hero mailer. The first paint is the closed box rendered on the
- * server from the same geometry the browser animates (src/scripts/hero-box.ts).
+ * Interactive mailer photo. Three aligned photos of the same box (closed,
+ * lid lifted, open) are stacked; toggling crossfades through them with a
+ * short stagger (see src/scripts/hero-box.ts). The server sends the closed
+ * box; under reduced motion the inline script shows the open one before
+ * first paint.
  */
-import { ISOTYPE_PATH as ISOTYPE, ISOTYPE_FOLDS as FOLDS } from '../../data/brand';
-import { heroStatic, heroFrame, STATIC_MATS, VIEW, LIME } from '../../scripts/hero-box';
-import Materials from '../boxes/materials.astro';
-
-const st = heroStatic();
-const fr = heroFrame(0);
-
-// The fully open frame, applied before first paint when motion is reduced
-// (see the inline script below), so those visitors never see the closed box.
-const open = heroFrame(1);
-const openFrame = {
-  shapes: Object.fromEntries(
-    Object.entries(open.shapes).map(([k, v]) => [k, { d: v.d, fill: v.fill, opacity: v.opacity, hidden: !!v.hidden }]),
-  ),
-  mats: open.mats,
-  show: { lidOuter: open.outer, lidInner: !open.outer, lip: true, card: open.cardFront },
-  lidFront: open.lidFront,
-};
-
-const TRAY_BACK = ['shadow', 'contact', 'floor', 'floorTex', 'innerBack', 'innerBackShade', 'innerBackTex', 'innerLeft', 'innerLeftShade', 'innerLeftTex', 'tissueBack', 'tissueLeft', 'tissue', 'tissueCreases', 'seal', 'sealRing'];
-const JAR = ['jarShadow', 'jarBody', 'jarGlint', 'jarLabel', 'jarLabelLine', 'jarLabelLine2', 'jarCap', 'jarCapTop'];
-const TRAY_FRONT = ['front', 'frontLight', 'frontShade', 'frontTex', 'side', 'sideLight', 'sideShade', 'sideTex', 'rim', 'rimFlute', 'edgeLight', 'cornerLight'];
-// Lid paint order: outer face (+ its fibre, shade, edge light, hinge score), printed outer
-// art, inner face (+ fibre, light), printed inner art, then the cut edges and the lip.
-const LID_OUTER = ['lidOuter', 'lidOuterTex', 'lidOuterShade', 'lidEdge', 'hingeFold'];
-const LID_INNER = ['lidInner', 'lidInnerTex', 'lidInnerShade'];
-const LID_EDGES = ['lipBottom', 'lidSide', 'lidFlute', 'lip'];
-const CARD = ['cardShadow', 'cardBack', 'cardFace'];
-
-const sh = (k: string) => {
-  const s = st[k] ?? fr.shapes[k];
-  return {
-    'data-k': k in fr.shapes ? k : undefined,
-    d: s.d,
-    fill: s.fill,
-    stroke: s.stroke,
-    'stroke-width': s.sw,
-    'stroke-dasharray': s.dash,
-    'stroke-linejoin': 'round',
-    'stroke-linecap': 'round',
-    opacity: s.opacity,
-    filter: k === 'contact' ? 'url(#fw-blur-s)' : k === 'shadow' || k === 'jarShadow' || k === 'cardShadow' ? 'url(#hb-blur)' : undefined,
-    style: (fr.shapes[k] as { hidden?: boolean } | undefined)?.hidden ? 'display:none' : undefined,
-  };
-};
-
-// Burst of lime fold dashes above the open box.
-const cx = VIEW.w * 0.5;
-const cy = VIEW.h * 0.2;
-const rays = Array.from({ length: 9 }, (_, i) => {
-  const a = (-160 + (i * 140) / 8) * (Math.PI / 180);
-  return { x1: cx + Math.cos(a) * 34, y1: cy + Math.sin(a) * 34, x2: cx + Math.cos(a) * 58, y2: cy + Math.sin(a) * 58, i };
-});
+const FRAMES = [
+  {
+    key: 'closed',
+    src: '/img/products/mailer-cerrada.webp',
+    alt: 'Caja mailer Foldwise color ciruela, cerrada, con el logo de Foldwise impreso en la tapa.',
+  },
+  {
+    key: 'half',
+    src: '/img/products/mailer-entreabierta.webp',
+    alt: 'La misma caja mailer con la tapa levantada a medias; asoma el papel de seda blanco.',
+  },
+  {
+    key: 'open',
+    src: '/img/products/mailer-abierta.webp',
+    alt: 'La caja mailer abierta: interior kraft con papel de seda, una tarjeta que dice «¡Gracias por apoyar lo pequeño!» y un frasco de vidrio; en la tapa, «Lo pequeño se cuida en grande.».',
+  },
+] as const;
 ---
 
-<Materials />
 <button
   type="button"
   class="hero-box"
@@ -71,167 +37,39 @@ const rays = Array.from({ length: 9 }, (_, i) => {
   aria-describedby="hero-box-desc"
 >
   <span id="hero-box-desc" class="visually-hidden">
-    Caja mailer Foldwise color ciruela que se abre y muestra papel de seda, una tarjeta de agradecimiento y una vela.
+    Caja mailer Foldwise color ciruela que se abre y muestra papel de seda, una tarjeta de agradecimiento y un frasco.
   </span>
-  <svg viewBox={`0 0 ${VIEW.w} ${VIEW.h}`} aria-hidden="true" focusable="false">
-    <defs>
-      <filter id="hb-blur" x="-30%" y="-30%" width="160%" height="160%">
-        <feGaussianBlur stdDeviation="7"></feGaussianBlur>
-      </filter>
-      <linearGradient id="hb-vshade" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.05"></stop>
-        <stop offset="0.6" stop-color="#000000" stop-opacity="0"></stop>
-        <stop offset="1" stop-color="#160818" stop-opacity="0.28"></stop>
-      </linearGradient>
-      <linearGradient id="hb-lidshade" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.08"></stop>
-        <stop offset="1" stop-color="#160818" stop-opacity="0.18"></stop>
-      </linearGradient>
-      <linearGradient id="hb-glass" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#A9845E"></stop>
-        <stop offset="0.45" stop-color="#C9A27A"></stop>
-        <stop offset="1" stop-color="#7E5E3E"></stop>
-      </linearGradient>
-      <linearGradient id="hb-cap" x1="0" y1="0" x2="1" y2="0">
-        <stop offset="0" stop-color="#5A3360"></stop>
-        <stop offset="1" stop-color="#2A1430"></stop>
-      </linearGradient>
-    </defs>
-
-    <g data-slot="back"></g>
-
-    <g data-part="tray">
-      {TRAY_BACK.map((k) => <path {...sh(k)} />)}
-      <g transform={STATIC_MATS.seal}>
-        <g transform="translate(0.2 0.18) scale(0.0115)">
-          <path d={ISOTYPE} fill="#3A1D3F"></path>
-        </g>
-      </g>
-      <g data-part="card">
-        {CARD.map((k) => <path {...sh(k)} />)}
-        <g data-mat="card" transform={fr.mats.card} style={fr.cardFront ? undefined : 'display:none'}>
-          <g transform="translate(0.45 0.45) scale(0.0165)">
-            <path d={ISOTYPE} fill="#3A1D3F"></path>
-            <path d={FOLDS} fill="none" stroke={LIME} stroke-width="2.4" stroke-dasharray="3 2.5"></path>
-          </g>
-          <text
-            x="0.45"
-            y="1.86"
-            font-family="'Bricolage Grotesque', sans-serif"
-            font-weight="800"
-            font-size="0.6"
-            letter-spacing="-0.02em"
-            fill="#3A1D3F"
-          ><tspan x="0.45">¡Gracias por </tspan><tspan x="0.45" dy="0.66">apoyar lo pequeño!</tspan></text>
-          <path d="M0.45 2.86h3.3" stroke={LIME} stroke-width="0.13" stroke-linecap="round" stroke-dasharray="0.32 0.18"></path>
-          <text x="0.45" y="3.26" font-family="'Figtree', sans-serif" font-weight="500" font-size="0.26" fill="#5A3360">Con cariño, desde nuestro taller</text>
-        </g>
-      </g>
-      {JAR.map((k) => <path {...sh(k)} />)}
-      {TRAY_FRONT.map((k) => <path {...sh(k)} />)}
-      <g transform={STATIC_MATS.front} data-part="front-print" opacity="0.95">
-        <text x="0.8" y="3.2" font-family="'Figtree', sans-serif" font-weight="600" font-size="0.46" fill="#F6F1E7" opacity="0.92">
-          Pedidos pequeños. Cuidado enorme.
-        </text>
-      </g>
-      <g transform={STATIC_MATS.side} data-part="side-print">
-        <g transform="translate(3.9 1.25) scale(0.05)">
-          <path d={ISOTYPE} fill="#F6F1E7" opacity="0.9"></path>
-          <path d={FOLDS} fill="none" stroke="#3A1D3F" stroke-width="2" stroke-dasharray="3 2.5"></path>
-        </g>
-      </g>
-    </g>
-
-    <g data-slot="front">
-      <g data-lid>
-        {LID_OUTER.map((k) => <path {...sh(k)} />)}
-        <g data-mat="lidOuter" transform={fr.mats.lidOuter} opacity="0.95">
-          <g transform="translate(2.3 3.55) scale(0.058)">
-            <path d={ISOTYPE} fill="#F6F1E7"></path>
-            <path d={FOLDS} fill="none" stroke={LIME} stroke-width="2.2" stroke-dasharray="3 2.5"></path>
-          </g>
-          <text
-            x="5.35"
-            y="5.95"
-            font-family="'Bricolage Grotesque', sans-serif"
-            font-weight="800"
-            font-size="2.05"
-            letter-spacing="-0.035em"
-            fill="#F6F1E7"
-          >foldwise</text>
-        </g>
-        {LID_INNER.map((k) => <path {...sh(k)} />)}
-        <g data-mat="lidInner" transform={fr.mats.lidInner} style="display:none">
-          <g transform="translate(6.35 1.7) scale(0.028)">
-            <path d={ISOTYPE} fill="#3A1D3F"></path>
-          </g>
-          <text
-            x="7"
-            y="4.35"
-            text-anchor="middle"
-            font-family="'Bricolage Grotesque', sans-serif"
-            font-weight="800"
-            font-size="0.72"
-            letter-spacing="-0.02em"
-            fill="#3A1D3F"
-          >Lo pequeño se cuida en grande.</text>
-          <text x="7" y="5.2" text-anchor="middle" font-family="'Figtree', sans-serif" font-weight="500" font-size="0.36" fill="#5A3360">
-            Tu aliado de packaging desde la primera caja.
-          </text>
-        </g>
-        {LID_EDGES.map((k) => <path {...sh(k)} />)}
-        <g data-mat="lip" transform={fr.mats.lip}>
-          <circle cx="7" cy="0.47" r="0.36" fill={LIME}></circle>
-          <circle cx="7" cy="0.47" r="0.27" fill="none" stroke="#3A1D3F" stroke-width="0.04" stroke-dasharray="0.08 0.07"></circle>
-          <g transform="translate(6.85 0.32) scale(0.0068)">
-            <path d={ISOTYPE} fill="#3A1D3F"></path>
-          </g>
-        </g>
-      </g>
-    </g>
-
-    <g class="hero-box__burst" aria-hidden="true">
-      {
-        rays.map((r) => (
-          <line
-            x1={r.x1}
-            y1={r.y1}
-            x2={r.x2}
-            y2={r.y2}
-            stroke={LIME}
-            stroke-width="4"
-            stroke-linecap="round"
-            stroke-dasharray={r.i % 2 ? '6 6' : undefined}
-            style={`--i:${r.i}`}
-          />
-        ))
-      }
-    </g>
-  </svg>
+  <span class="hero-box__frames">
+    {
+      FRAMES.map((f, i) => (
+        <img
+          data-frame={f.key}
+          src={f.src}
+          alt={f.alt}
+          width="1400"
+          height="1120"
+          decoding="async"
+          loading={i === 0 ? 'eager' : 'lazy'}
+          aria-hidden={i === 0 ? undefined : 'true'}
+          draggable="false"
+        />
+      ))
+    }
+  </span>
 </button>
-<script is:inline define:vars={{ openFrame }}>
-  // Reduced motion: draw the open box now, before first paint. The module
+<script is:inline>
+  // Reduced motion: show the open photo now, before first paint. The module
   // script then mounts on an already-open box and keeps it in sync.
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     const root = document.currentScript && document.currentScript.previousElementSibling;
-    const svg = root && root.matches('[data-hero-box]') ? root.querySelector('svg') : null;
-    if (svg) {
-      svg.querySelectorAll('[data-k]').forEach((el) => {
-        const sh = openFrame.shapes[el.getAttribute('data-k')];
-        if (!sh) return;
-        el.setAttribute('d', sh.d);
-        el.setAttribute('fill', sh.fill);
-        if (sh.opacity !== undefined && sh.opacity !== null) el.setAttribute('opacity', String(sh.opacity));
-        el.style.display = sh.hidden ? 'none' : '';
+    if (root && root.matches('[data-hero-box]')) {
+      root.querySelectorAll('img[data-frame]').forEach((img) => {
+        const on = img.getAttribute('data-frame') === 'open';
+        if (on) {
+          img.removeAttribute('aria-hidden');
+          img.setAttribute('loading', 'eager');
+        } else img.setAttribute('aria-hidden', 'true');
       });
-      svg.querySelectorAll('[data-mat]').forEach((g) => {
-        const k = g.getAttribute('data-mat');
-        g.setAttribute('transform', openFrame.mats[k]);
-        g.style.display = openFrame.show[k] ? '' : 'none';
-      });
-      const lid = svg.querySelector('[data-lid]');
-      const slot = svg.querySelector(openFrame.lidFront ? '[data-slot="front"]' : '[data-slot="back"]');
-      if (lid && slot) slot.appendChild(lid);
       root.setAttribute('data-open', 'true');
       root.setAttribute('data-progress', '1');
       root.setAttribute('aria-pressed', 'true');
@@ -266,30 +104,85 @@ const rays = Array.from({ length: 9 }, (_, i) => {
     border: 0;
   }
   .hero-box:active {
-    transform: scale(0.985);
+    transform: scale(0.99);
   }
   .hero-box:focus-visible {
     outline: 2px solid var(--c-ciruela);
     outline-offset: 6px;
   }
-  .hero-box svg {
+
+  /* The three photos share one grid cell. Each later frame covers the earlier
+     ones, so opening only fades frames in (half, then open) and closing fades
+     them out in reverse: no frame ever shows the backdrop through two boxes. */
+  .hero-box__frames {
+    display: grid;
+    aspect-ratio: 1400 / 1120;
+    /* the photo's paper backdrop melts into the stage colour: every edge fades to zero */
+    --hb-fade-x: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    --hb-fade-y: linear-gradient(to bottom, transparent, #000 10%, #000 88%, transparent);
+    mask-image: var(--hb-fade-x), var(--hb-fade-y);
+    mask-composite: intersect;
+    -webkit-mask-image: var(--hb-fade-x), var(--hb-fade-y);
+    -webkit-mask-composite: source-in;
+  }
+  .hero-box__frames img {
+    grid-area: 1 / 1;
     display: block;
     width: 100%;
-    height: auto;
-    overflow: visible;
-  }
-  .hero-box__burst line {
+    height: 100%;
+    object-fit: cover;
     opacity: 0;
-    transform-box: fill-box;
-    transform-origin: center;
+    user-select: none;
+    -webkit-user-select: none;
   }
-  .hero-box[data-celebrate='true'] .hero-box__burst line {
-    animation: hb-burst 0.9s cubic-bezier(0.2, 0.8, 0.2, 1) both;
-    animation-delay: calc(var(--i) * 25ms);
+  .hero-box__frames [data-frame='closed'],
+  .hero-box[data-open='true'] [data-frame='half'],
+  .hero-box[data-open='true'] [data-frame='open'] {
+    opacity: 1;
   }
-  @keyframes hb-burst {
-    0% { opacity: 0; transform: scale(0.3); }
-    35% { opacity: 1; }
-    100% { opacity: 0; transform: scale(1.15) translateY(-6px); }
+
+  /* Motion only once the script has mounted and motion is allowed. */
+  .hero-box[data-motion='animated'] img {
+    transition: opacity 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .hero-box[data-motion='animated'][data-open='true'] [data-frame='half'] {
+    transition-duration: 0.26s;
+  }
+  .hero-box[data-motion='animated'][data-open='true'] [data-frame='open'] {
+    transition-duration: 0.42s;
+    transition-delay: 0.22s;
+  }
+  .hero-box[data-motion='animated'][data-open='false'] [data-frame='open'] {
+    transition-duration: 0.32s;
+  }
+  .hero-box[data-motion='animated'][data-open='false'] [data-frame='half'] {
+    transition-duration: 0.38s;
+    transition-delay: 0.2s;
+  }
+  /* A closed box hints at the lid when pointed at. */
+  @media (hover: hover) {
+    .hero-box[data-motion='animated'][data-open='false']:hover [data-frame='half'] {
+      opacity: 0.3;
+      transition-delay: 0s;
+    }
+  }
+
+  /* A tiny lift while the lid moves, then the box settles. Two identical
+     keyframes so the animation restarts on every toggle. */
+  .hero-box[data-moved][data-open='true'] .hero-box__frames {
+    animation: hb-lift-a 0.68s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .hero-box[data-moved][data-open='false'] .hero-box__frames {
+    animation: hb-lift-b 0.68s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  @keyframes hb-lift-a {
+    0% { transform: none; }
+    38% { transform: translateY(-1.4%) scale(1.012); }
+    100% { transform: none; }
+  }
+  @keyframes hb-lift-b {
+    0% { transform: none; }
+    38% { transform: translateY(-1.4%) scale(1.012); }
+    100% { transform: none; }
   }
 </style>

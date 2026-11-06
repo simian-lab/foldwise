@@ -30,3 +30,8 @@ Fotos de producto en `products/`, generadas con IA (Figma MCP `generate_image`, 
 | `products/cajas-ropa.webp` | Figma AI · gpt-image-2.5-flare | compuesto (tapa) |
 | `products/hero.webp` | Figma AI · gpt-image-2.5-flare | compuesto (cara frontal) |
 | `products/familia.webp` | Figma AI · gpt-image-2.5-flare | sin logo |
+| `products/mailer-cerrada.webp` | Figma AI · gpt-image-2.5-flare | compuesto (tapa) |
+| `products/mailer-entreabierta.webp` | Figma AI · gpt-image-2.5-flare | compuesto (tapa) |
+| `products/mailer-abierta.webp` | Figma AI · gpt-image-2.5-flare | compuesto (tarjeta «¡Gracias por apoyar lo pequeño!» y tapa interior «Lo pequeño se cuida en grande.») |
+
+Las tres fotos `mailer-*.webp` (sección «Ábrela como la abre tu cliente») son tres generaciones independientes de la misma caja. Para que el fundido se lea como la tapa moviéndose, la cerrada y la entreabierta se alinearon a la abierta con una homografía de la pared frontal y se pasaron al mismo fondo de papel de la abierta; luego se compusieron las marcas y textos exactos con la misma mezcla de tinta.

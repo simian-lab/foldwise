@@ -3,7 +3,7 @@
  * Shared board materials for every box drawing on the page: a fine paper
  * grain, soft face lighting, shadow blurs and tape gloss.
  *
- * Rendered by IsoBox, HeroBox and AssemblyGuide, but only the first call on a
+ * Rendered by IsoBox and AssemblyGuide, but only the first call on a
  * page emits anything (guarded through Astro.locals), so a page with a dozen
  * boxes still holds ONE copy of each filter. Every drawing references these
  * by id (`url(#fw-…)`). The inline script moves the defs to the top of <body>
@@ -11,7 +11,7 @@
  * (Chrome drops gradients, patterns and filters under display:none).
  *
  * Units: gradients are objectBoundingBox (scale-free). `fw-fiber` and the
- * blurs live in the user space of a ~400-unit viewBox (IsoBox, HeroBox);
+ * blurs live in the user space of a ~400-unit viewBox (IsoBox);
  * `fw-fiber-in` is the same fibre for drawings in inch units (the guide).
  * Print gets no filter on purpose: a missing or heavy filter can hide the
  * logo, and legibility comes first.
