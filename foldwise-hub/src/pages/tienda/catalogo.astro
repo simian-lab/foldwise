@@ -1,0 +1,404 @@
+---
+/**
+ * Catalog: the 12 families with two simple client-side filters, estilo (box
+ * construction) and uso (who it is for). Each card sits in a wrapper with
+ * id={slug} so /tienda/catalogo#{slug} anchors land on it.
+ */
+import ShopLayout from '../../layouts/ShopLayout.astro';
+import CategoryCard from '../../components/site/CategoryCard.astro';
+import CatalogFilters, { type FilterGroup } from '../../components/site/CatalogFilters.astro';
+import Icon from '../../components/brand/Icon.astro';
+import { categories, type BoxStyle } from '../../data/categories';
+
+const ESTILOS: { value: string; label: string; styles: BoxStyle[] }[] = [
+  { value: 'clasicas', label: 'Clásicas', styles: ['rsc', 'multidepth', 'sideloader'] },
+  { value: 'mailers', label: 'Mailers', styles: ['mailer', 'easyfold'] },
+  { value: 'con-tapa', label: 'Con tapa', styles: ['file', 'retail', 'apparel'] },
+  { value: 'con-divisores', label: 'Con divisores', styles: ['wine'] },
+];
+
+const USOS: { value: string; label: string; slugs: string[] }[] = [
+  {
+    value: 'tienda-en-linea',
+    label: 'Tienda en línea',
+    slugs: ['cajas-de-envio', 'cajas-mailer', 'mailers-faciles', 'cajas-livianas', 'cajas-multi-altura'],
+  },
+  { value: 'moda', label: 'Moda y ropa', slugs: ['cajas-ropa', 'cajas-mailer', 'cajas-regalo-retail', 'mailers-faciles'] },
+  { value: 'belleza-regalos', label: 'Belleza y regalos', slugs: ['cajas-regalo-retail', 'cajas-mailer', 'cajas-livianas'] },
+  { value: 'alimentos-bebidas', label: 'Alimentos y bebidas', slugs: ['cajas-vino-botellas', 'cajas-de-envio', 'cajas-reforzadas'] },
+  {
+    value: 'bodega-oficina',
+    label: 'Bodega y oficina',
+    slugs: ['cajas-de-archivo', 'cajas-reforzadas', 'cajas-multi-altura', 'cajas-carga-lateral'],
+  },
+  { value: 'mudanza', label: 'Mudanza y hogar', slugs: ['cajas-de-mudanza', 'cajas-reforzadas', 'cajas-de-archivo'] },
+];
+
+const estiloOf = (style: BoxStyle) => ESTILOS.find((e) => e.styles.includes(style))?.value ?? '';
+const usosOf = (slug: string) => USOS.filter((u) => u.slugs.includes(slug)).map((u) => u.value);
+
+const items = categories.map((c) => ({ category: c, estilo: estiloOf(c.style), uso: usosOf(c.slug) }));
+const groups: FilterGroup[] = [
+  {
+    id: 'estilo',
+    legend: 'Estilo',
+    options: ESTILOS.map((e) => ({ value: e.value, label: e.label, count: items.filter((i) => i.estilo === e.value).length })),
+  },
+  {
+    id: 'uso',
+    legend: 'Uso',
+    options: USOS.map((u) => ({ value: u.value, label: u.label, count: items.filter((i) => i.uso.includes(u.value)).length })),
+  },
+];
+const minUnits = Math.min(...categories.map((c) => c.minUnits));
+---
+
+<ShopLayout
+  title="Catálogo de cajas · Foldwise"
+  description="Las 12 familias de cajas de cartón corrugado Foldwise, en medidas estándar de EE. UU."
+>
+  <div class="catalog">
+    <header class="catalog__head">
+      <nav class="crumbs" aria-label="Ruta de navegación">
+        <ol>
+          <li><a href="/tienda">Tienda</a></li>
+          <li aria-current="page">Catálogo</li>
+        </ol>
+      </nav>
+      <div class="catalog__intro">
+        <div>
+          <h1>Todas nuestras cajas</h1>
+          <p>
+            Doce familias de cartón corrugado en medidas estándar de EE. UU. Elige la tuya y, cuando crezcas, el precio
+            baja contigo.
+          </p>
+        </div>
+        <ul class="catalog__proof">
+          <li><Icon name="pedido-pequeno" size={20} /> Desde {minUnits} cajas por pedido</li>
+          <li><Icon name="personaliza" size={20} /> Con tu logo impreso</li>
+          <li><Icon name="rapido" size={20} /> Listas en 3 a 5 días hábiles</li>
+        </ul>
+      </div>
+    </header>
+
+    <div class="catalog__body">
+      <aside class="catalog__aside">
+        <CatalogFilters groups={groups} total={categories.length} />
+      </aside>
+
+      <section class="catalog__results" aria-labelledby="results-title">
+        <div class="catalog__bar">
+          <h2 id="results-title" class="catalog__count">
+            <span data-catalog-count aria-live="polite">{categories.length} familias</span>
+          </h2>
+          <span class="catalog__note">Precios de muestra en USD, por unidad</span>
+        </div>
+
+        <div class="catalog__grid">
+          {
+            items.map((i) => (
+              <div
+                class="catalog__item"
+                id={i.category.slug}
+                data-catalog-item
+                data-estilo={i.estilo}
+                data-uso={i.uso.join(' ')}
+              >
+                <CategoryCard category={i.category} />
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="catalog__empty" data-catalog-empty hidden>
+          <p><strong>Ninguna caja cumple los dos filtros.</strong> Prueba con otro uso o quita los filtros.</p>
+          <button type="button" class="catalog__clear" data-catalog-clear>Quitar filtros</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="custom" aria-labelledby="custom-title">
+      <span class="custom__icon"><Icon name="medida" size={30} /></span>
+      <div>
+        <h2 id="custom-title">¿Tu producto no cabe en ninguna?</h2>
+        <p>Hacemos la caja a la medida, con el mismo pedido mínimo. Cuéntanos qué envías y te proponemos la medida.</p>
+      </div>
+      <a href="#" class="custom__btn">Habla con un asesor</a>
+    </section>
+  </div>
+</ShopLayout>
+
+<style>
+  .catalog {
+    max-width: 1360px;
+    margin-inline: auto;
+    padding: 0 var(--s-8) var(--s-8);
+  }
+
+  .crumbs ol {
+    display: flex;
+    gap: var(--s-2);
+    margin: 0;
+    padding: var(--s-6) 0 var(--s-8);
+    list-style: none;
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: color-mix(in srgb, var(--c-ciruela) 65%, var(--c-crema));
+  }
+  .crumbs li + li::before {
+    content: '/';
+    margin-right: var(--s-2);
+    color: var(--c-kraft);
+  }
+  .crumbs a {
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: var(--c-ciruela);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .crumbs [aria-current] {
+    color: var(--c-ciruela);
+    font-weight: 600;
+  }
+
+  .catalog__intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: var(--s-8);
+  }
+  .catalog__proof {
+    display: grid;
+    gap: var(--s-3);
+    margin: 0;
+    padding: 0 0 var(--s-1);
+    list-style: none;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+  .catalog__proof li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .catalog__proof :global(.fw-icon) {
+    color: var(--c-ciruela-claro);
+  }
+  .catalog__head h1 {
+    font-size: clamp(2.6rem, 1.4rem + 3.6vw, 4.8rem);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+    max-width: 12ch;
+  }
+  .catalog__head p {
+    margin: var(--s-4) 0 0;
+    max-width: 52ch;
+    font-size: 1.15rem;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-ciruela) 78%, var(--c-crema));
+  }
+
+  .catalog__body {
+    display: grid;
+    grid-template-columns: 240px minmax(0, 1fr);
+    gap: var(--s-12);
+    margin-top: var(--s-12);
+    padding-top: var(--s-8);
+    border-top: 1px solid color-mix(in srgb, var(--c-kraft) 35%, transparent);
+  }
+  .catalog__aside {
+    position: sticky;
+    top: 150px;
+    align-self: start;
+  }
+
+  .catalog__bar {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s-4);
+    margin-bottom: var(--s-6);
+  }
+  .catalog__count {
+    font-size: 1.4rem;
+    letter-spacing: -0.03em;
+  }
+  .catalog__note {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: color-mix(in srgb, var(--c-ciruela) 60%, var(--c-crema));
+  }
+
+  .catalog__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--s-6);
+  }
+  .catalog__item {
+    display: flex;
+    scroll-margin-top: 160px;
+    border-radius: var(--r-lg);
+  }
+  .catalog__item[hidden] {
+    display: none;
+  }
+  .catalog__item > :global(.cat-card) {
+    flex: 1;
+  }
+  .catalog__item:global(.is-entering) {
+    animation: item-in 0.45s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+  }
+  .catalog__item:target {
+    animation: item-target 1.6s ease-out 0.3s both;
+  }
+  @keyframes item-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px) scale(0.98);
+    }
+  }
+  @keyframes item-target {
+    0%,
+    60% {
+      box-shadow: 0 0 0 4px var(--c-lima);
+    }
+    100% {
+      box-shadow: 0 0 0 4px transparent;
+    }
+  }
+
+  .catalog__empty {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4);
+    padding: var(--s-8);
+    border: 1.5px dashed var(--c-kraft);
+    border-radius: var(--r-lg);
+  }
+  .catalog__empty[hidden] {
+    display: none;
+  }
+  .catalog__empty p {
+    margin: 0;
+    max-width: 48ch;
+    color: color-mix(in srgb, var(--c-ciruela) 78%, var(--c-crema));
+  }
+  .catalog__empty strong {
+    display: block;
+    font-family: var(--f-display);
+    font-size: 1.3rem;
+    letter-spacing: -0.03em;
+    color: var(--c-ciruela);
+  }
+  .catalog__clear,
+  .custom__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 50px;
+    padding: 0 1.5rem;
+    border: 0;
+    border-radius: var(--r-pill);
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+    font: inherit;
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    box-shadow: inset 0 -2px 0 rgba(42, 20, 48, 0.18);
+    transition:
+      transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+      box-shadow 0.2s;
+  }
+  .catalog__clear:hover,
+  .custom__btn:hover {
+    transform: translateY(-1px);
+    box-shadow:
+      inset 0 -2px 0 rgba(42, 20, 48, 0.18),
+      0 10px 24px -12px rgba(110, 150, 20, 0.8);
+  }
+  .catalog__clear:active,
+  .custom__btn:active {
+    transform: translateY(1px) scale(0.97);
+  }
+
+  .custom {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-8);
+    margin-top: var(--s-24);
+    padding: var(--s-12);
+    border-radius: 28px;
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .custom h2 {
+    font-size: var(--fs-xl);
+    color: var(--c-crema);
+  }
+  .custom p {
+    margin: var(--s-2) 0 0;
+    max-width: 56ch;
+    color: color-mix(in srgb, var(--c-crema) 80%, transparent);
+  }
+  .custom__icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    border-radius: 20px;
+    background: var(--c-ciruela-claro);
+    color: var(--c-kraft-claro);
+  }
+
+  @media (max-width: 1100px) {
+    .catalog__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 900px) {
+    .catalog__intro {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-6);
+    }
+    .catalog__body {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-6);
+      padding-top: var(--s-6);
+    }
+    .catalog__aside {
+      position: static;
+    }
+    .custom {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-4);
+      padding: var(--s-8) var(--s-6);
+    }
+    .custom__btn {
+      justify-self: start;
+    }
+  }
+  @media (max-width: 760px) {
+    .catalog {
+      padding-inline: var(--s-4);
+    }
+    .catalog__grid {
+      gap: var(--s-3);
+    }
+    .catalog__bar {
+      flex-direction: column;
+      gap: var(--s-1);
+    }
+    .custom {
+      margin-top: var(--s-16);
+      border-radius: 22px;
+    }
+  }
+</style>

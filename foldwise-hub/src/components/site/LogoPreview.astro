@@ -1,0 +1,153 @@
+---
+/**
+ * Live "Tu logo aquí" stage for a product page. Renders one isometric box per
+ * size with `branding="cliente"` (IsoBox draws the dashed placeholder inside
+ * its `front-print` group, already mapped onto the front face). The client
+ * script in ../../scripts/configurator.ts swaps the placeholder for an
+ * <image> carrying a local blob: URL, so the logo follows the face's
+ * isometric transform without any re-render or network request.
+ */
+import type { Category } from '../../data/categories';
+import IsoBox from '../boxes/IsoBox.astro';
+
+interface Props {
+  category: Category;
+}
+
+const { category } = Astro.props;
+const first = category.sizes[0];
+const dims = (s: { l: number; w: number; h: number }) => `${s.l} × ${s.w} × ${s.h} in`;
+---
+
+<figure class="preview" data-logo-preview>
+  <svg class="preview__flutes" viewBox="0 0 600 600" preserveAspectRatio="xMidYMid slice" aria-hidden="true" focusable="false">
+    <defs>
+      <pattern id="pdp-flute" width="28" height="18" patternUnits="userSpaceOnUse">
+        <path d="M0 9c7 0 7-7 14-7s7 7 14 7" fill="none" stroke="#A9845E" stroke-width="1.1" opacity="0.35"></path>
+      </pattern>
+    </defs>
+    <rect width="600" height="600" fill="url(#pdp-flute)"></rect>
+  </svg>
+
+  <div class="preview__boxes" data-preview-boxes>
+    {
+      category.sizes.map((s, i) => (
+        <div class="preview__box" data-preview-size={s.code} data-dims={dims(s)} hidden={i !== 0}>
+          <IsoBox
+            style={category.style}
+            l={s.l}
+            w={s.w}
+            h={s.h}
+            colorway="kraft"
+            branding="cliente"
+            label={`${category.nameEs} ${s.code} de ${s.l} × ${s.w} × ${s.h} pulgadas, con tu logo en la cara frontal`}
+          />
+        </div>
+      ))
+    }
+  </div>
+
+  <figcaption class="preview__caption">
+    <span class="preview__dims" data-preview-dims aria-live="polite">
+      <strong>{first.code}</strong>
+      {dims(first)}
+    </span>
+    <span class="preview__hint" data-preview-hint>Sube tu logo y míralo impreso en la cara frontal</span>
+  </figcaption>
+</figure>
+
+<style>
+  .preview {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin: 0;
+    min-height: 560px;
+    padding: var(--s-12) var(--s-8) var(--s-6);
+    border-radius: 28px;
+    background: radial-gradient(70% 60% at 50% 45%, color-mix(in srgb, var(--c-kraft-claro) 70%, #fff) 0%, var(--c-kraft-claro) 70%);
+    overflow: hidden;
+    isolation: isolate;
+    scroll-margin-top: 140px;
+  }
+  .preview__flutes {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    mask-image: radial-gradient(80% 70% at 50% 50%, transparent 30%, #000 85%);
+    -webkit-mask-image: radial-gradient(80% 70% at 50% 50%, transparent 30%, #000 85%);
+  }
+  .preview__boxes {
+    position: relative;
+    width: min(100%, 540px);
+    margin-inline: auto;
+  }
+  .preview__box[hidden] {
+    display: none;
+  }
+  .preview__box {
+    animation: preview-in 0.55s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+  }
+  .preview__boxes:global(.is-stamped) .preview__box:not([hidden]) {
+    animation: preview-stamp 0.6s cubic-bezier(0.3, 1.5, 0.5, 1) both;
+  }
+  .preview :global([data-part='client-logo']) {
+    animation: preview-ink 0.7s ease-out both;
+  }
+  @keyframes preview-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+    }
+  }
+  @keyframes preview-stamp {
+    35% {
+      transform: translateY(4px) scale(0.975);
+    }
+  }
+  @keyframes preview-ink {
+    from {
+      opacity: 0;
+    }
+  }
+
+  .preview__caption {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    margin-top: var(--s-6);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--c-ciruela-claro);
+  }
+  .preview__dims {
+    display: inline-flex;
+    gap: var(--s-2);
+    font-weight: 500;
+    color: color-mix(in srgb, var(--c-ciruela) 70%, var(--c-kraft-claro));
+  }
+  .preview__dims strong {
+    font-weight: 700;
+    color: var(--c-ciruela);
+  }
+
+  @media (max-width: 900px) {
+    .preview {
+      min-height: 0;
+    }
+  }
+  @media (max-width: 760px) {
+    .preview {
+      padding: var(--s-8) var(--s-4) var(--s-4);
+      border-radius: 22px;
+    }
+    .preview__caption {
+      flex-direction: column;
+      gap: var(--s-1);
+    }
+  }
+</style>

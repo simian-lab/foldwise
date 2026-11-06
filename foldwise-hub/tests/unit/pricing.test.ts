@@ -18,6 +18,15 @@ describe('clampQuantity', () => {
   });
   it('caps at 100000', () => {
     expect(clampQuantity(1e9, 25)).toBe(100000);
+    expect(clampQuantity('1e9', 25)).toBe(100000);
+  });
+  it('treats Infinity as above the cap (>100000 -> 100000)', () => {
+    expect(clampQuantity(Infinity, 25)).toBe(100000);
+    expect(clampQuantity('Infinity', 25)).toBe(100000);
+  });
+  it('treats -Infinity and NaN as below min', () => {
+    expect(clampQuantity(-Infinity, 25)).toBe(25);
+    expect(clampQuantity(NaN, 25)).toBe(25);
   });
   it('floors decimals', () => {
     expect(clampQuantity('120.7', 25)).toBe(120);

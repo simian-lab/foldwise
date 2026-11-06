@@ -1,0 +1,435 @@
+---
+/**
+ * Product page, built only for featured families. Live logo preview on the
+ * left, configurator on the right, then specs, the dieline slot (Task 9) and
+ * related families.
+ */
+import ShopLayout from '../../../layouts/ShopLayout.astro';
+import LogoPreview from '../../../components/site/LogoPreview.astro';
+import Configurator from '../../../components/site/Configurator.astro';
+import CategoryCard from '../../../components/site/CategoryCard.astro';
+import Icon from '../../../components/brand/Icon.astro';
+import { categories, type Category } from '../../../data/categories';
+
+export function getStaticPaths() {
+  return categories.filter((c) => c.featured).map((c) => ({ params: { slug: c.slug }, props: { category: c } }));
+}
+
+interface Props {
+  category: Category;
+}
+
+const { category } = Astro.props;
+
+const FLUTE: Record<Category['flute'], string> = {
+  B: 'B, pared sencilla de 1/8 in',
+  C: 'C, pared sencilla de 5/32 in',
+  E: 'E, pared fina de 1/16 in',
+  BC: 'BC, pared doble de 1/4 in',
+};
+const STYLE_COPY: Partial<Record<Category['style'], { style: string; perks: string[] }>> = {
+  mailer: {
+    style: 'Mailer con tapa y solapas frontales, se arma sin cinta',
+    perks: [
+      'Se arma en segundos, sin cinta ni grapas',
+      'Impresión de tu logo a una tinta en la tapa o el frente',
+      'Cartón fino y firme, ideal para unboxing',
+    ],
+  },
+  rsc: {
+    style: 'Caja regular ranurada (RSC), solapas que se encuentran al centro',
+    perks: [
+      'Resistente para despachar casi cualquier producto',
+      'Impresión de tu logo a una tinta en los costados',
+      'Se guarda plana y se arma con cinta',
+    ],
+  },
+};
+const copy = STYLE_COPY[category.style] ?? { style: category.nameEs, perks: [] };
+const ectCopy = category.ect === 44 ? 'para envíos pesados' : 'para envíos de uso diario';
+
+const related = [
+  ...categories.filter((c) => c.featured && c.slug !== category.slug),
+  ...categories.filter((c) => !c.featured && c.style === category.style),
+  ...categories.filter((c) => !c.featured && c.style !== category.style),
+].slice(0, 4);
+---
+
+<ShopLayout
+  title={`${category.nameEs} con tu logo · Foldwise`}
+  description={`${category.nameEs} de cartón corrugado desde ${category.minUnits} unidades. ${category.shortEs}`}
+>
+  <div class="pdp" data-pdp>
+    <nav class="crumbs" aria-label="Ruta de navegación">
+      <ol>
+        <li><a href="/tienda">Tienda</a></li>
+        <li><a href="/tienda/catalogo">Catálogo</a></li>
+        <li aria-current="page">{category.nameEs}</li>
+      </ol>
+    </nav>
+
+    <section class="pdp__top" aria-labelledby="pdp-title">
+      <div class="pdp__media">
+        <LogoPreview category={category} />
+      </div>
+
+      <div class="pdp__info">
+        <h1 id="pdp-title" class="pdp__title">{category.nameEs}</h1>
+        <p class="pdp__lede">{category.shortEs}</p>
+        <ul class="pdp__perks">
+          {
+            copy.perks.map((p) => (
+              <li>
+                <span class="pdp__check" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" focusable="false">
+                    <path d="M3.5 8.5l3 3 6-7" />
+                  </svg>
+                </span>
+                {p}
+              </li>
+            ))
+          }
+        </ul>
+        <Configurator category={category} />
+      </div>
+    </section>
+
+    <section class="pdp__specs" aria-labelledby="specs-title">
+      <div class="pdp__specs-head">
+        <h2 id="specs-title">Ficha técnica</h2>
+        <p>Medidas interiores en pulgadas. Si tu producto queda entre dos medidas, te ayudamos a elegir.</p>
+      </div>
+      <dl class="specs" data-specs>
+        <div>
+          <dt>Estilo</dt>
+          <dd>{copy.style}</dd>
+        </div>
+        <div>
+          <dt>Flauta</dt>
+          <dd>{FLUTE[category.flute]}</dd>
+        </div>
+        <div>
+          <dt>Resistencia</dt>
+          <dd>ECT {category.ect}, {ectCopy}</dd>
+        </div>
+        <div>
+          <dt>Pedido mínimo</dt>
+          <dd>{category.minUnits} cajas</dd>
+        </div>
+        <div class="specs__sizes">
+          <dt>Medidas</dt>
+          <dd>
+            <ul>
+              {
+                category.sizes.map((s) => (
+                  <li>
+                    <span>{s.code}</span>
+                    {`${s.l} × ${s.w} × ${s.h} in`}
+                  </li>
+                ))
+              }
+            </ul>
+          </dd>
+        </div>
+      </dl>
+      <ul class="pdp__service">
+        <li><Icon name="rapido" size={22} /> Producción en 3 a 5 días hábiles</li>
+        <li><Icon name="envio" size={22} /> Envío a todo EE. UU.</li>
+        <li><Icon name="eco" size={22} /> Cartón 100 % reciclable</li>
+      </ul>
+    </section>
+
+    <!-- Task 9: the dieline component replaces the placeholder inside this slot. -->
+    <section class="pdp__dieline" aria-labelledby="dieline-title">
+      <div data-dieline-slot>
+        <h2 id="dieline-title">Despiece</h2>
+        <p class="pdp__dieline-lede">
+          La caja extendida, con sus cortes y pliegues, para que tu diseñador ubique el logo con precisión.
+        </p>
+        <div class="pdp__dieline-placeholder" data-dieline-placeholder aria-hidden="true"></div>
+      </div>
+    </section>
+
+    <section class="pdp__related" aria-labelledby="related-title">
+      <div class="pdp__related-head">
+        <h2 id="related-title">También te puede servir</h2>
+        <a href="/tienda/catalogo" class="pdp__link">Ver el catálogo completo</a>
+      </div>
+      <div class="pdp__related-grid">
+        {related.map((c) => <CategoryCard category={c} />)}
+      </div>
+    </section>
+  </div>
+</ShopLayout>
+
+<style>
+  .pdp {
+    max-width: 1360px;
+    margin-inline: auto;
+    padding: 0 var(--s-8) var(--s-8);
+  }
+
+  .crumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin: 0;
+    padding: var(--s-6) 0 var(--s-4);
+    list-style: none;
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: color-mix(in srgb, var(--c-ciruela) 65%, var(--c-crema));
+  }
+  .crumbs li + li::before {
+    content: '/';
+    margin-right: var(--s-2);
+    color: var(--c-kraft);
+  }
+  .crumbs a {
+    text-decoration: none;
+  }
+  .crumbs a:hover {
+    color: var(--c-ciruela);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .crumbs [aria-current] {
+    color: var(--c-ciruela);
+    font-weight: 600;
+  }
+
+  .pdp__top {
+    display: grid;
+    grid-template-columns: minmax(0, 1.12fr) minmax(0, 1fr);
+    gap: var(--s-12);
+    align-items: start;
+  }
+  .pdp__media {
+    position: sticky;
+    top: 150px;
+  }
+  .pdp__info {
+    padding-top: var(--s-6);
+    max-width: 560px;
+  }
+  .pdp__title {
+    font-size: clamp(2.6rem, 1.4rem + 3.2vw, 4.4rem);
+    line-height: 0.95;
+    letter-spacing: -0.045em;
+  }
+  .pdp__lede {
+    margin: var(--s-4) 0 0;
+    max-width: 44ch;
+    font-size: 1.15rem;
+    line-height: 1.5;
+    color: color-mix(in srgb, var(--c-ciruela) 80%, var(--c-crema));
+  }
+  .pdp__perks {
+    display: grid;
+    gap: var(--s-2);
+    margin: var(--s-6) 0 var(--s-8);
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+  .pdp__perks li {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+  }
+  .pdp__check {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--c-kraft-claro) 70%, transparent);
+  }
+  .pdp__check svg {
+    width: 13px;
+    height: 13px;
+    fill: none;
+    stroke: var(--c-ciruela);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* specs */
+  .pdp__specs {
+    display: grid;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.6fr);
+    gap: var(--s-8) var(--s-12);
+    margin-top: var(--s-24);
+    padding-top: var(--s-12);
+    border-top: 1px solid color-mix(in srgb, var(--c-kraft) 35%, transparent);
+  }
+  .pdp__specs-head h2,
+  .pdp__dieline h2,
+  .pdp__related h2 {
+    font-size: var(--fs-xl);
+  }
+  .pdp__specs-head p {
+    margin: var(--s-3) 0 0;
+    max-width: 34ch;
+    font-size: var(--fs-sm);
+    color: color-mix(in srgb, var(--c-ciruela) 72%, var(--c-crema));
+  }
+  .specs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0;
+    border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+  }
+  .specs > div {
+    padding: var(--s-4) var(--s-4) var(--s-4) 0;
+    border-bottom: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+  }
+  .specs dt {
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: color-mix(in srgb, var(--c-ciruela) 62%, var(--c-crema));
+  }
+  .specs dd {
+    margin: var(--s-1) 0 0;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+  .specs__sizes {
+    grid-column: 1 / -1;
+  }
+  .specs__sizes ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    margin: var(--s-2) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .specs__sizes li {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--s-2);
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--c-kraft-claro) 40%, transparent);
+    font-size: var(--fs-sm);
+    font-variant-numeric: tabular-nums;
+  }
+  .specs__sizes li span {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    color: color-mix(in srgb, var(--c-ciruela) 62%, var(--c-crema));
+  }
+  .pdp__service {
+    grid-column: 2;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3) var(--s-8);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+  .pdp__service li {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+  }
+  .pdp__service :global(.fw-icon) {
+    color: var(--c-ciruela-claro);
+  }
+
+  /* dieline slot */
+  .pdp__dieline {
+    margin-top: var(--s-24);
+  }
+  .pdp__dieline-lede {
+    margin: var(--s-3) 0 var(--s-6);
+    max-width: 52ch;
+    color: color-mix(in srgb, var(--c-ciruela) 75%, var(--c-crema));
+  }
+  .pdp__dieline-placeholder {
+    min-height: 320px;
+    border-radius: 28px;
+    border: 1.5px dashed var(--c-kraft);
+    background:
+      repeating-linear-gradient(0deg, transparent 0 31px, color-mix(in srgb, var(--c-kraft) 18%, transparent) 31px 32px),
+      repeating-linear-gradient(90deg, transparent 0 31px, color-mix(in srgb, var(--c-kraft) 18%, transparent) 31px 32px),
+      color-mix(in srgb, var(--c-crema) 50%, #fff);
+  }
+
+  /* related */
+  .pdp__related {
+    margin-top: var(--s-24);
+  }
+  .pdp__related-head {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    gap: var(--s-6);
+    margin-bottom: var(--s-8);
+  }
+  .pdp__link {
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    text-underline-offset: 4px;
+  }
+  .pdp__related-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--s-6);
+  }
+
+  @media (max-width: 1100px) {
+    .pdp__top {
+      gap: var(--s-8);
+    }
+    .pdp__related-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+  @media (max-width: 900px) {
+    .pdp__top,
+    .pdp__specs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .pdp__media {
+      position: static;
+    }
+    .pdp__info {
+      max-width: none;
+      padding-top: 0;
+    }
+    .pdp__service {
+      grid-column: auto;
+    }
+  }
+  @media (max-width: 760px) {
+    .pdp {
+      padding-inline: var(--s-4);
+    }
+    .pdp__specs,
+    .pdp__dieline,
+    .pdp__related {
+      margin-top: var(--s-16);
+    }
+    .specs {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .pdp__related-head {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .pdp__related-grid {
+      gap: var(--s-3);
+    }
+    .pdp__dieline-placeholder {
+      min-height: 220px;
+      border-radius: 22px;
+    }
+  }
+</style>

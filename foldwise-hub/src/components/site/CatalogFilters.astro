@@ -1,0 +1,206 @@
+---
+/**
+ * Simple client-side catalog filters: one single-choice group per facet.
+ * Items to filter carry `data-catalog-item` plus a space-separated
+ * `data-<group>` attribute; non-matching items get `hidden`.
+ */
+export interface FilterOption {
+  value: string;
+  label: string;
+  count: number;
+}
+export interface FilterGroup {
+  id: string;
+  legend: string;
+  options: FilterOption[];
+}
+
+interface Props {
+  groups: FilterGroup[];
+  total: number;
+}
+
+const { groups, total } = Astro.props;
+---
+
+<form class="filters" data-catalog-filters aria-label="Filtrar cajas" onsubmit="return false">
+  {
+    groups.map((g) => (
+      <fieldset class="filters__group" data-filter-group={g.id}>
+        <legend>{g.legend}</legend>
+        <div class="filters__chips">
+          <label class="chip">
+            <input type="radio" name={g.id} value="" checked />
+            <span class="chip__label">Todas</span>
+            <span class="chip__count">{total}</span>
+          </label>
+          {g.options.map((o) => (
+            <label class="chip">
+              <input type="radio" name={g.id} value={o.value} />
+              <span class="chip__label">{o.label}</span>
+              <span class="chip__count">{o.count}</span>
+            </label>
+          ))}
+        </div>
+      </fieldset>
+    ))
+  }
+  <button type="reset" class="filters__reset" data-filters-reset hidden>Quitar filtros</button>
+</form>
+
+<script>
+  document.querySelectorAll<HTMLFormElement>('[data-catalog-filters]').forEach((form) => {
+    const items = [...document.querySelectorAll<HTMLElement>('[data-catalog-item]')];
+    const groups = [...form.querySelectorAll<HTMLElement>('[data-filter-group]')].map((g) => g.dataset.filterGroup!);
+    const count = document.querySelector('[data-catalog-count]');
+    const empty = document.querySelector<HTMLElement>('[data-catalog-empty]');
+    const reset = form.querySelector<HTMLElement>('[data-filters-reset]');
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const apply = () => {
+      const data = new FormData(form);
+      const active = groups.map((g) => [g, String(data.get(g) ?? '')] as const).filter(([, v]) => v);
+      let shown = 0;
+      for (const item of items) {
+        const match = active.every(([g, v]) => (item.dataset[g] ?? '').split(' ').includes(v));
+        const wasHidden = item.hidden;
+        item.hidden = !match;
+        if (match) {
+          shown++;
+          if (wasHidden && !reduce) {
+            item.classList.remove('is-entering');
+            void item.offsetWidth;
+            item.classList.add('is-entering');
+          }
+        }
+      }
+      if (count) count.textContent = `${shown} ${shown === 1 ? 'familia' : 'familias'}`;
+      if (empty) empty.hidden = shown > 0;
+      if (reset) reset.hidden = active.length === 0;
+    };
+
+    form.addEventListener('change', apply);
+    form.addEventListener('reset', () => requestAnimationFrame(apply));
+    document.querySelectorAll('[data-catalog-clear]').forEach((b) => b.addEventListener('click', () => form.reset()));
+    apply();
+  });
+</script>
+
+<style>
+  .filters {
+    display: grid;
+    gap: var(--s-8);
+  }
+  .filters__group {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  .filters__group legend {
+    padding: 0;
+    margin-bottom: var(--s-3);
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: -0.03em;
+  }
+  .filters__chips {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+  }
+  .chip {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-3);
+    padding: 0.55rem 0.85rem;
+    border-radius: 12px;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+  }
+  .chip input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .chip:hover {
+    background: color-mix(in srgb, var(--c-kraft-claro) 35%, transparent);
+  }
+  .chip__count {
+    min-width: 1.8em;
+    padding: 0 0.45em;
+    border-radius: var(--r-pill);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-align: center;
+    color: color-mix(in srgb, var(--c-ciruela) 60%, var(--c-crema));
+    background: color-mix(in srgb, var(--c-kraft-claro) 45%, transparent);
+    transition: background 0.2s, color 0.2s;
+  }
+  .chip:has(input:checked) {
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    font-weight: 600;
+  }
+  .chip:has(input:checked) .chip__count {
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+  }
+  .chip:has(input:focus-visible) {
+    outline: 2px solid var(--c-ciruela);
+    outline-offset: 2px;
+  }
+  .filters__reset {
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: var(--c-ciruela-claro);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .filters__reset[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 900px) {
+    .filters {
+      gap: var(--s-4);
+    }
+    .filters__group legend {
+      font-size: 1rem;
+      margin-bottom: var(--s-2);
+    }
+    .filters__chips {
+      flex-direction: row;
+      gap: var(--s-2);
+      overflow-x: auto;
+      margin-inline: calc(var(--s-4) * -1);
+      padding: 2px var(--s-4) var(--s-1);
+      scrollbar-width: none;
+    }
+    .filters__chips::-webkit-scrollbar {
+      display: none;
+    }
+    .chip {
+      flex: none;
+      padding: 0.45rem 0.6rem 0.45rem 0.9rem;
+      border: 1px solid color-mix(in srgb, var(--c-kraft) 50%, transparent);
+      border-radius: var(--r-pill);
+      white-space: nowrap;
+    }
+    .chip:has(input:checked) {
+      border-color: var(--c-ciruela);
+    }
+  }
+</style>

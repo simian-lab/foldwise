@@ -8,7 +8,8 @@ export const MAX_QUANTITY = 100000;
 /** Normalizes any user input into an integer quantity within [min, MAX_QUANTITY]. */
 export function clampQuantity(raw: unknown, min: number): number {
   const n = typeof raw === 'number' ? raw : parseFloat(String(raw ?? '').trim());
-  if (!Number.isFinite(n)) return min;
+  if (Number.isNaN(n) || n === -Infinity) return min;
+  if (n === Infinity) return MAX_QUANTITY;
   const whole = Math.floor(n);
   if (whole < min) return min;
   if (whole > MAX_QUANTITY) return MAX_QUANTITY;

@@ -1,0 +1,582 @@
+---
+/**
+ * Product configurator: size, quantity with volume tiers, live unit price and
+ * total, logo upload and the quote CTA (no cart). DOM contract consumed by
+ * ../../scripts/configurator.ts and the e2e tests:
+ * select[name=size], input[name=qty], [data-unit-price], [data-total],
+ * input[type=file][name=logo], [data-logo-error], [data-quote-cta].
+ */
+import type { Category } from '../../data/categories';
+import { unitPrice, orderTotal } from '../../data/pricing';
+
+interface Props {
+  category: Category;
+}
+
+const { category } = Astro.props;
+const { tiers, minUnits, sizes } = category;
+const qty = minUnits;
+
+const money = (n: number) =>
+  `US$ ${n.toLocaleString('es-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const tierLabel = (i: number) => {
+  const next = tiers[i + 1];
+  const from = i === 0 ? minUnits : tiers[i].minQty;
+  return next ? `${from} a ${next.minQty - 1} cajas` : `${from} cajas o más`;
+};
+const next = tiers.find((t) => t.minQty > qty);
+const hint = next
+  ? `Con ${next.minQty - qty} cajas más, cada una baja a ${money(next.unitPrice)}.`
+  : 'Ya tienes el mejor precio por volumen.';
+---
+
+<form
+  class="cfg"
+  data-configurator
+  data-tiers={JSON.stringify(tiers)}
+  data-min={minUnits}
+  novalidate
+  onsubmit="return false"
+>
+  <div class="cfg__field">
+    <label class="cfg__label" for="cfg-size">Medida interior</label>
+    <div class="cfg__select">
+      <select id="cfg-size" name="size">
+        {sizes.map((s) => <option value={s.code}>{`${s.l} × ${s.w} × ${s.h} in (${s.code})`}</option>)}
+      </select>
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+        ></path>
+      </svg>
+    </div>
+  </div>
+
+  <div class="cfg__field">
+    <label class="cfg__label" for="cfg-qty">Cantidad de cajas</label>
+    <div class="cfg__stepper">
+      <button type="button" class="cfg__step" data-step="-1" aria-label={`Quitar ${minUnits} cajas`}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 12h12"></path></svg>
+      </button>
+      <input
+        id="cfg-qty"
+        name="qty"
+        type="text"
+        inputmode="numeric"
+        autocomplete="off"
+        value={qty}
+        aria-describedby="cfg-qty-help"
+      />
+      <button type="button" class="cfg__step" data-step="1" aria-label={`Agregar ${minUnits} cajas`}>
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 12h12 M12 6v12"></path></svg>
+      </button>
+    </div>
+    <p id="cfg-qty-help" class="cfg__help">Mínimo {minUnits} cajas, hasta 100,000 por pedido.</p>
+  </div>
+
+  <fieldset class="cfg__tiers">
+    <legend class="cfg__label">Precio por volumen</legend>
+    <ul>
+      {
+        tiers.map((t, i) => (
+          <li>
+            <button
+              type="button"
+              class="cfg__tier"
+              data-tier={i}
+              data-tier-qty={i === 0 ? minUnits : t.minQty}
+              aria-pressed={unitPrice(tiers, qty) === t.unitPrice ? 'true' : 'false'}
+            >
+              <span class="cfg__tier-range">{tierLabel(i)}</span>
+              <span class="cfg__tier-price">{money(t.unitPrice)} c/u</span>
+            </button>
+          </li>
+        ))
+      }
+    </ul>
+    <p class="cfg__nudge" data-tier-hint aria-live="polite">{hint}</p>
+  </fieldset>
+
+  <div class="cfg__field">
+    <span class="cfg__label" id="cfg-logo-label">Tu logo</span>
+    <label class="cfg__drop" data-logo-drop>
+      <input
+        class="cfg__file"
+        type="file"
+        name="logo"
+        accept=".png,.jpg,.jpeg,.svg,image/png,image/jpeg,image/svg+xml"
+        aria-labelledby="cfg-logo-label cfg-logo-cta"
+        aria-describedby="cfg-logo-rules"
+      />
+      <span class="cfg__drop-icon" aria-hidden="true">
+        <img class="cfg__thumb" data-logo-thumb alt="" hidden />
+        <svg viewBox="0 0 24 24" focusable="false">
+          <path d="M12 16V5 M7.5 9.5L12 5l4.5 4.5 M4.5 15v3a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5v-3"></path>
+        </svg>
+      </span>
+      <span class="cfg__drop-text">
+        <strong id="cfg-logo-cta" data-logo-name>Sube tu logo</strong>
+        <span id="cfg-logo-rules">PNG, JPG o SVG, hasta 5 MB. Se queda en tu navegador.</span>
+      </span>
+    </label>
+    <button type="button" class="cfg__clear" data-logo-clear hidden>Quitar logo</button>
+    <p class="cfg__error" data-logo-error role="alert" hidden></p>
+  </div>
+
+  <div class="cfg__summary" aria-live="polite">
+    <div class="cfg__row">
+      <span>Precio por caja</span>
+      <output class="cfg__unit" data-unit-price>{money(unitPrice(tiers, qty))}</output>
+    </div>
+    <div class="cfg__row cfg__row--total">
+      <span>Total estimado <small data-qty-echo>({qty} cajas)</small></span>
+      <output class="cfg__total" data-total>{money(orderTotal(tiers, qty))}</output>
+    </div>
+    <p class="cfg__saving" data-saving hidden></p>
+  </div>
+
+  <div class="cfg__actions">
+    <a href="#" class="cfg__btn cfg__btn--lime" data-quote-cta>Solicitar cotización</a>
+    <a href="#" class="cfg__btn cfg__btn--ghost">Habla con un asesor</a>
+  </div>
+  <p class="cfg__sample" data-sample-note>Datos de muestra: medidas y precios ilustrativos, en dólares de EE. UU.</p>
+</form>
+
+<script>
+  import { initConfigurators } from '../../scripts/configurator';
+  initConfigurators();
+</script>
+
+<style>
+  .cfg {
+    display: grid;
+    gap: var(--s-6);
+  }
+  .cfg__field {
+    display: grid;
+    gap: var(--s-2);
+  }
+  .cfg__label {
+    padding: 0;
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    color: var(--c-ciruela);
+  }
+  .cfg__help {
+    margin: 0;
+    font-size: var(--fs-xs);
+    color: color-mix(in srgb, var(--c-ciruela) 65%, var(--c-crema));
+  }
+
+  /* shared control skin */
+  .cfg__select select,
+  .cfg__stepper {
+    height: 54px;
+    border: 1px solid color-mix(in srgb, var(--c-kraft) 55%, transparent);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--c-crema) 35%, #fff);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .cfg__select select:hover,
+  .cfg__stepper:hover {
+    border-color: var(--c-kraft-sombra);
+  }
+  .cfg__select select:focus-visible,
+  .cfg__stepper:focus-within {
+    outline: none;
+    border-color: var(--c-ciruela);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-lima) 55%, transparent);
+  }
+
+  .cfg__select {
+    position: relative;
+  }
+  .cfg__select select {
+    width: 100%;
+    padding: 0 3rem 0 1.1rem;
+    font: inherit;
+    font-weight: 600;
+    color: var(--c-ciruela);
+    appearance: none;
+    cursor: pointer;
+  }
+  .cfg__select svg {
+    position: absolute;
+    right: 1.1rem;
+    top: 50%;
+    width: 20px;
+    height: 20px;
+    transform: translateY(-50%);
+    pointer-events: none;
+    color: var(--c-ciruela-claro);
+  }
+
+  .cfg__stepper {
+    display: grid;
+    grid-template-columns: 54px minmax(0, 1fr) 54px;
+    align-items: center;
+    overflow: hidden;
+  }
+  .cfg__stepper input {
+    min-width: 0;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: -0.03em;
+    text-align: center;
+    color: var(--c-ciruela);
+    outline: none;
+    font-variant-numeric: tabular-nums;
+  }
+  .cfg__step {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--c-ciruela);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .cfg__step svg {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    transition: transform 0.2s cubic-bezier(0.3, 1.5, 0.5, 1);
+  }
+  .cfg__step:hover {
+    background: color-mix(in srgb, var(--c-kraft-claro) 40%, transparent);
+  }
+  .cfg__step:active svg {
+    transform: scale(0.8);
+  }
+  .cfg__step:focus-visible {
+    outline: 2px solid var(--c-ciruela);
+    outline-offset: -4px;
+  }
+
+  /* volume tiers */
+  .cfg__tiers {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  .cfg__tiers legend {
+    margin-bottom: var(--s-2);
+  }
+  .cfg__tiers ul {
+    display: grid;
+    grid-template-columns: repeat(var(--tiers, 3), minmax(0, 1fr));
+    gap: var(--s-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .cfg__tier {
+    position: relative;
+    display: grid;
+    gap: 2px;
+    width: 100%;
+    padding: var(--s-3) var(--s-4);
+    border: 1px dashed color-mix(in srgb, var(--c-kraft) 80%, transparent);
+    border-radius: 14px;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    color: var(--c-ciruela);
+    cursor: pointer;
+    transition:
+      background 0.25s,
+      border-color 0.25s,
+      transform 0.25s cubic-bezier(0.3, 1.4, 0.5, 1);
+  }
+  .cfg__tier:hover {
+    border-color: var(--c-ciruela);
+    transform: translateY(-2px);
+  }
+  .cfg__tier[aria-pressed='true'] {
+    border-style: solid;
+    border-color: var(--c-ciruela);
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .cfg__tier[aria-pressed='true']::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--c-lima);
+  }
+  .cfg__tier-range {
+    font-size: var(--fs-xs);
+    font-weight: 500;
+    opacity: 0.85;
+  }
+  .cfg__tier-price {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 1.05rem;
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+  }
+  .cfg__nudge {
+    margin: var(--s-3) 0 0;
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    color: var(--c-ciruela-claro);
+  }
+
+  /* logo upload */
+  .cfg__drop {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    padding: var(--s-4) var(--s-4);
+    border: 1.5px dashed var(--c-kraft-sombra);
+    border-radius: 16px;
+    background: color-mix(in srgb, var(--c-kraft-claro) 18%, transparent);
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .cfg__drop:hover,
+  .cfg__drop:global(.is-dragging) {
+    border-color: var(--c-ciruela);
+    background: color-mix(in srgb, var(--c-kraft-claro) 38%, transparent);
+  }
+  .cfg__drop:focus-within {
+    border-color: var(--c-ciruela);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--c-lima) 55%, transparent);
+  }
+  .cfg__drop:global(.has-logo) {
+    border-style: solid;
+    border-color: var(--c-ciruela);
+  }
+  .cfg__file {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  .cfg__drop-icon {
+    display: grid;
+    place-items: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    background: var(--c-crema);
+    color: var(--c-ciruela);
+    transition: background 0.25s, transform 0.3s cubic-bezier(0.3, 1.4, 0.5, 1);
+  }
+  .cfg__drop:hover .cfg__drop-icon {
+    transform: translateY(-2px);
+  }
+  .cfg__thumb {
+    width: 100%;
+    height: 100%;
+    padding: 6px;
+    object-fit: contain;
+    border-radius: 14px;
+    background: #fff;
+  }
+  .cfg__thumb[hidden],
+  .cfg__drop:global(.has-logo) .cfg__drop-icon svg {
+    display: none;
+  }
+  .cfg__drop:global(.has-logo) .cfg__drop-icon {
+    background: #fff;
+    box-shadow: 0 0 0 2px var(--c-lima);
+  }
+  .cfg__drop-icon svg {
+    width: 22px;
+    height: 22px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .cfg__drop-text {
+    display: grid;
+    min-width: 0;
+    font-size: var(--fs-xs);
+    color: color-mix(in srgb, var(--c-ciruela) 70%, var(--c-crema));
+  }
+  .cfg__drop-text strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-sm);
+    color: var(--c-ciruela);
+  }
+  .cfg__clear {
+    justify-self: start;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    color: var(--c-ciruela-claro);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+  .cfg__clear[hidden],
+  .cfg__error[hidden] {
+    display: none;
+  }
+  .cfg__error {
+    margin: 0;
+    padding: var(--s-2) var(--s-3);
+    border-left: 3px solid #b3261e;
+    border-radius: 6px;
+    background: #fbe9e7;
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    color: #8c1d18;
+  }
+
+  /* summary */
+  .cfg__summary {
+    display: grid;
+    gap: var(--s-2);
+    padding: var(--s-4) 0;
+    border-top: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+    border-bottom: 1px dashed color-mix(in srgb, var(--c-kraft) 70%, transparent);
+  }
+  .cfg__row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--s-4);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+  }
+  .cfg__row small {
+    font-size: var(--fs-xs);
+    color: color-mix(in srgb, var(--c-ciruela) 60%, var(--c-crema));
+  }
+  .cfg__unit,
+  .cfg__total {
+    font-family: var(--f-display);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .cfg__unit {
+    font-size: 1.2rem;
+  }
+  .cfg__total {
+    font-size: clamp(1.8rem, 1.4rem + 1vw, 2.3rem);
+    line-height: 1;
+  }
+  .cfg__unit:global(.is-ticking),
+  .cfg__total:global(.is-ticking) {
+    animation: cfg-tick 0.45s cubic-bezier(0.3, 1.5, 0.5, 1);
+  }
+  @keyframes cfg-tick {
+    40% {
+      transform: translateY(-3px);
+      color: var(--c-ciruela-claro);
+    }
+  }
+  .cfg__unit,
+  .cfg__total {
+    display: inline-block;
+  }
+  .cfg__saving {
+    justify-self: end;
+    margin: 0;
+    padding: 0.15rem 0.6rem;
+    border-radius: var(--r-pill);
+    background: var(--c-lima);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    color: var(--c-ciruela);
+  }
+  .cfg__saving[hidden] {
+    display: none;
+  }
+
+  /* actions */
+  .cfg__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+  }
+  .cfg__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 54px;
+    padding: 0 1.6rem;
+    border-radius: var(--r-pill);
+    font-weight: 600;
+    font-size: var(--fs-sm);
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1),
+      background 0.2s,
+      box-shadow 0.2s;
+  }
+  .cfg__btn:active {
+    transform: translateY(1px) scale(0.97);
+  }
+  .cfg__btn--lime {
+    flex: 1 1 auto;
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+    font-size: 1rem;
+    box-shadow: inset 0 -2px 0 rgba(42, 20, 48, 0.18);
+  }
+  .cfg__btn--lime:hover {
+    box-shadow:
+      inset 0 -2px 0 rgba(42, 20, 48, 0.18),
+      0 10px 24px -12px rgba(110, 150, 20, 0.8);
+    transform: translateY(-1px);
+  }
+  .cfg__btn--ghost {
+    color: var(--c-ciruela);
+    border: 1.5px solid color-mix(in srgb, var(--c-ciruela) 30%, transparent);
+  }
+  .cfg__btn--ghost:hover {
+    border-color: var(--c-ciruela);
+    background: color-mix(in srgb, var(--c-kraft-claro) 30%, transparent);
+  }
+  .cfg__sample {
+    margin: calc(var(--s-2) * -1) 0 0;
+    font-size: var(--fs-xs);
+    color: color-mix(in srgb, var(--c-ciruela) 60%, var(--c-crema));
+  }
+
+  @media (max-width: 560px) {
+    .cfg__tiers ul {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .cfg__tier {
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: baseline;
+    }
+    .cfg__tier[aria-pressed='true']::after {
+      display: none;
+    }
+    .cfg__btn {
+      flex: 1 1 100%;
+    }
+  }
+</style>
