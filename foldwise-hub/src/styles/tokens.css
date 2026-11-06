@@ -1,0 +1,43 @@
+:root {
+  /* Brand palette */
+  --c-crema: #F6F1E7;
+  --c-kraft: #C9A27A;
+  --c-ciruela: #3A1D3F;
+  --c-lima: #C8F25A;
+
+  /* Support palette */
+  --c-ciruela-claro: #5A3360;
+  --c-ciruela-sombra: #2A1430;
+  --c-kraft-claro: #E2C7A0;
+  --c-kraft-sombra: #A9845E;
+
+  /* Typography */
+  --f-display: 'Bricolage Grotesque', 'Helvetica Neue', Arial, sans-serif;
+  --f-text: 'Figtree', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Type scale (fluid, 375 -> 1440) */
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.9375rem;
+  --fs-body: 1.0625rem;
+  --fs-lg: clamp(1.25rem, 1.1rem + 0.6vw, 1.5rem);
+  --fs-xl: clamp(1.75rem, 1.3rem + 1.8vw, 2.5rem);
+  --fs-2xl: clamp(2.25rem, 1.4rem + 3.5vw, 4rem);
+  --fs-hero: clamp(3rem, 1.5rem + 6.5vw, 7rem);
+
+  /* Radii */
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  /* Spacing (4px base) */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-6: 1.5rem;
+  --s-8: 2rem;
+  --s-12: 3rem;
+  --s-16: 4rem;
+  --s-24: 6rem;
+}
