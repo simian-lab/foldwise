@@ -25,6 +25,16 @@ Objective: local Spanish brand hub (manual + board + renders + e-commerce sample
 
 Final evidence: vitest 38/38; `npm run build` 11 pages; `grep -ril ebiopacking dist` none; Playwright on built preview 86/86. Final whole-branch review: ready after fixes → fixes re-reviewed, all addressed.
 
+## Phase 2 — realista (branch feature/foldwise-realista; v1 frozen at tag v1-ilustrado, worktree ../nuevamarca-ebiopacking-v1 served on :4322)
+- S4: "Podemos hacer que el giro o el header de la página se vea con el de Packbox?"
+- S5: "quisiera intentar que se vieran un poco más reales" — approved: AI photos where it sells (hero, catalog cards, family) + more realistic SVG where interactive.
+- S6: "no perdamos lo que hay para poder comparar"
+| ID | Task | Route | Status |
+|---|---|---|---|
+| R1 | AI photoreal product images (12 + hero + familia) | delegated, wave A | done 6af6ae2 |
+| R2 | SVG realism (IsoBox, HeroBox, guides) | delegated, wave A | done 37e3a5e, 3c4a693 (clean kraft fix after "las cajas parecen sucias") |
+| R3 | Packbox-style header + hero panel; integrate photos in cards/catalog/familia; opening mailer moves to its own section | delegated, wave B | done 65431b9, 6de3e35 — vitest 43, build OK, no ebiopacking, e2e 93 |
+
 ## Rulings (controller decisions; cost if wrong)
 - R1 Parallel waves (user request) despite skill default — risk of conflicts; none occurred.
 - R2 In parallel waves implementers didn't commit/build; parent committed and ran seam checks.
