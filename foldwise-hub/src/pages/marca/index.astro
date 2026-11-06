@@ -11,6 +11,11 @@ import PaletteStudy from '../../components/brand/explored/PaletteStudy.astro';
 import IsotypeStudy from '../../components/brand/explored/IsotypeStudy.astro';
 import { palette, taglines, voice, ISOTYPE_PATH } from '../../data/brand';
 import { minOrderUnits } from '../../data/categories';
+import IgFeedGrid from '../../components/brand/social/IgFeedGrid.astro';
+import IgPost from '../../components/brand/social/IgPost.astro';
+import IgCarousel from '../../components/brand/social/IgCarousel.astro';
+import IgStory from '../../components/brand/social/IgStory.astro';
+import { feed } from '../../data/social';
 
 const chapters = [
   { id: 'la-marca', num: '01', title: 'La marca' },
@@ -22,8 +27,9 @@ const chapters = [
   { id: 'iconos', num: '07', title: 'Íconos' },
   { id: 'patrones', num: '08', title: 'Patrones' },
   { id: 'voz', num: '09', title: 'Voz de marca' },
-  { id: 'direcciones', num: '10', title: 'Direcciones exploradas' },
-  { id: 'proximos-pasos', num: '11', title: 'Próximos pasos' },
+  { id: 'redes', num: '10', title: 'Redes sociales' },
+  { id: 'direcciones', num: '11', title: 'Direcciones exploradas' },
+  { id: 'proximos-pasos', num: '12', title: 'Próximos pasos' },
 ] as const;
 const ch = Object.fromEntries(chapters.map((c) => [c.id, c])) as Record<(typeof chapters)[number]['id'], (typeof chapters)[number]>;
 
@@ -83,6 +89,16 @@ const icons = [
   { name: 'asesoria', label: 'Asesoría' },
   { name: 'eco', label: 'Reciclable' },
 ] as const;
+
+// "Redes sociales": the four formats, drawn to scale with their safe zones.
+const SAFE = 72; // px of margin on a 1080 px wide canvas
+const templates = [
+  { id: 'post-1x1', name: 'Post cuadrado', ratio: '1 / 1', size: '1080 × 1080 px', use: 'Frases y anuncios cortos.', bands: 0 },
+  { id: 'post-4x5', name: 'Post vertical', ratio: '4 / 5', size: '1080 × 1350 px', use: 'El formato por defecto del feed: ocupa más pantalla.', bands: 0 },
+  { id: 'story', name: 'Historia', ratio: '9 / 16', size: '1080 × 1920 px', use: 'Deja libres 250 px arriba y abajo para la interfaz.', bands: 250 / 1920 },
+  { id: 'carousel', name: 'Carrusel', ratio: '4 / 5', size: '1080 × 1350 px por lámina', use: 'De 3 a 5 láminas, una idea por lámina.', bands: 0 },
+] as const;
+const unboxing = feed.find((p) => p.id === 'unboxing')!;
 
 const traits = ['Amigable', 'Cercana', 'Joven', 'Vibrante', 'Atenta'];
 
@@ -652,6 +668,138 @@ const nextSteps = [
         </Section>
 
         {/* 10 ------------------------------------------------------------ */}
+        <Section {...ch['redes']}>
+          <Fragment slot="aside">
+            <p>El feed se arma como se arma una caja: con orden y con calma.</p>
+            <p>
+              Alternamos tres tipos de post para que el perfil nunca se vea repetido: la foto de producto, la voz en grande y
+              el patrón del cartón. La lima es el detalle que se nota, no el fondo de todo.
+            </p>
+            <p>Los ejemplos usan solo datos reales de la marca: nada de seguidores, clientes ni testimonios inventados.</p>
+          </Fragment>
+
+          <div class="block" data-social-block="ritmo">
+            <h3>Ritmo del feed</h3>
+            <div class="rhythm">
+              <IgFeedGrid header={false} annotate class="rhythm__grid" />
+              <ul class="rhythm__rules" role="list">
+                <li><b>Foto, tipografía, patrón.</b> Nunca dos del mismo tipo seguidos en una fila.</li>
+                <li><b>Una frase por post.</b> Si necesita más, es un carrusel.</li>
+                <li><b>Un post lima cada nueve.</b> Es la cinta del cierre: se ve porque es poca.</li>
+                <li><b>Producto real.</b> Cajas fotografiadas sobre crema o kraft, con luz suave.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="block" data-social-block="plantillas">
+            <h3>Plantillas y zonas seguras</h3>
+            <ul class="templates" role="list">
+              {
+                templates.map((t) => (
+                  <li data-template={t.id}>
+                    <div class="templates__canvas" style={`aspect-ratio:${t.ratio};--safe:${(SAFE / 1080) * 100}cqi;--band:${t.bands * 100}%`}>
+                      {t.bands > 0 && <span class="templates__band templates__band--top" />}
+                      {t.bands > 0 && <span class="templates__band templates__band--bottom" />}
+                      <span class="templates__safe">
+                        <Isotype variant="ciruela" size={16} label="" />
+                        <span class="templates__head">Titular</span>
+                      </span>
+                      {t.id === 'carousel' && (
+                        <span class="templates__dots" aria-hidden="true">
+                          <i class="on" /><i /><i /><i />
+                        </span>
+                      )}
+                    </div>
+                    <p class="templates__name">{t.name}</p>
+                    <p class="small">{t.size}. {t.use}</p>
+                  </li>
+                ))
+              }
+            </ul>
+            <p class="small">
+              El margen de seguridad es de {SAFE} px en todos los formatos: el texto y el isotipo nunca lo cruzan. El isotipo
+              va arriba a la izquierda; el titular, abajo y alineado a la izquierda.
+            </p>
+          </div>
+
+          <div class="cols2 cols2--top" data-social-block="color-tipo">
+            <div class="block">
+              <h3>Color en redes</h3>
+              <ul class="social-rules" role="list">
+                <li><b>Fondos</b> Crema, ciruela o kraft. Nunca blanco puro ni negro.</li>
+                <li><b>Lima</b> Un detalle por pieza: un botón, un chip, un trazo. Como fondo, solo un post cada nueve.</li>
+                <li><b>Fotos</b> Producto sobre crema o kraft; el texto va al lado de la foto, no encima.</li>
+              </ul>
+            </div>
+            <div class="block">
+              <h3>Tipografía en redes</h3>
+              <ul class="social-rules" role="list">
+                <li><b>Titular</b> Bricolage Grotesque 800, máximo ocho palabras, en tipo oración y con punto final.</li>
+                <li><b>Texto</b> Figtree 500 para subtítulos y láminas de carrusel.</li>
+                <li><b>Tamaño</b> El titular ocupa al menos un tercio del ancho: se lee en la cuadrícula del perfil.</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="block" data-social-block="captions">
+            <h3>Tono de los captions</h3>
+            <div class="cols2 cols2--top">
+              <div class="voice voice--si">
+                <ul role="list">
+                  <li>Una o dos frases cortas, tuteando, con un verbo de acción.</li>
+                  <li>De uno a tres hashtags en español, al final: #packagingconmarca, #emprendedores.</li>
+                </ul>
+              </div>
+              <div class="voice voice--no">
+                <ul role="list">
+                  <li>No llenamos el caption de mayúsculas, emojis ni signos de exclamación.</li>
+                  <li>No prometemos tiempos, precios ni resultados que no podamos cumplir.</li>
+                </ul>
+              </div>
+            </div>
+            <ul class="examples" role="list">
+              {
+                voice.ejemplos.slice(0, 2).map((e) => (
+                  <li data-caption-example>
+                    <p class="examples__before">
+                      <span>Así no</span>
+                      {e.antes}
+                    </p>
+                    <p class="examples__after">
+                      <span>Así sí</span>
+                      {e.despues}
+                    </p>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+
+          <div class="block" data-social-block="ejemplos">
+            <h3>Ejemplos</h3>
+            <div class="social-examples">
+              <figure>
+                <IgPost media={unboxing.media} caption={unboxing.caption} hashtags={unboxing.hashtags} ratio="4:5" framed />
+                <figcaption><b>Post vertical</b> Unboxing con foto de producto.</figcaption>
+              </figure>
+              <figure>
+                <IgCarousel phone={false} />
+                <figcaption><b>Carrusel</b> Una idea técnica, en cuatro láminas.</figcaption>
+              </figure>
+              <figure style="--phone-w:260px">
+                <IgStory kind="poll" />
+                <figcaption><b>Historia con encuesta</b> Sin resultados: se publica antes de votar.</figcaption>
+              </figure>
+              <figure style="--phone-w:260px">
+                <IgStory kind="steps" />
+                <figcaption><b>Detrás de la caja</b> El proceso en tres pasos.</figcaption>
+              </figure>
+            </div>
+            <p class="small">Todos los ejemplos están en tamaño real en <a href="/marca/en-accion">la marca en acción</a>.</p>
+          </div>
+        </Section>
+
+        {/* 11 ------------------------------------------------------------ */}
         <Section {...ch['direcciones']}>
           <Fragment slot="aside">
             <p>Antes de llegar aquí exploramos otros caminos.</p>
@@ -743,7 +891,7 @@ const nextSteps = [
           </p>
         </Section>
 
-        {/* 11 ------------------------------------------------------------ */}
+        {/* 12 ------------------------------------------------------------ */}
         <Section {...ch['proximos-pasos']} class="sheet--closing">
           <Fragment slot="aside">
             <p>Este manual es el comienzo.</p>
@@ -1867,6 +2015,137 @@ const nextSteps = [
   }
 
   /* Responsive -------------------------------------------------------- */
+  /* 10 Redes sociales ------------------------------------------------- */
+  .rhythm {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 4fr);
+    gap: var(--s-8);
+    align-items: start;
+  }
+  .rhythm :global(.rhythm__grid) {
+    max-width: 380px;
+  }
+  .rhythm__rules,
+  .social-rules {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--s-4);
+    font-size: var(--fs-sm);
+    line-height: 1.5;
+  }
+  .rhythm__rules li,
+  .social-rules li {
+    padding-top: var(--s-3);
+    border-top: 1px dashed rgb(58 29 63 / 0.25);
+  }
+  .rhythm__rules b,
+  .social-rules b {
+    display: block;
+    font-family: var(--f-display);
+  }
+  .templates {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 0.72fr 1fr;
+    gap: var(--s-6);
+    align-items: end;
+  }
+  .templates li {
+    display: grid;
+    gap: var(--s-2);
+    min-width: 0;
+  }
+  .templates__canvas {
+    container-type: inline-size;
+    position: relative;
+    width: 100%;
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .templates__band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--band);
+    background: repeating-linear-gradient(-45deg, rgb(200 242 90 / 0.5) 0 2px, transparent 2px 7px);
+  }
+  .templates__band--top {
+    top: 0;
+  }
+  .templates__band--bottom {
+    bottom: 0;
+  }
+  .templates__safe {
+    position: absolute;
+    inset: calc(var(--safe) + var(--band, 0%)) var(--safe);
+    outline: 1.5px dashed var(--c-lima);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 6px;
+  }
+  [data-template='story'] .templates__safe {
+    inset: var(--band) var(--safe);
+  }
+  .templates__head {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 14cqi;
+    line-height: 1;
+  }
+  .templates__dots {
+    position: absolute;
+    bottom: 3cqi;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 3px;
+  }
+  .templates__dots i {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: rgb(246 241 231 / 0.4);
+  }
+  .templates__dots i.on {
+    background: var(--c-crema);
+  }
+  .templates__name {
+    margin: var(--s-2) 0 0;
+    font-family: var(--f-display);
+    font-weight: 700;
+  }
+  .social-examples {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 300px));
+    gap: var(--s-12) var(--s-8);
+    align-items: start;
+  }
+  .social-examples figure {
+    margin: 0;
+    display: grid;
+    gap: var(--s-3);
+    min-width: 0;
+    align-content: start;
+  }
+  .social-examples figcaption {
+    font-size: var(--fs-xs);
+    line-height: 1.45;
+    color: rgb(58 29 63 / 0.78);
+  }
+  .social-examples figcaption b {
+    display: block;
+    color: var(--c-ciruela);
+    font-size: var(--fs-sm);
+  }
+
   @media (max-width: 1100px) {
     .manual__layout {
       grid-template-columns: minmax(0, 1fr);
@@ -1887,6 +2166,10 @@ const nextSteps = [
       grid-template-columns: repeat(3, minmax(0, 1fr));
     }
     .studies {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .social-examples,
+    .templates {
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
@@ -1932,6 +2215,16 @@ const nextSteps = [
     }
     .patterns {
       grid-template-columns: minmax(0, 1fr);
+    }
+    .rhythm {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .social-examples {
+      grid-template-columns: minmax(0, 1fr);
+      justify-items: center;
+    }
+    .social-examples figure {
+      width: min(100%, 320px);
     }
     .steps {
       grid-template-columns: minmax(0, 1fr);
@@ -2040,7 +2333,14 @@ const nextSteps = [
     .next li,
     .studies > *,
     .patterns figure,
+    .templates li,
+    .social-examples figure,
     .closing {
+      break-inside: avoid;
+    }
+    /* the four social examples fit one row of the landscape sheet: keep them together */
+    .social-examples {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       break-inside: avoid;
     }
     * {

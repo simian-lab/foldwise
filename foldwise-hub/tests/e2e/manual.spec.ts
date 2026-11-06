@@ -13,8 +13,9 @@ const SECTIONS = [
   { id: 'iconos', num: '07', title: 'Íconos' },
   { id: 'patrones', num: '08', title: 'Patrones' },
   { id: 'voz', num: '09', title: 'Voz de marca' },
-  { id: 'direcciones', num: '10', title: 'Direcciones exploradas' },
-  { id: 'proximos-pasos', num: '11', title: 'Próximos pasos' },
+  { id: 'redes', num: '10', title: 'Redes sociales' },
+  { id: 'direcciones', num: '11', title: 'Direcciones exploradas' },
+  { id: 'proximos-pasos', num: '12', title: 'Próximos pasos' },
 ];
 
 const ICONS = ['envio', 'personaliza', 'rapido', 'asesoria', 'pedido-pequeno', 'eco', 'medida', 'armado'];
@@ -23,7 +24,7 @@ const section = (page: import('@playwright/test').Page, id: string) =>
   page.locator(`main [data-manual-section="${id}"]`);
 
 test.describe('brand manual', () => {
-  test('renders the 11 sections in order, offline and without console errors', async ({ page }) => {
+  test('renders the 12 sections in order, offline and without console errors', async ({ page }) => {
     const errors: string[] = [];
     page.on('console', (m) => {
       if (m.type() === 'error') errors.push(m.text());
@@ -131,6 +132,33 @@ test.describe('brand manual', () => {
     }
     await expect(sec.locator('[data-direction="chosen"]')).toContainText('Plum & Lime');
   });
+
+  test('Redes sociales follows Voz de marca with rhythm, templates, caption tone and examples', async ({ page }) => {
+    await page.goto(PAGE);
+    const ids = await page.locator('main [data-manual-section]').evaluateAll((els) => els.map((el) => el.id));
+    expect(ids.indexOf('redes')).toBe(ids.indexOf('voz') + 1);
+    const sec = section(page, 'redes');
+    for (const h of ['Ritmo del feed', 'Plantillas y zonas seguras', 'Color en redes', 'Tipografía en redes', 'Tono de los captions', 'Ejemplos']) {
+      await expect(sec.getByRole('heading', { level: 3, name: h, exact: true })).toBeVisible();
+    }
+    const tiles = sec.locator('[data-ig-feed] [data-ig-tile]');
+    await expect(tiles).toHaveCount(9);
+    for (const r of ['foto', 'tipografia', 'patron']) {
+      expect(await sec.locator(`[data-ig-tile][data-rhythm="${r}"]`).count()).toBeGreaterThanOrEqual(2);
+    }
+    for (const t of ['post-1x1', 'post-4x5', 'story', 'carousel']) {
+      await expect(sec.locator(`[data-template="${t}"]`)).toBeVisible();
+    }
+    await expect(sec.locator('[data-template="story"]')).toContainText('1080 × 1920 px');
+    await expect(sec.locator('[data-caption-example]')).toHaveCount(2);
+    await expect(sec.locator('[data-caption-example]').first()).toContainText('Empieza con 25 cajas');
+    await expect(sec.locator('[data-ig-post]').first()).toContainText('#');
+    await expect(sec.locator('[data-ig-carousel] [data-ig-slide]')).toHaveCount(4);
+    await expect(sec.locator('[data-ig-story]')).toHaveCount(2);
+    await expect(sec.locator('[data-ig-story="encuesta"] [data-ig-poll]')).toContainText('Kraft');
+    await expect(sec.locator('[data-ig-story="encuesta"] [data-ig-poll]')).not.toContainText('%');
+  });
+
 
   test('Próximos pasos lists the next deliverables; Simian credit and sibling links are present', async ({ page }) => {
     await page.goto(PAGE);

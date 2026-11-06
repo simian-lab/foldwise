@@ -1,0 +1,311 @@
+---
+/**
+ * The picture area of a post, slide or grid tile. It fills its box (the parent
+ * fixes the ratio) and is a size container, so the type scales with the tile:
+ * the same post reads at 110 px in the profile grid and at 400 px in a phone.
+ */
+import Isotype from '../Isotype.astro';
+import Pattern from '../Pattern.astro';
+import { palette } from '../../../data/brand';
+import { getDieline } from '../../../data/dielines';
+import type { IgMedia, SurfaceColor } from '../../../data/social';
+import IgIcon from './IgIcon.astro';
+
+interface Props {
+  media: IgMedia;
+  /** Grid tiles are small: drop secondary lines. */
+  compact?: boolean;
+  class?: string;
+}
+const { media, compact = false, class: className } = Astro.props;
+
+const isoOn: Record<SurfaceColor, 'crema' | 'ciruela' | 'kraft' | 'lima'> = {
+  crema: 'crema',
+  ciruela: 'ciruela',
+  kraft: 'kraft',
+  lima: 'lima',
+};
+const bg = 'bg' in media ? media.bg : 'crema';
+const dl = media.kind === 'dieline' ? getDieline('mailer') : null;
+const dlBox = dl ? dl.viewBox : '';
+---
+
+<div class:list={['igm', `igm--${media.kind}`, `igm--on-${bg}`, { 'igm--compact': compact }, className]} data-ig-media={media.kind}>
+  {
+    media.kind === 'photo' && (
+      <img
+        class="igm__photo"
+        src={media.src}
+        alt={media.alt}
+        width={media.width}
+        height={media.height}
+        loading="lazy"
+        decoding="async"
+        style={media.position ? `object-position:${media.position}` : undefined}
+      />
+    )
+  }
+
+  {
+    media.kind === 'type' && (
+      <div class="igm__type">
+        <Isotype variant={isoOn[bg]} size={20} label="" class="igm__mark" />
+        <p class="igm__headline">{media.text}</p>
+        {media.sub && !compact && <p class="igm__sub">{media.sub}</p>}
+      </div>
+    )
+  }
+
+  {
+    media.kind === 'pattern' && (
+      <div class="igm__pattern">
+        <div class="igm__fill" aria-hidden="true">
+          <Pattern kind={media.pattern} color={palette.ciruela} bg={palette.crema} scale={0.55} />
+        </div>
+        <p class="igm__band">{media.text}</p>
+      </div>
+    )
+  }
+
+  {
+    media.kind === 'dieline' && dl && (
+      <div class="igm__dieline">
+        {!compact && <p class="igm__kicker">{media.sub}</p>}
+        <p class="igm__headline igm__headline--sm">{media.text}</p>
+        <svg class="igm__dl" viewBox={dlBox} preserveAspectRatio="xMidYMid meet" aria-hidden="true" focusable="false">
+          <path d={dl.cuts.join(' ')} fill={palette.kraftClaro} fill-rule="evenodd" />
+          <g fill="none" stroke={palette.ciruela} stroke-width="1.6" vector-effect="non-scaling-stroke">
+            {dl.cuts.map((p) => <path d={p} vector-effect="non-scaling-stroke" />)}
+          </g>
+          <g fill="none" stroke={palette.ciruela} stroke-width="1.6" stroke-dasharray="4 3">
+            {dl.folds.map((p) => <path d={p} vector-effect="non-scaling-stroke" />)}
+          </g>
+        </svg>
+      </div>
+    )
+  }
+
+  {
+    media.kind === 'slide' && (
+      <div class={`igm__slide igm__slide--${media.art}`}>
+        {media.art === 'flauta-cover' && (
+          <div class="igm__fill igm__fill--low" aria-hidden="true">
+            <Pattern kind="flauta" color={palette.kraftSombra} bg={palette.kraft} scale={1.1} />
+          </div>
+        )}
+        {media.art === 'flauta-wave' && (
+          <svg class="igm__art" viewBox="0 0 200 60" aria-hidden="true" focusable="false">
+            <path d="M0 30C12.5 6 37.5 6 50 30S87.5 54 100 30 137.5 6 150 30 187.5 54 200 30" fill="none" stroke={palette.ciruela} stroke-width="5" />
+          </svg>
+        )}
+        {media.art === 'flauta-layers' && (
+          <svg class="igm__art" viewBox="0 0 200 70" aria-hidden="true" focusable="false">
+            <path d="M0 4H200M0 66H200" stroke={palette.crema} stroke-width="5" />
+            <path d="M0 35C12.5 8 37.5 8 50 35S87.5 62 100 35 137.5 8 150 35 187.5 62 200 35" fill="none" stroke={palette.lima} stroke-width="5" />
+          </svg>
+        )}
+        {media.art === 'isotype' && <Isotype variant="crema" size={64} label="" class="igm__iso" />}
+        <div class="igm__slide-copy">
+          <p class="igm__headline">{media.text}</p>
+          {media.sub && !compact && (
+            <p class={media.art === 'flauta-cover' ? 'igm__chip' : 'igm__sub'}>
+              {media.sub}
+              {media.art === 'flauta-cover' && <IgIcon name="swipe" size={14} />}
+            </p>
+          )}
+        </div>
+      </div>
+    )
+  }
+</div>
+
+<style>
+  .igm {
+    container-type: inline-size;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--igm-bg);
+    color: var(--igm-ink);
+  }
+  .igm--on-crema {
+    --igm-bg: var(--c-crema);
+    --igm-ink: var(--c-ciruela);
+  }
+  .igm--on-ciruela {
+    --igm-bg: var(--c-ciruela);
+    --igm-ink: var(--c-crema);
+  }
+  .igm--on-kraft {
+    --igm-bg: var(--c-kraft);
+    --igm-ink: var(--c-ciruela);
+  }
+  .igm--on-lima {
+    --igm-bg: var(--c-lima);
+    --igm-ink: var(--c-ciruela);
+  }
+  .igm p {
+    margin: 0;
+  }
+  .igm__photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .igm__headline {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 11.5cqi;
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  .igm__headline--sm {
+    font-size: 10cqi;
+  }
+  .igm__sub {
+    margin-top: 4cqi !important;
+    font-family: var(--f-text);
+    font-weight: 500;
+    font-size: 4.6cqi;
+    line-height: 1.35;
+    max-width: 30ch;
+  }
+
+  /* Type post: the voice, big, bottom-left, with the isotype as signature */
+  .igm__type {
+    position: absolute;
+    inset: 0;
+    padding: 8cqi;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .igm__type :global(.igm__mark) {
+    position: absolute;
+    top: 8cqi;
+    left: 8cqi;
+    width: 9cqi;
+    height: 9cqi;
+  }
+
+  /* Pattern post: one-colour pattern, the line on a solid band, never over it */
+  .igm__fill {
+    position: absolute;
+    inset: 0;
+  }
+  .igm__band {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 6cqi 8cqi 7cqi;
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 8.5cqi;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  /* Assembly tip: the mailer dieline, cut solid, fold dashed */
+  .igm__dieline {
+    position: absolute;
+    inset: 0;
+    padding: 8cqi;
+    display: grid;
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 2cqi;
+  }
+  .igm__kicker {
+    font-family: var(--f-text);
+    font-weight: 700;
+    font-size: 4.4cqi;
+    color: var(--c-ciruela-claro);
+  }
+  .igm__dl {
+    width: 100%;
+    height: 100%;
+    margin-top: 3cqi;
+  }
+
+  /* Carousel slides */
+  .igm__slide {
+    position: absolute;
+    inset: 0;
+    padding: 8cqi;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .igm__fill--low {
+    top: 52%;
+  }
+  .igm__slide-copy {
+    position: relative;
+  }
+  .igm__slide--flauta-cover .igm__slide-copy {
+    order: -1;
+  }
+  .igm__slide--flauta-cover .igm__headline {
+    font-size: 14cqi;
+  }
+  .igm__slide--flauta-wave,
+  .igm__slide--flauta-layers,
+  .igm__slide--isotype {
+    justify-content: flex-end;
+    gap: 10cqi;
+  }
+  .igm__art {
+    width: 100%;
+    height: auto;
+    margin-bottom: auto;
+    margin-top: 10cqi;
+  }
+  .igm__slide :global(.igm__iso) {
+    width: 22cqi;
+    height: 22cqi;
+    margin-bottom: auto;
+  }
+  .igm__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5cqi;
+    margin-top: 5cqi !important;
+    padding: 2cqi 4cqi;
+    border-radius: 999px;
+    background: var(--c-lima);
+    color: var(--c-ciruela);
+    font-family: var(--f-text);
+    font-weight: 700;
+    font-size: 4.4cqi;
+  }
+  .igm__chip :global(.igi) {
+    width: 4.4cqi;
+    height: 4.4cqi;
+  }
+
+  /* Grid tiles: tighter padding so the line still fits at 100 px */
+  .igm--compact .igm__type,
+  .igm--compact .igm__slide,
+  .igm--compact .igm__dieline {
+    padding: 9cqi;
+  }
+  .igm--compact .igm__headline {
+    font-size: 13cqi;
+  }
+  .igm--compact .igm__slide--flauta-cover .igm__headline {
+    font-size: 15cqi;
+  }
+  .igm--compact .igm__band {
+    font-size: 10.5cqi;
+    padding: 6cqi 9cqi 8cqi;
+  }
+  .igm--compact .igm__headline--sm {
+    font-size: 11.5cqi;
+  }
+</style>

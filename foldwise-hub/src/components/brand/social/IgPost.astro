@@ -1,0 +1,147 @@
+---
+/**
+ * One feed post as Instagram shows it: handle, media at 1:1 or 4:5, the
+ * action row and the caption with its hashtags. Works inside a PhoneFrame or
+ * on its own (`framed`), where it gets a card edge of its own.
+ */
+import IgMedia from './IgMedia.astro';
+import IgIcon from './IgIcon.astro';
+import IgAvatar from './IgAvatar.astro';
+import { SOCIAL_HANDLE, type IgMedia as Media } from '../../../data/social';
+
+interface Props {
+  media: Media;
+  caption: string;
+  hashtags: string[];
+  ratio?: '1:1' | '4:5';
+  /** Carousel position dots. */
+  dots?: { count: number; current: number };
+  framed?: boolean;
+  class?: string;
+}
+const { media, caption, hashtags, ratio = '1:1', dots, framed = false, class: className } = Astro.props;
+---
+
+<article
+  class:list={['igp', { 'igp--framed': framed }, className]}
+  data-ig-post
+  data-ratio={ratio}
+  aria-label={`Post de Instagram de ${SOCIAL_HANDLE}`}
+>
+  <header class="igp__head" aria-hidden="true">
+    <IgAvatar size={30} ring="lima" />
+    <span class="igp__handle">{SOCIAL_HANDLE}</span>
+    <IgIcon name="more" size={20} class="igp__more" />
+  </header>
+  <div class="igp__media" style={`aspect-ratio:${ratio === '1:1' ? '1 / 1' : '4 / 5'}`}>
+    <IgMedia media={media} />
+    {dots && <span class="igp__count" aria-hidden="true">{dots.current}/{dots.count}</span>}
+  </div>
+  <div class="igp__actions" aria-hidden="true">
+    <IgIcon name="heart" size={23} />
+    <IgIcon name="comment" size={22} />
+    <IgIcon name="share" size={22} />
+    {
+      dots && (
+        <span class="igp__dots">
+          {Array.from({ length: dots.count }, (_, i) => (
+            <i class:list={{ on: i + 1 === dots.current }} />
+          ))}
+        </span>
+      )
+    }
+    <IgIcon name="save" size={22} class="igp__save" />
+  </div>
+  <p class="igp__caption" data-ig-caption>
+    <b>{SOCIAL_HANDLE}</b>
+    {caption} <span class="igp__tags">{hashtags.join(' ')}</span>
+  </p>
+</article>
+
+<style>
+  .igp {
+    --igp-ink: var(--ig-ink, #2a1430);
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    color: var(--igp-ink);
+    background: var(--ig-screen, #fffdf8);
+    font-family: var(--f-text);
+  }
+  .igp--framed {
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgb(58 29 63 / 0.1),
+      0 18px 32px -20px rgb(42 20 48 / 0.4);
+  }
+  .igp__head {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 12px;
+  }
+  .igp__handle {
+    font-weight: 700;
+    font-size: 13px;
+  }
+  .igp__head :global(.igp__more) {
+    margin-left: auto;
+  }
+  .igp__media {
+    position: relative;
+    width: 100%;
+  }
+  .igp__count {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgb(42 20 48 / 0.72);
+    color: var(--c-crema);
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  .igp__actions {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px 6px;
+  }
+  .igp__actions :global(.igp__save) {
+    margin-left: auto;
+  }
+  .igp__dots {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 4px;
+  }
+  .igp__dots i {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: rgb(58 29 63 / 0.25);
+  }
+  .igp__dots i.on {
+    background: var(--c-ciruela);
+  }
+  .igp__caption {
+    margin: 0;
+    padding: 0 12px 12px;
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  .igp__caption b {
+    font-weight: 700;
+    margin-right: 0.3em;
+  }
+  .igp__tags {
+    color: var(--c-ciruela-claro);
+    font-weight: 600;
+  }
+</style>

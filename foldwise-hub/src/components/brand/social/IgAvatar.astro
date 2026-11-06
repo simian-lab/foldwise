@@ -1,0 +1,43 @@
+---
+/** The @foldwise avatar: the isotype on ciruela inside a thin ring. */
+import Isotype from '../Isotype.astro';
+
+interface Props {
+  size?: number;
+  /** Lime ring marks an unseen story; kraft is the resting ring. */
+  ring?: 'lima' | 'kraft' | 'none';
+}
+const { size = 32, ring = 'kraft' } = Astro.props;
+---
+
+<span class:list={['iga', `iga--${ring}`]} style={`--iga:${size}px`} aria-hidden="true">
+  <span class="iga__disc"><Isotype variant="ciruela" size={Math.round(size * 0.56)} label="" /></span>
+</span>
+
+<style>
+  .iga {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: var(--iga);
+    height: var(--iga);
+    border-radius: 50%;
+    padding: 2px;
+    background: var(--iga-ring, transparent);
+  }
+  .iga--lima {
+    --iga-ring: var(--c-lima);
+  }
+  .iga--kraft {
+    --iga-ring: var(--c-kraft);
+  }
+  .iga__disc {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--c-ciruela);
+    box-shadow: 0 0 0 2px var(--ig-screen, #fffdf8);
+  }
+</style>

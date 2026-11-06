@@ -14,6 +14,10 @@ import Sticker from '../../components/brand/applications/Sticker.astro';
 import BusinessCard from '../../components/brand/applications/BusinessCard.astro';
 import SocialPost from '../../components/brand/applications/SocialPost.astro';
 import DeliveryVan from '../../components/brand/applications/DeliveryVan.astro';
+import PhoneFrame from '../../components/brand/social/PhoneFrame.astro';
+import IgFeedGrid from '../../components/brand/social/IgFeedGrid.astro';
+import IgCarousel from '../../components/brand/social/IgCarousel.astro';
+import IgStory from '../../components/brand/social/IgStory.astro';
 import { palette, taglines, voice } from '../../data/brand';
 
 // "Aplicaciones": one photo per touchpoint (public/img/board), the same order and
@@ -270,6 +274,44 @@ const icons = [
             }
           </div>
         </details>
+      </section>
+
+      <section class="panel panel--social" data-board-section="redes" aria-labelledby="h-redes">
+        <div class="social__head">
+          <h2 id="h-redes">Redes sociales</h2>
+          <p class="panel__why">
+            El feed respira igual que la caja: foto de producto, la voz en grande y el patrón del cartón, turnándose. La lima
+            queda para los detalles: un post de nueve, la cinta del cierre, el botón de deslizar.
+          </p>
+        </div>
+        <div class="social">
+          <figure class="social__item social__item--feed">
+            <div class="social__phone" style="--phone-w:360px">
+              <PhoneFrame fit>
+                <IgFeedGrid />
+              </PhoneFrame>
+            </div>
+            <figcaption><b>El perfil</b> Nueve posts: foto, tipografía y patrón se turnan.</figcaption>
+          </figure>
+          <figure class="social__item social__item--carousel">
+            <div class="social__phone" style="--phone-w:330px">
+              <IgCarousel />
+            </div>
+            <figcaption><b>Carrusel educativo</b> Lo técnico, en simple y en cuatro láminas.</figcaption>
+          </figure>
+          <figure class="social__item social__item--poll">
+            <div class="social__phone" style="--phone-w:260px">
+              <IgStory kind="poll" />
+            </div>
+            <figcaption><b>Historia con encuesta</b> Preguntar también es parte de la conversación.</figcaption>
+          </figure>
+          <figure class="social__item social__item--steps">
+            <div class="social__phone" style="--phone-w:260px">
+              <IgStory kind="steps" />
+            </div>
+            <figcaption><b>Detrás de la caja</b> El proceso, paso a paso, contado por quien lo hace.</figcaption>
+          </figure>
+        </div>
       </section>
 
       <section class="panel panel--voice" data-board-section="voz" aria-labelledby="h-voz">
@@ -929,6 +971,62 @@ const icons = [
     color: rgb(246 241 231 / 0.75);
   }
 
+  /* Social: staggered phones, like a spread rather than a grid */
+  .panel--social {
+    grid-column: 1 / -1;
+  }
+  .social__head {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--s-6);
+    align-items: end;
+  }
+  .social__head .panel__why {
+    margin-bottom: 0;
+  }
+  .social {
+    display: grid;
+    grid-template-columns: minmax(0, 1.16fr) minmax(0, 1.06fr) minmax(0, 0.84fr) minmax(0, 0.84fr);
+    align-items: start;
+    gap: var(--s-6);
+    margin-top: var(--s-8);
+    padding: var(--s-8) var(--s-6) var(--s-6);
+    border-radius: var(--r-md);
+    background: var(--c-kraft-claro);
+  }
+  .social__item {
+    margin: 0;
+    min-width: 0;
+    display: grid;
+    gap: var(--s-4);
+  }
+  .social__phone {
+    display: grid;
+    justify-items: center;
+    min-width: 0;
+  }
+  .social__item figcaption {
+    font-size: var(--fs-xs);
+    line-height: 1.45;
+    max-width: 30ch;
+    color: var(--ink-soft);
+  }
+  .social__item figcaption b {
+    display: block;
+    font-family: var(--f-display);
+    font-size: var(--fs-sm);
+    color: var(--c-ciruela);
+  }
+  .social__item--carousel {
+    margin-top: var(--s-16);
+  }
+  .social__item--poll {
+    margin-top: var(--s-6);
+  }
+  .social__item--steps {
+    margin-top: calc(var(--s-16) * 1.6);
+  }
+
   @media (max-width: 1100px) {
     .panel--logo,
     .panel--palette,
@@ -956,6 +1054,16 @@ const icons = [
     .panel--voice {
       grid-template-columns: 1fr;
       gap: var(--s-8);
+    }
+    .social {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .social__item--poll,
+    .social__item--steps {
+      margin-top: 0;
+    }
+    .social__item--carousel {
+      margin-top: var(--s-12);
     }
   }
 
@@ -1006,6 +1114,22 @@ const icons = [
     }
     .panel--voice {
       padding: var(--s-8) var(--s-4);
+    }
+    .social__head {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+    .social {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--s-8);
+      padding: var(--s-6) var(--s-3);
+    }
+    .social__item--carousel {
+      margin-top: 0;
+    }
+    .social__item figcaption {
+      justify-self: center;
+      text-align: center;
     }
   }
 </style>

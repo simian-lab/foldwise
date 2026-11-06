@@ -1,0 +1,87 @@
+---
+/**
+ * A carousel post: the first slide as it lands in the feed (4:5, with dots),
+ * and the whole sequence laid out as a numbered strip, since the slides only
+ * make sense in order.
+ */
+import IgPost from './IgPost.astro';
+import IgMedia from './IgMedia.astro';
+import PhoneFrame from './PhoneFrame.astro';
+import { flautaCarousel } from '../../../data/social';
+
+interface Props {
+  /** Put the post in a phone; otherwise it is a framed card. */
+  phone?: boolean;
+  class?: string;
+}
+const { phone = true, class: className } = Astro.props;
+const c = flautaCarousel;
+const count = c.slides.length;
+---
+
+<div class:list={['igc', className]} data-ig-carousel data-slides={count}>
+  <div class="igc__post">
+    {
+      phone ? (
+        <PhoneFrame>
+          <IgPost media={c.slides[0]} caption={c.caption} hashtags={c.hashtags} ratio="4:5" dots={{ count, current: 1 }} />
+        </PhoneFrame>
+      ) : (
+        <IgPost media={c.slides[0]} caption={c.caption} hashtags={c.hashtags} ratio="4:5" dots={{ count, current: 1 }} framed />
+      )
+    }
+  </div>
+  <ol class="igc__strip" aria-label="Las 4 láminas del carrusel, en orden">
+    {
+      c.slides.map((s, i) => (
+        <li data-ig-slide>
+          <div class="igc__slide">
+            <IgMedia media={s} compact />
+          </div>
+          <span class="igc__num" aria-hidden="true">{i + 1}</span>
+        </li>
+      ))
+    }
+  </ol>
+</div>
+
+<style>
+  .igc {
+    width: min(100%, var(--phone-w, 320px));
+    margin-inline: auto;
+    display: grid;
+    gap: var(--s-4);
+    min-width: 0;
+  }
+  .igc__post {
+    display: grid;
+    justify-items: center;
+    min-width: 0;
+  }
+  .igc__strip {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 6px;
+    min-width: 0;
+  }
+  .igc__strip li {
+    display: grid;
+    gap: 6px;
+    min-width: 0;
+  }
+  .igc__slide {
+    aspect-ratio: 4 / 5;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px rgb(58 29 63 / 0.12);
+  }
+  .igc__num {
+    font-family: var(--f-display);
+    font-weight: 700;
+    font-size: var(--fs-xs);
+    font-variant-numeric: tabular-nums;
+  }
+</style>

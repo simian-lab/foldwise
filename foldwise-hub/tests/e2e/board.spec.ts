@@ -3,7 +3,7 @@ import { blockExternal } from './helpers';
 
 const PAGE = '/marca/en-accion';
 
-const SECTIONS = ['Paleta', 'Tipografía', 'Logo', 'Patrones e íconos', 'Aplicaciones', 'Voz de marca'];
+const SECTIONS = ['Paleta', 'Tipografía', 'Logo', 'Patrones e íconos', 'Aplicaciones', 'Redes sociales', 'Voz de marca'];
 
 const PRIMARY = [
   { name: 'Crema', hex: '#F6F1E7' },
@@ -82,6 +82,43 @@ test.describe('brand-in-action board', () => {
       'Esto lo empacamos pensando en ti',
     );
     await expect(illus.locator('[data-application-illustrated="shipping-box"] [data-part="band"]')).toHaveCount(1);
+  });
+
+  test('Redes sociales follows Aplicaciones with a 9-post feed, 1 carousel and 2 stories in phones', async ({ page }) => {
+    await page.goto(PAGE);
+    const order = await page.locator('main [data-board-section]').evaluateAll((els) => els.map((el) => el.getAttribute('data-board-section')));
+    expect(order.indexOf('redes')).toBe(order.indexOf('aplicaciones') + 1);
+    const sec = page.locator('[data-board-section="redes"]');
+    await expect(sec.locator('[data-phone]')).toHaveCount(4);
+    const tiles = sec.locator('[data-ig-feed] [data-ig-tile]');
+    await expect(tiles).toHaveCount(9);
+    await expect(sec.locator('[data-ig-bio]')).toContainText('Pedidos pequeños. Cuidado enorme.');
+    await expect(sec.locator('[data-ig-carousel]')).toHaveCount(1);
+    await expect(sec.locator('[data-ig-carousel] [data-ig-slide]')).toHaveCount(4);
+    await expect(sec.locator('[data-ig-story]')).toHaveCount(2);
+    await expect(sec.locator('[data-ig-story="encuesta"]')).toContainText('¿Kraft o ciruela?');
+    await expect(sec.locator('[data-ig-story="detras"]')).toContainText('Detrás de la caja');
+    await expect(sec.locator('[data-ig-tile="voz"]')).toContainText('Ser pequeño no te hace cliente secundario.');
+    await expect(sec.locator('[data-ig-tile="minimo"]')).toContainText('Pide desde 25 cajas.');
+    // every caption carries 1-3 hashtags; no follower counts anywhere
+    const captions = await sec.locator('[data-ig-caption]').allInnerTexts();
+    expect(captions.length).toBeGreaterThan(0);
+    for (const c of captions) {
+      const tags = c.match(/#\p{L}+/gu) ?? [];
+      expect(tags.length).toBeGreaterThanOrEqual(1);
+      expect(tags.length).toBeLessThanOrEqual(3);
+    }
+    expect(await sec.innerText()).not.toMatch(/seguidores|followers/i);
+    // all photos load, with Spanish alt text
+    const imgs = sec.locator('img');
+    const n = await imgs.count();
+    expect(n).toBeGreaterThanOrEqual(6);
+    for (let i = 0; i < n; i++) {
+      const img = imgs.nth(i);
+      expect((await img.getAttribute('alt'))?.length).toBeGreaterThan(5);
+      await img.scrollIntoViewIfNeeded();
+      await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.complete && el.naturalWidth > 0)).toBe(true);
+    }
   });
 
   test('the patterns panel shows the 8 brand icons', async ({ page }) => {

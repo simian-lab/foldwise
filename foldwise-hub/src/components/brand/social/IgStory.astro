@@ -1,0 +1,300 @@
+---
+/**
+ * A 9:16 story: progress segments, handle, the frame itself and the reply
+ * bar. Two frames exist: a "¿Kraft o ciruela?" poll and the first step of
+ * "Detrás de la caja". The poll shows the sticker before anyone votes, so it
+ * carries no invented results.
+ */
+import IgIcon from './IgIcon.astro';
+import IgAvatar from './IgAvatar.astro';
+import Isotype from '../Isotype.astro';
+import PhoneFrame from './PhoneFrame.astro';
+import { SOCIAL_HANDLE, pollStory, stepsStory } from '../../../data/social';
+
+interface Props {
+  kind: 'poll' | 'steps';
+  class?: string;
+}
+const { kind, class: className } = Astro.props;
+const story = kind === 'poll' ? pollStory : stepsStory;
+const segments = Array.from({ length: story.frames }, (_, i) => i);
+const l = pollStory.left;
+const r = pollStory.right;
+const sp = stepsStory.photo;
+---
+
+<div class:list={['igs', className]} data-ig-story={story.id}>
+  <div class="igs__wrap">
+        <PhoneFrame tone="dark" nav={false}>
+          <div class="igs__screen">
+            <div class={`igs__frame igs__frame--${kind}`} role="group" aria-label={story.label}>
+              <div class="igs__bar" aria-hidden="true">
+                {segments.map((i) => (
+                  <span class:list={{ on: i === 0 }} />
+                ))}
+              </div>
+              <div class="igs__head" aria-hidden="true">
+                <IgAvatar size={26} ring="none" />
+                <span>{SOCIAL_HANDLE}</span>
+                <IgIcon name="close" size={18} class="igs__close" />
+              </div>
+              {kind === 'poll' ? (
+                <div class="igs__poll">
+                  <p class="igs__q">{pollStory.question}</p>
+                  <div class="igs__split">
+                    <img src={l.kind === 'photo' ? l.src : ''} alt={l.kind === 'photo' ? l.alt : ''} width="1600" height="1200" loading="lazy" decoding="async" />
+                    <img src={r.kind === 'photo' ? r.src : ''} alt={r.kind === 'photo' ? r.alt : ''} width="1400" height="1120" loading="lazy" decoding="async" />
+                  </div>
+                  <div class="igs__sticker" data-ig-poll>
+                    <p>Vota por tu caja</p>
+                    <div class="igs__options">
+                      {pollStory.options.map((o) => (
+                        <span>{o}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div class="igs__steps">
+                  <img
+                    class="igs__photo"
+                    src={sp.kind === 'photo' ? sp.src : ''}
+                    alt={sp.kind === 'photo' ? sp.alt : ''}
+                    width="1600"
+                    height="1068"
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <p class="igs__title">
+                    <Isotype variant="ciruela" size={16} label="" />
+                    {stepsStory.title}
+                  </p>
+                  <p class="igs__step-num">Paso 1 de {stepsStory.steps.length}</p>
+                  <p class="igs__step">{stepsStory.steps[0]}</p>
+                  <p class="igs__next">Sigue: {stepsStory.steps[1]}</p>
+                </div>
+              )}
+            </div>
+            <div class="igs__reply" aria-hidden="true">
+              <span>Enviar mensaje</span>
+              <IgIcon name="heart" size={22} />
+              <IgIcon name="share" size={21} />
+            </div>
+          </div>
+        </PhoneFrame>
+  </div>
+</div>
+
+<style>
+  .igs {
+    width: min(100%, var(--phone-w, 320px));
+    margin-inline: auto;
+    min-width: 0;
+    display: grid;
+    justify-items: center;
+  }
+  .igs__wrap {
+    width: 100%;
+    display: grid;
+    justify-items: center;
+  }
+  .igs__screen {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0 6px;
+  }
+  .igs__frame {
+    container-type: inline-size;
+    position: relative;
+    aspect-ratio: 9 / 16;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+    font-family: var(--f-text);
+  }
+  .igs__frame p {
+    margin: 0;
+  }
+  .igs__frame--poll {
+    background: var(--c-crema);
+    color: var(--c-ciruela);
+  }
+  .igs__frame--steps {
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+  .igs__bar {
+    position: absolute;
+    top: 3cqi;
+    left: 3.5cqi;
+    right: 3.5cqi;
+    display: flex;
+    gap: 1.2cqi;
+    z-index: 2;
+  }
+  .igs__bar span {
+    flex: 1;
+    height: 3px;
+    border-radius: 2px;
+    background: rgb(246 241 231 / 0.4);
+  }
+  .igs__frame--poll .igs__bar span {
+    background: rgb(58 29 63 / 0.18);
+  }
+  .igs__bar span.on {
+    background: var(--c-lima);
+  }
+  .igs__frame--poll .igs__bar span.on {
+    background: var(--c-ciruela);
+  }
+  .igs__head {
+    position: absolute;
+    top: 7cqi;
+    left: 3.5cqi;
+    right: 3.5cqi;
+    display: flex;
+    align-items: center;
+    gap: 2.4cqi;
+    font-weight: 700;
+    font-size: 4.2cqi;
+    z-index: 2;
+  }
+  .igs__head :global(.igs__close) {
+    margin-left: auto;
+  }
+
+  /* Poll: question, the two boxes, then the sticker */
+  .igs__poll {
+    position: absolute;
+    inset: 0;
+    padding: 22cqi 6cqi 8cqi;
+    display: flex;
+    flex-direction: column;
+    gap: 6cqi;
+  }
+  .igs__q {
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 13cqi;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+  }
+  .igs__split {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5cqi;
+  }
+  .igs__split img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 3cqi;
+  }
+  .igs__split img:first-child {
+    object-position: 42% 50%;
+  }
+  .igs__sticker {
+    align-self: center;
+    width: 82%;
+    margin-top: -16cqi;
+    padding: 4cqi;
+    border-radius: 4cqi;
+    background: #fffdf8;
+    box-shadow: 0 6px 18px -6px rgb(42 20 48 / 0.45);
+    text-align: center;
+  }
+  .igs__sticker p {
+    font-weight: 700;
+    font-size: 4.2cqi;
+    color: var(--c-ciruela-claro);
+    margin-bottom: 3cqi !important;
+  }
+  .igs__options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2.5cqi;
+  }
+  .igs__options span {
+    padding: 3cqi 0;
+    border-radius: 2.5cqi;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 5.6cqi;
+    background: var(--c-kraft-claro);
+    color: var(--c-ciruela);
+  }
+  .igs__options span:last-child {
+    background: var(--c-ciruela);
+    color: var(--c-crema);
+  }
+
+  /* Behind the box: photo, step, next step */
+  .igs__steps {
+    position: absolute;
+    inset: 0;
+    padding: 20cqi 6cqi 8cqi;
+    display: flex;
+    flex-direction: column;
+  }
+  .igs__photo {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    object-fit: cover;
+    object-position: 40% 50%;
+    border-radius: 3cqi;
+  }
+  .igs__title {
+    display: flex;
+    align-items: center;
+    gap: 2cqi;
+    margin-top: 6cqi !important;
+    font-weight: 700;
+    font-size: 4.4cqi;
+    color: var(--c-kraft-claro);
+  }
+  .igs__step-num {
+    margin-top: 5cqi !important;
+    font-weight: 700;
+    font-size: 4cqi;
+    color: var(--c-lima);
+    font-variant-numeric: tabular-nums;
+  }
+  .igs__step {
+    margin-top: 1.5cqi !important;
+    font-family: var(--f-display);
+    font-weight: 800;
+    font-size: 10.5cqi;
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+  .igs__next {
+    margin-top: 5cqi !important;
+    font-size: 3.9cqi;
+    color: rgb(246 241 231 / 0.75);
+  }
+
+  .igs__reply {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 4px 14px;
+    color: var(--c-crema);
+  }
+  .igs__reply span {
+    flex: 1;
+    padding: 8px 14px;
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 1px rgb(246 241 231 / 0.45);
+    font-family: var(--f-text);
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    color: rgb(246 241 231 / 0.8);
+  }
+</style>
